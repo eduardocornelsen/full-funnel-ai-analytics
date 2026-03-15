@@ -52,6 +52,13 @@ with st.sidebar:
                 button {
                     border-color: #30363d !important;
                 }
+                /* Target Sparkline backgrounds */
+                .stMetric [data-testid="stMetricChart"] {
+                    background-color: transparent !important;
+                }
+                canvas {
+                    filter: invert(0) !important; /* Ensure canvas doesn't double invert */
+                }
             </style>
         """, unsafe_allow_html=True)
 
@@ -71,10 +78,13 @@ with tab1:
         ga4_df = pd.read_csv(DATA_DIR / "mock_marketing" / "ga4_daily_sessions.csv")
         hubspot_df = pd.read_csv(DATA_DIR / "mock_marketing" / "hubspot_contacts.csv")
         
+        # Color palette that adapts to theme
         chart_color = "#58a6ff" if is_dark else "#0078d4"
+        plotly_template = "plotly_dark" if is_dark else "plotly_white"
         
-        # Metric row with sparklines
-        with st.container(horizontal=True):
+        # Metric row - Restored to 3 columns for desktop
+        col1, col2, col3 = st.columns(3)
+        with col1:
             st.metric(
                 "Total sessions", 
                 f"{ga4_df['sessions'].sum():,}", 
@@ -82,6 +92,7 @@ with tab1:
                 border=True,
                 chart_data=[random.randint(400, 600) for _ in range(7)]
             )
+        with col2:
             st.metric(
                 "New leads", 
                 f"{len(hubspot_df):,}", 
@@ -89,6 +100,7 @@ with tab1:
                 border=True,
                 chart_data=[random.randint(10, 30) for _ in range(7)]
             )
+        with col3:
             st.metric(
                 "Conversion rate", 
                 f"{(len(hubspot_df) / ga4_df['sessions'].sum()):.2%}", 
@@ -108,7 +120,12 @@ with tab1:
                 textinfo="value+percent initial",
                 marker={"color": [chart_color, "#29b5e8", "#71c8e5", "#a5ddf2"]}
             ))
-            fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+            fig.update_layout(
+                margin=dict(l=0, r=0, t=0, b=0), 
+                paper_bgcolor='rgba(0,0,0,0)', 
+                plot_bgcolor='rgba(0,0,0,0)',
+                template=plotly_template
+            )
             st.plotly_chart(fig, use_container_width=True)
     except Exception as e:
         st.error(f"Error loading funnel data: {e}")
@@ -151,6 +168,7 @@ with tab3:
         })
         
         main_color = "#58a6ff" if is_dark else "#0078d4"
+        plotly_template = "plotly_dark" if is_dark else "plotly_white"
         
         fig = px.bar(attr_df, x="Channel", y=["First-Touch", "Last-Touch", "Linear"], 
                     barmode="group", color_discrete_sequence=[main_color, "#29b5e8", "#a5ddf2"])
@@ -158,7 +176,8 @@ with tab3:
             legend_title_text="Model", 
             margin=dict(l=0, r=0, t=30, b=0),
             paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)'
+            plot_bgcolor='rgba(0,0,0,0)',
+            template=plotly_template
         )
         st.plotly_chart(fig, use_container_width=True)
 

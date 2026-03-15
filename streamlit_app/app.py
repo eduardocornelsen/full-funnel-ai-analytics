@@ -55,8 +55,11 @@ with st.sidebar:
         key="date_selector" # Linked to session state
     )
     
-    # Update local variables from state
-    sql_start, sql_end = st.session_state.date_selector
+    # Update local variables from state (Handling single-date selections)
+    if len(st.session_state.date_selector) == 2:
+        sql_start, sql_end = st.session_state.date_selector
+    else:
+        sql_start = sql_end = st.session_state.date_selector[0]
 
     env = st.segmented_control("Environment", ["Production", "Staging", "Dev"], default="Production")
     

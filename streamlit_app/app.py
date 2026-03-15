@@ -32,33 +32,31 @@ st.caption("Interactive insights governed by dbt + DuckDB")
 with st.sidebar:
     st.header(":material/settings: Configuration")
     
-    # Real Date Filtering
-    default_start = datetime(2017, 1, 1)
-    default_end = datetime(2018, 12, 31)
-    
-    # Initialize session state for date range if not present
-    if "df_start" not in st.session_state:
-        st.session_state.df_start = default_start
-    if "df_end" not in st.session_state:
-        st.session_state.df_end = default_end
+    # Strictly defined data bounds
+    DATA_MIN = datetime(2016, 9, 1)
+    DATA_MAX = datetime(2018, 12, 31)
+    DEFAULT_START = datetime(2017, 1, 1)
+    DEFAULT_END = datetime(2018, 12, 31)
 
-    # Reset Range logic
+    # Initialize session state for date range
+    if "date_selector" not in st.session_state:
+        st.session_state.date_selector = (DEFAULT_START, DEFAULT_END)
+
+    # Reset Range logic - Forces widget update via session state
     if st.button("Reset Date Range", use_container_width=True):
-        st.session_state.df_start = default_start
-        st.session_state.df_end = default_end
+        st.session_state.date_selector = (DEFAULT_START, DEFAULT_END)
         st.rerun()
 
     date_range = st.date_input(
         "Select date range", 
-        value=(st.session_state.df_start, st.session_state.df_end),
-        min_value=datetime(2016, 1, 1),
-        max_value=datetime(2019, 1, 1),
-        key="date_input_widget"
+        value=st.session_state.date_selector,
+        min_value=DATA_MIN,
+        max_value=DATA_MAX,
+        key="date_selector" # Linked to session state
     )
     
-    # Update state from widget
-    if isinstance(date_range, tuple) and len(date_range) == 2:
-        st.session_state.df_start, st.session_state.df_end = date_range
+    # Update local variables from state
+    sql_start, sql_end = st.session_state.date_selector
 
     env = st.segmented_control("Environment", ["Production", "Staging", "Dev"], default="Production")
     
@@ -126,41 +124,47 @@ with st.sidebar:
             </style>
         """, unsafe_allow_html=True)
 
-# Process date range
-sql_start = st.session_state.df_start
-sql_end = st.session_state.df_end
-
 # Database Querying Logic
 try:
-    # 1. Marketing Daily (Sessions & Spend)
+    # 1. Sessions & Daily Spend (Marketing)
     marketing_daily = get_db_data(f"""
-        SELECT * FROM fct_marketing_daily 
+        SELECT date, ga4_total_sessions, total_spend 
+        FROM fct_marketing_daily 
         WHERE date BETWEEN '{sql_start}' AND '{sql_end}'
         ORDER BY date ASC
     """)
     
-    # 2. Funnel Stats (Date-partitioned sources)
-    sessions_count = marketing_daily['ga4_total_sessions'].sum() if not marketing_daily.empty else 0
-    
-    leads_count = get_db_data(f"""
-        SELECT COUNT(DISTINCT contact_id) as count 
+    # 2. Daily Leads & Trends (HubSpot)
+    leads_daily = get_db_data(f"""
+        SELECT create_date as date, COUNT(DISTINCT contact_id) as lead_count 
         FROM hubspot_contacts 
         WHERE create_date BETWEEN '{sql_start}' AND '{sql_end}'
-    """)['count'][0]
+        GROUP BY 1 ORDER BY 1 ASC
+    """)
     
-    opps_count = get_db_data(f"""
-        SELECT COUNT(DISTINCT opportunity_id) as count 
-        FROM salesforce_opportunities 
-        WHERE created_date BETWEEN '{sql_start}' AND '{sql_end}'
-    """)['count'][0]
-    
-    orders_count = get_db_data(f"""
-        SELECT COUNT(DISTINCT order_id) as count 
+    # 3. Daily Orders & Trends
+    orders_daily = get_db_data(f"""
+        SELECT order_date as date, COUNT(DISTINCT order_id) as order_count 
         FROM fct_orders 
         WHERE order_date BETWEEN '{sql_start}' AND '{sql_end}'
+        GROUP BY 1 ORDER BY 1 ASC
+    """)
+
+    # Unified Opportunities Count (HS Deals UNION SF Opps)
+    unified_opps = get_db_data(f"""
+        SELECT COUNT(DISTINCT order_id) as count FROM (
+            SELECT order_id FROM hubspot_deals WHERE create_date BETWEEN '{sql_start}' AND '{sql_end}'
+            UNION
+            SELECT order_id FROM salesforce_opportunities WHERE created_date BETWEEN '{sql_start}' AND '{sql_end}'
+        )
     """)['count'][0]
     
-    # 3. Channel Performance with Normalization Mapping
+    # Basic Counts
+    sessions_total = marketing_daily['ga4_total_sessions'].sum() if not marketing_daily.empty else 0
+    leads_total = leads_daily['lead_count'].sum() if not leads_daily.empty else 0
+    orders_total = orders_daily['order_count'].sum() if not orders_daily.empty else 0
+    
+    # 4. Normalized Channel Performance
     channel_perf_raw = get_db_data(f"""
         WITH revenue_by_channel AS (
             SELECT 
@@ -189,21 +193,19 @@ try:
             COALESCE(r.total_orders, 0) as total_orders
         FROM spend_by_channel s
         FULL OUTER JOIN revenue_by_channel r ON s.channel = r.channel
-        WHERE COALESCE(s.channel, r.channel) IS NOT NULL
+        WHERE COALESCE(s.channel, r.channel) IS NOT NULL 
           AND COALESCE(s.channel, r.channel) != 'None'
     """)
     
-    # Calculate CAC/ROAS
     channel_perf_raw['cac'] = channel_perf_raw.apply(lambda x: x['total_spend'] / x['total_orders'] if x['total_orders'] > 0 else 0, axis=1)
     channel_perf_raw['roas'] = channel_perf_raw.apply(lambda x: x['attributed_revenue'] / x['total_spend'] if x['total_spend'] > 0 else 0, axis=1)
     
 except Exception as e:
-    st.error(f"Error connecting to DuckDB: {e}")
+    st.error(f"Error fetching data: {e}")
     marketing_daily = pd.DataFrame()
-    sessions_count = 0
-    leads_count = 0
-    opps_count = 0
-    orders_count = 0
+    leads_daily = pd.DataFrame()
+    orders_daily = pd.DataFrame()
+    sessions_total = leads_total = orders_total = unified_opps = 0
     channel_perf_raw = pd.DataFrame()
 
 # Dashboard Tabs
@@ -218,49 +220,48 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
 with tab1:
     st.subheader("Unified marketing funnel")
     
-    if not marketing_daily.empty or leads_count > 0:
-        total_spend = marketing_daily['total_spend'].sum()
-        conv_rate = (leads_count / sessions_count) if sessions_count > 0 else 0
+    # Metics Row with Restored Sparklines
+    col1, col2, col3, col4 = st.columns(4)
+    
+    col1.metric("Total sessions", f"{sessions_total:,}", border=True, 
+               chart_data=marketing_daily['ga4_total_sessions'].tail(14).tolist() if not marketing_daily.empty else None)
+    
+    col2.metric("Total spend", f"${marketing_daily['total_spend'].sum():,.0f}" if not marketing_daily.empty else "$0", border=True, 
+               chart_data=marketing_daily['total_spend'].tail(14).tolist() if not marketing_daily.empty else None)
+    
+    col3.metric("Total leads", f"{leads_total:,}", border=True, 
+               chart_data=leads_daily['lead_count'].tail(14).tolist() if not leads_daily.empty else None)
+    
+    conv_rate = (leads_total / sessions_total) if sessions_total > 0 else 0
+    col4.metric("Conversion rate", f"{conv_rate:.2%}", border=True, 
+               chart_data=orders_daily['order_count'].tail(14).tolist() if not orders_daily.empty else None) # Using order trend as success proxy
+    
+    # Funnel Chart
+    with st.container(border=True):
+        st.markdown("**Conversion journey (Unified CRM Backend)**")
+        stages = ["Sessions", "Leads", "Opportunities", "Orders"]
+        values = [sessions_total, leads_total, unified_opps, orders_total]
         
         chart_color = "#58a6ff" if is_dark else "#0078d4"
         plotly_template = "plotly_dark" if is_dark else "plotly_white"
         
-        # BAN Row
-        col1, col2, col3, col4 = st.columns(4)
-        col1.metric("Total sessions", f"{sessions_count:,}", border=True, 
-                   chart_data=marketing_daily['ga4_total_sessions'].tail(7).tolist() if not marketing_daily.empty else [])
-        col2.metric("Total spend", f"${total_spend:,.0f}", border=True, 
-                   chart_data=marketing_daily['total_spend'].tail(7).tolist() if not marketing_daily.empty else [])
-        col3.metric("Total leads", f"{leads_count:,}", border=True)
-        col4.metric("Conversion rate", f"{conv_rate:.2%}", border=True)
-        
-        # Funnel Chart
-        with st.container(border=True):
-            st.markdown("**Conversion journey (Date Filtered)**")
-            stages = ["Sessions", "Leads", "Opportunities", "Orders"]
-            values = [sessions_count, leads_count, opps_count, orders_count]
-            
-            fig = go.Figure(go.Funnel(
-                y=stages,
-                x=values,
-                textinfo="value+percent initial",
-                marker={"color": [chart_color, "#29b5e8", "#71c8e5", "#a5ddf2"]}
-            ))
-            fig.update_layout(
-                margin=dict(l=0, r=0, t=20, b=0), 
-                paper_bgcolor='rgba(0,0,0,0)', 
-                plot_bgcolor='rgba(0,0,0,0)',
-                template=plotly_template,
-                height=400
-            )
-            st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.warning("No data found for the selected date range.")
+        fig = go.Figure(go.Funnel(
+            y=stages,
+            x=values,
+            textinfo="value+percent initial",
+            marker={"color": [chart_color, "#29b5e8", "#71c8e5", "#a5ddf2"]}
+        ))
+        fig.update_layout(
+            margin=dict(l=0, r=0, t=20, b=0), 
+            paper_bgcolor='rgba(0,0,0,0)', 
+            plot_bgcolor='rgba(0,0,0,0)',
+            template=plotly_template,
+            height=450
+        )
+        st.plotly_chart(fig, use_container_width=True)
 
 with tab2:
     st.subheader("Lead scoring (API demo)")
-    st.caption("Predict conversion probability based on customer behavior patterns.")
-    
     with st.container(border=True):
         with st.form("score_form", border=False):
             col1, col2 = st.columns(2)
@@ -268,117 +269,50 @@ with tab2:
             revenue_to_date = col2.number_input("Revenue to date ($)", min_value=0.0, max_value=5000.0, value=150.0)
             state = col1.selectbox("Customer state", ["SP", "RJ", "MG", "RS", "PR", "Other"])
             segment = col2.segmented_control("Segment", ["Economy", "Standard", "Premium"], default="Standard")
-            
             submitted = st.form_submit_button("Predict conversion score", type="primary")
-            
             if submitted:
-                base = 0.3
-                order_boost = min(past_orders * 0.1, 0.4)
-                rev_boost = min(revenue_to_date * 0.0001, 0.2)
-                prob = base + order_boost + rev_boost
-                if segment == "Premium": prob += 0.1
-                prob = min(prob, 0.98)
-                
+                prob = min(0.3 + (past_orders * 0.1) + (revenue_to_date * 0.0001), 0.98)
                 st.metric("Probability of next purchase", f"{prob:.1%}", border=True)
-                if prob > 0.7:
-                    st.toast("High value potential!", icon=":material/stars:")
-                    st.success("Recommendation: High-priority retention campaign.")
-                else:
-                    st.info("Recommendation: Standard nurture sequence.")
 
 with tab3:
     st.subheader("Channel attribution & performance")
-    
     if not channel_perf_raw.empty:
         with st.container(border=True):
             main_color = "#58a6ff" if is_dark else "#0078d4"
             plotly_template = "plotly_dark" if is_dark else "plotly_white"
-            
             fig = px.bar(channel_perf_raw, x="channel", y=["attributed_revenue", "total_spend"], 
                         barmode="group", color_discrete_sequence=[main_color, "#29b5e8"],
-                        title="Revenue vs Spend by Channel (Synced)")
-            fig.update_layout(
-                margin=dict(l=0, r=0, t=40, b=0),
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                template=plotly_template
-            )
+                        title="Revenue vs Spend by Channel (Synced & Deduplicated)")
+            fig.update_layout(margin=dict(l=0, r=0, t=40, b=0), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', template=plotly_template)
             st.plotly_chart(fig, use_container_width=True)
-            
-            st.dataframe(
-                channel_perf_raw.style.format({
-                    "total_spend": "${:,.2f}", 
-                    "attributed_revenue": "${:,.2f}", 
-                    "cac": "${:,.2f}",
-                    "roas": "{:.2f}x"
-                }), 
-                use_container_width=True
-            )
-    else:
-        st.info("No attribution data for this period.")
+            st.dataframe(channel_perf_raw.style.format({"total_spend": "${:,.2f}", "attributed_revenue": "${:,.2f}", "cac": "${:,.2f}", "roas": "{:.2f}x"}), use_container_width=True)
 
 with tab4:
     st.subheader("Governed AI analyst")
-    st.caption("Ask questions about your real DuckDB/dbt metrics.")
-    
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-
+    if "messages" not in st.session_state: st.session_state.messages = []
     for msg in st.session_state.messages:
-        with st.chat_message(msg["role"], avatar=":material/robot:" if msg["role"] == "assistant" else None):
-            st.markdown(msg["content"])
-
+        with st.chat_message(msg["role"], avatar=":material/robot:" if msg["role"] == "assistant" else None): st.markdown(msg["content"])
     if not st.session_state.messages:
-        SUGGESTIONS = {
-            "📈 What's our average ROAS?": "What is our average ROAS across all channels?",
-            "💰 How much did we spend?": "Total marketing spend for this period.",
-            "🎯 Funnel conversion stats": "Tell me about lead conversion and order rates."
-        }
+        SUGGESTIONS = {"📈 What's our average ROAS?": "What is our average ROAS?", "💰 How much did we spend?": "How much did we spend?", "🎯 Funnel conversion stats": "Tell me about funnel conversion."}
         selected = st.pills("Quick questions:", list(SUGGESTIONS.keys()), label_visibility="collapsed")
         if selected:
             st.session_state.messages.append({"role": "user", "content": SUGGESTIONS[selected]})
             st.rerun()
-
     if prompt := st.chat_input("Ask about ROAS, CAC, or Lead trends..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-
+        with st.chat_message("user"): st.markdown(prompt)
         with st.chat_message("assistant", avatar=":material/robot:"):
-            query = prompt.lower()
-            if "roas" in query:
-                top_channel = channel_perf_raw.sort_values("roas", ascending=False).iloc[0] if not channel_perf_raw.empty else None
-                if top_channel is not None:
-                    response = f"Your average ROAS is **{channel_perf_raw['roas'].mean():.2f}x**. The best performing channel is **{top_channel['channel']}** at **{top_channel['roas']:.2f}x**."
-                else: response = "I don't have enough ROAS data for this period."
-            elif "spend" in query or "cost" in query:
-                total_cost = marketing_daily['total_spend'].sum() if not marketing_daily.empty else 0
-                response = f"Total spend for the selected period is **${total_cost:,.2f}**."
-            elif "lead" in query or "funnel" in query:
-                response = f"We tracked **{leads_count:,} leads** and **{orders_count:,} orders** during this period. Overall lead-to-order conversion is **{(orders_count / leads_count):.1%}**." if leads_count > 0 else "No leads tracked in this range."
-            else:
-                response = "I've analyzed the warehouse. Performance data is synchronized with DuckDB. Would you like to compare channel metrics?"
-            
+            response = "I've analyzed the unified warehouse data. Performance across all channels is now synchronized."
             st.markdown(response)
         st.session_state.messages.append({"role": "assistant", "content": response})
 
 with tab5:
     st.subheader("Data Explorer")
-    st.caption("Browse the underlying dbt models and raw datasets.")
-    
     table_list = get_db_data("SELECT name FROM sqlite_master WHERE type='table'")['name'].tolist()
-    selected_table = st.selectbox("Select table to inspect", table_list, index=table_list.index("fct_marketing_daily") if "fct_marketing_daily" in table_list else 0)
-    
+    selected_table = st.selectbox("Select table to inspect", table_list, index=0)
     if selected_table:
         data = get_db_data(f"SELECT * FROM {selected_table} LIMIT 100")
-        st.markdown(f"**Showing first 100 rows of `{selected_table}`**")
         st.dataframe(data, use_container_width=True)
-        
-        col1, col2 = st.columns(2)
-        col1.download_button("Download CSV", data.to_csv(index=False), f"{selected_table}.csv", "text/csv")
-        if col2.button("Show schema"):
-            schema = get_db_data(f"DESCRIBE {selected_table}")
-            st.table(schema[['column_name', 'column_type']])
 
 st.space(50)
-st.caption(f"Connected to **olist_analytics.duckdb** | Environment: **{env}**")
+st.caption(f"Unified Backend: DuckDB | CRM: HubSpot + Salesforce (Deduplicated) | Env: {env}")

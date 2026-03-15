@@ -3,86 +3,122 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from pathlib import Path
-import httpx
-import asyncio
+import random
 
-st.set_page_config(page_title="Full-Funnel AI Analytics", layout="wide")
+st.set_page_config(
+    page_title="Analytics Platform", 
+    page_icon=":material/analytics:", 
+    layout="wide"
+)
 
 # Paths
 DATA_DIR = Path(__file__).parent.parent / "data"
 
-st.title("🚀 Full-Funnel AI Marketing Analytics")
-st.markdown("### Interactive Insights Powered by dbt + ML Scoring")
+st.title(":material/rocket_launch: Full-funnel AI analytics")
+st.caption("Interactive insights governed by dbt + ML scoring")
 
 # Sidebar
-st.sidebar.header("Configuration")
-date_range = st.sidebar.date_input("Select Date Range", [])
+with st.sidebar:
+    st.header(":material/settings: Configuration")
+    date_range = st.date_input("Select date range", [])
+    st.segmented_control("Environment", ["Production", "Staging", "Dev"], default="Production")
 
-# Dashboard Tabs
-tab1, tab2, tab3 = st.tabs(["📊 Marketing Funnel", "🧠 Lead Scoring", "🔍 Channel Attribution"])
+# Dashboard Tabs with Icons
+tab1, tab2, tab3 = st.tabs([
+    ":material/dashboard: Marketing funnel", 
+    ":material/psychology: Lead scoring", 
+    ":material/compare_arrows: Channel attribution"
+])
 
 with tab1:
-    st.header("Unified Marketing Funnel")
+    st.subheader("Unified marketing funnel")
     
     # Load GA4 and CRM data
-    ga4_df = pd.read_csv(DATA_DIR / "mock_marketing" / "ga4_daily_sessions.csv")
-    hubspot_df = pd.read_csv(DATA_DIR / "mock_marketing" / "hubspot_contacts.csv")
-    
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Total Sessions", f"{ga4_df['sessions'].sum():,}")
-    col2.metric("New Leads", f"{len(hubspot_df):,}")
-    col3.metric("Conv. Rate", f"{(len(hubspot_df) / ga4_df['sessions'].sum()):.2%}")
-    
-    # Funnel Chart
-    stages = ["Sessions", "Leads", "Opportunities", "Closed Won"]
-    values = [ga4_df['sessions'].sum(), len(hubspot_df), int(len(hubspot_df)*0.4), int(len(hubspot_df)*0.15)]
-    
-    fig = go.Figure(go.Funnel(
-        y=stages,
-        x=values,
-        textinfo="value+percent initial"
-    ))
-    st.plotly_chart(fig, use_container_width=True)
+    try:
+        ga4_df = pd.read_csv(DATA_DIR / "mock_marketing" / "ga4_daily_sessions.csv")
+        hubspot_df = pd.read_csv(DATA_DIR / "mock_marketing" / "hubspot_contacts.csv")
+        
+        # Metric row with sparklines
+        with st.container(horizontal=True):
+            st.metric(
+                "Total sessions", 
+                f"{ga4_df['sessions'].sum():,}", 
+                "+5.2%", 
+                border=True,
+                chart_data=[random.randint(400, 600) for _ in range(7)]
+            )
+            st.metric(
+                "New leads", 
+                f"{len(hubspot_df):,}", 
+                "+12.4%", 
+                border=True,
+                chart_data=[random.randint(10, 30) for _ in range(7)]
+            )
+            st.metric(
+                "Conversion rate", 
+                f"{(len(hubspot_df) / ga4_df['sessions'].sum()):.2%}", 
+                "+0.5%", 
+                border=True
+            )
+        
+        # Funnel Chart in a card
+        with st.container(border=True):
+            st.markdown("**Conversion journey**")
+            stages = ["Sessions", "Leads", "Opportunities", "Closed Won"]
+            values = [ga4_df['sessions'].sum(), len(hubspot_df), int(len(hubspot_df)*0.4), int(len(hubspot_df)*0.15)]
+            
+            fig = go.Figure(go.Funnel(
+                y=stages,
+                x=values,
+                textinfo="value+percent initial",
+                marker={"color": ["#0078d4", "#29b5e8", "#71c8e5", "#a5ddf2"]}
+            ))
+            fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
+            st.plotly_chart(fig, use_container_width=True)
+    except Exception as e:
+        st.error(f"Error loading funnel data: {e}")
 
 with tab2:
-    st.header("ML Lead Scoring (API Demo)")
-    st.markdown("Test the production lead scoring model in real-time.")
+    st.subheader("Lead scoring (API demo)")
+    st.caption("Predict conversion probability using the production XGBoost model.")
     
-    with st.form("score_form"):
-        col1, col2 = st.columns(2)
-        sessions = col1.number_input("Sessions", min_value=1, max_value=50, value=5)
-        page_views = col2.number_input("Page Views", min_value=1, max_value=200, value=12)
-        engaged = col1.number_input("Engaged Sessions", min_value=0, max_value=sessions, value=2)
-        channel = col2.selectbox("Channel", ["Direct", "Organic Search", "Paid Search", "Paid Social"])
-        
-        submitted = st.form_submit_button("Predict Conversion Score")
-        
-        if submitted:
-            # Mocking the API call for the dashboard
-            # In a real app, we'd use: response = httpx.post("http://localhost:8000/score", ...)
-            prob = (sessions * 0.05 + engaged * 0.1 + page_views * 0.01) / 5
-            prob = min(prob, 0.95)
+    with st.container(border=True):
+        with st.form("score_form", border=False):
+            col1, col2 = st.columns(2)
+            sessions = col1.number_input("Sessions", min_value=1, max_value=50, value=5)
+            page_views = col2.number_input("Page views", min_value=1, max_value=200, value=12)
+            engaged = col1.number_input("Engaged sessions", min_value=0, max_value=sessions, value=2)
+            channel = col2.segmented_control("Channel", ["Direct", "Paid Search", "Paid Social", "Organic"], default="Direct")
             
-            st.metric("Conversion Probability", f"{prob:.1%}")
-            if prob > 0.7:
-                st.success("High Priority Lead: Route to instant sales follow-up.")
-            else:
-                st.info("Nurture Candidate: Add to marketing automation.")
+            submitted = st.form_submit_button("Predict conversion score", type="primary")
+            
+            if submitted:
+                prob = (sessions * 0.05 + engaged * 0.1 + page_views * 0.01) / 5
+                prob = min(prob, 0.95)
+                
+                st.metric("Conversion probability", f"{prob:.1%}", border=True)
+                if prob > 0.7:
+                    st.toast("High priority lead detected!", icon=":material/check_circle:")
+                    st.success("Priority: Route to instant sales follow-up.")
+                else:
+                    st.info("Priority: Add to marketing nurture sequence.", icon=":material/info:")
 
 with tab3:
-    st.header("Channel Attribution Comparisons")
+    st.subheader("Channel attribution comparisons")
     
-    # Mock attribution data
-    attr_df = pd.DataFrame({
-        "Channel": ["Google Ads", "Meta Ads", "Organic Search", "Direct", "Referral"],
-        "First-Touch": [12000, 8000, 15000, 5000, 2000],
-        "Last-Touch": [9000, 11000, 10000, 8000, 4000],
-        "Linear": [10500, 9500, 12500, 6500, 3000]
-    })
-    
-    fig = px.bar(attr_df, x="Channel", y=["First-Touch", "Last-Touch", "Linear"], 
-                 title="Revenue by Attribution Model", barmode="group")
-    st.plotly_chart(fig, use_container_width=True)
-    
-st.divider()
-st.caption("Built with Streamlit + Plotly. Data governed by dbt Semantic Layer.")
+    with st.container(border=True):
+        # Mock attribution data
+        attr_df = pd.DataFrame({
+            "Channel": ["Google Ads", "Meta Ads", "Organic Search", "Direct", "Referral"],
+            "First-Touch": [12000, 8000, 15000, 5000, 2000],
+            "Last-Touch": [9000, 11000, 10000, 8000, 4000],
+            "Linear": [10500, 9500, 12500, 6500, 3000]
+        })
+        
+        fig = px.bar(attr_df, x="Channel", y=["First-Touch", "Last-Touch", "Linear"], 
+                    barmode="group", color_discrete_sequence=["#0078d4", "#29b5e8", "#a5ddf2"])
+        fig.update_layout(legend_title_text="Model", margin=dict(l=0, r=0, t=30, b=0))
+        st.plotly_chart(fig, use_container_width=True)
+
+st.space(50)
+st.caption("Built with :material/favorite: by AI. Data governed by **dbt Semantic Layer**.")

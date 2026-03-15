@@ -1,15 +1,8 @@
 [theme]
 base = "light"
 primaryColor = "#0078d4"
-
-[theme.light]
-primaryColor = "#0078d4"
 backgroundColor = "#ffffff"
 secondaryBackgroundColor = "#f6f8fa"
 textColor = "#1f2328"
-
-[theme.dark]
-primaryColor = "#58a6ff"
-backgroundColor = "#0d1117"
-secondaryBackgroundColor = "#161b22"
-textColor = "#e6edf3"
+font = "sans-serif"
+baseRadius = "8px"

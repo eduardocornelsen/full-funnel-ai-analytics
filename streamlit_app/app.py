@@ -23,8 +23,37 @@ with st.sidebar:
     date_range = st.date_input("Select date range", [])
     st.segmented_control("Environment", ["Production", "Staging", "Dev"], default="Production")
     
-    # Explicit UI Toggle for Dark Mode
+    # Explicit UI Toggle for Dark Mode with CSS Injection
     is_dark = st.toggle("Dark mode", value=False, help="Toggle between light and dark visualization modes")
+    
+    if is_dark:
+        st.markdown("""
+            <style>
+                [data-testid="stAppViewContainer"] {
+                    background-color: #0d1117;
+                    color: #e6edf3;
+                }
+                [data-testid="stSidebar"] {
+                    background-color: #161b22;
+                }
+                [data-testid="stHeader"] {
+                    background-color: rgba(13, 17, 23, 0.8);
+                }
+                .st-emotion-cache-1vt76ie { /* Cards/Borders */
+                    background-color: #161b22 !important;
+                    border-color: #30363d !important;
+                }
+                .stMarkdown, p, h1, h2, h3, h4, h5, h6, span, label {
+                    color: #e6edf3 !important;
+                }
+                .stMetric {
+                    background-color: #161b22;
+                }
+                button {
+                    border-color: #30363d !important;
+                }
+            </style>
+        """, unsafe_allow_html=True)
 
 # Dashboard Tabs with Icons
 tab1, tab2, tab3, tab4 = st.tabs([

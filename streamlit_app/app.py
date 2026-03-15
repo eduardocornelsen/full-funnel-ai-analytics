@@ -61,15 +61,35 @@ with st.sidebar:
                     border-color: #30363d !important;
                 }
                 
-                /* Segmented Control / Pills */
+                /* Specific fix for Date Input text */
+                .stDateInput input {
+                    color: #ffffff !important;
+                    -webkit-text-fill-color: #ffffff !important;
+                }
+                
+                /* Segmented Control / Pills / Environment Buttons */
                 div[data-testid="stSegmentedControl"] button {
                     background-color: #262730 !important;
-                    color: #e6edf3 !important;
+                    color: #e6edf3 !important; /* Visible text for unselected */
                     border-color: #30363d !important;
+                    box-shadow: none !important;
                 }
                 div[data-testid="stSegmentedControl"] button[aria-checked="true"] {
                     background-color: #0078d4 !important;
                     color: white !important;
+                }
+                div[data-testid="stSegmentedControl"] div[role="radiogroup"] {
+                    background-color: #262730 !important;
+                }
+
+                /* Number Input Buttons (+/-) */
+                .stNumberInput button {
+                    background-color: #262730 !important;
+                    color: #ffffff !important;
+                    border-color: #30363d !important;
+                }
+                .stNumberInput button:hover {
+                    background-color: #30363d !important;
                 }
 
                 /* Metric Chart (Sparklines) */
@@ -80,7 +100,7 @@ with st.sidebar:
                     background-color: transparent !important;
                 }
                 
-                /* Button Borders */
+                /* Global Button Polish */
                 button {
                     border-color: #30363d !important;
                 }

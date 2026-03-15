@@ -49,39 +49,62 @@ with st.sidebar:
                     color: #e6edf3 !important;
                 }
                 
-                /* Aggressive Widget Overrides (Segmented Control, Pills, Buttons) */
-                div[data-testid="stSegmentedControl"] button, 
-                div[data-testid="stPills"] button, 
-                div[data-testid="stChatInput"] textarea,
+                /* Brutalist Override for ALL Widgets (Targets recursively) */
+                div[data-testid="stSegmentedControl"], 
+                div[data-testid="stPills"],
+                div[data-testid="stChatInput"],
+                div[data-baseweb="input"] {
+                    background-color: transparent !important;
+                }
+
+                /* Target children that actually hold the white background */
+                div[data-testid="stSegmentedControl"] div,
+                div[data-testid="stPills"] div,
                 div[data-testid="stChatInput"] div,
-                div[data-baseweb="input"],
-                div[data-baseweb="select"] > div,
-                .stNumberInput input,
-                .stDateInput input {
+                div[data-baseweb="input"] div {
+                    background-color: transparent !important;
+                }
+
+                /* Force button unselected state */
+                div[data-testid="stSegmentedControl"] button, 
+                div[data-testid="stPills"] button {
                     background-color: #262730 !important;
                     color: #ffffff !important;
-                    border-color: #30363d !important;
-                    -webkit-text-fill-color: #ffffff !important;
+                    border: 1px solid #30363d !important;
                 }
-                
-                /* Unselected State Visibility */
+
+                /* Text inside buttons */
                 div[data-testid="stSegmentedControl"] button p, 
                 div[data-testid="stPills"] button p {
-                    color: #e6edf3 !important;
+                    color: #ffffff !important;
+                    -webkit-text-fill-color: #ffffff !important;
                 }
-                
-                /* Selected State (Primary) */
+
+                /* Primary Selected State */
                 div[data-testid="stSegmentedControl"] button[aria-checked="true"],
                 div[data-testid="stPills"] button[aria-checked="true"] {
                     background-color: #0078d4 !important;
-                    color: white !important;
+                    color: #ffffff !important;
                 }
 
-                /* Number Input +/- Controls */
+                /* Chat Input & Textareas */
+                textarea[data-testid="stChatInputTextArea"] {
+                    background-color: #262730 !important;
+                    color: #ffffff !important;
+                    border: 1px solid #30363d !important;
+                }
+                
+                /* Number/Date Inputs */
+                .stNumberInput input, .stDateInput input {
+                    background-color: #262730 !important;
+                    color: #ffffff !important;
+                    -webkit-text-fill-color: #ffffff !important;
+                }
+                
+                /* Number Input Buttons */
                 .stNumberInput button {
                     background-color: #262730 !important;
                     color: white !important;
-                    border-color: #30363d !important;
                 }
 
                 /* Metric Chart (Sparklines) Transparency */
@@ -92,12 +115,6 @@ with st.sidebar:
                 /* Global Button Polish */
                 button {
                     border-color: #30363d !important;
-                }
-                
-                /* Chat Input Fix */
-                div[data-testid="stChatInput"] {
-                    background-color: #161b22 !important;
-                    border-top: 1px solid #30363d !important;
                 }
             </style>
         """, unsafe_allow_html=True)

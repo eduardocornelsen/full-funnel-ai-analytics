@@ -29,92 +29,75 @@ with st.sidebar:
     if is_dark:
         st.markdown("""
             <style>
-                /* Main Backgrounds */
-                [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
+                /* 1. Reset Global Backgrounds */
+                [data-testid="stAppViewContainer"], [data-testid="stHeader"], [data-testid="stSidebar"] {
                     background-color: #0d1117 !important;
                     color: #e6edf3 !important;
                 }
-                [data-testid="stSidebar"] {
-                    background-color: #161b22 !important;
-                }
                 
-                /* Cards & Borders */
-                .st-emotion-cache-1vt76ie, [data-testid="stMetric"], [data-testid="stMetricChart"] {
-                    background-color: #161b22 !important;
+                /* 2. Nuclear Widget Overrides (Targets the internal white containers) */
+                /* Segmented Controls, Pills, and standard Inputs */
+                [data-testid="stSegmentedControl"] div,
+                [data-testid="stPills"] div,
+                [data-testid="stChatInput"] div,
+                [data-baseweb="input"] div,
+                [data-baseweb="select"] div {
+                    background-color: #262730 !important;
+                    color: #ffffff !important;
                     border-color: #30363d !important;
                 }
-                
-                /* Global Typography */
-                .stMarkdown, p, h1, h2, h3, h4, h5, h6, span, label, .stMetric label {
-                    color: #e6edf3 !important;
-                }
-                
-                /* Brutalist Override for ALL Widgets (Targets recursively) */
-                div[data-testid="stSegmentedControl"], 
-                div[data-testid="stPills"],
-                div[data-testid="stChatInput"],
-                div[data-baseweb="input"] {
-                    background-color: transparent !important;
-                }
 
-                /* Target children that actually hold the white background */
-                div[data-testid="stSegmentedControl"] div,
-                div[data-testid="stPills"] div,
-                div[data-testid="stChatInput"] div,
-                div[data-baseweb="input"] div {
-                    background-color: transparent !important;
-                }
-
-                /* Force button unselected state */
+                /* 3. Button/Segment/Pill Specifics */
                 div[data-testid="stSegmentedControl"] button, 
                 div[data-testid="stPills"] button {
                     background-color: #262730 !important;
                     color: #ffffff !important;
                     border: 1px solid #30363d !important;
                 }
-
-                /* Text inside buttons */
+                
+                /* Text invisibility fix for p tags inside buttons */
                 div[data-testid="stSegmentedControl"] button p, 
                 div[data-testid="stPills"] button p {
                     color: #ffffff !important;
                     -webkit-text-fill-color: #ffffff !important;
                 }
 
-                /* Primary Selected State */
+                /* Active/Selected state */
                 div[data-testid="stSegmentedControl"] button[aria-checked="true"],
                 div[data-testid="stPills"] button[aria-checked="true"] {
                     background-color: #0078d4 !important;
                     color: #ffffff !important;
                 }
 
-                /* Chat Input & Textareas */
-                textarea[data-testid="stChatInputTextArea"] {
-                    background-color: #262730 !important;
-                    color: #ffffff !important;
-                    border: 1px solid #30363d !important;
-                }
-                
-                /* Number/Date Inputs */
-                .stNumberInput input, .stDateInput input {
+                /* 4. Input Field Specifics */
+                input, textarea {
                     background-color: #262730 !important;
                     color: #ffffff !important;
                     -webkit-text-fill-color: #ffffff !important;
                 }
-                
-                /* Number Input Buttons */
-                .stNumberInput button {
-                    background-color: #262730 !important;
-                    color: white !important;
-                }
 
-                /* Metric Chart (Sparklines) Transparency */
+                /* 5. Metrics & Cards */
+                .st-emotion-cache-1vt76ie, [data-testid="stMetric"], [data-testid="stMetricChart"] {
+                    background-color: #161b22 !important;
+                    border: 1px solid #30363d !important;
+                }
+                
+                /* Sparkline Fix */
                 [data-testid="stMetricChart"] svg {
                     background-color: transparent !important;
                 }
+
+                /* 6. Fix for unselected sidebar date input */
+                [data-testid="stSidebar"] div[data-baseweb="input"] {
+                    background-color: #262730 !important;
+                }
                 
-                /* Global Button Polish */
-                button {
-                    border-color: #30363d !important;
+                /* 7. Chat Input specific wrapper */
+                [data-testid="stChatInput"] {
+                    background-color: #161b22 !important;
+                    border: 1px solid #30363d !important;
+                    border-radius: 12px;
+                    padding: 4px;
                 }
             </style>
         """, unsafe_allow_html=True)

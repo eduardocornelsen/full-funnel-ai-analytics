@@ -52,12 +52,21 @@ with st.sidebar:
                 button {
                     border-color: #30363d !important;
                 }
-                /* Target Sparkline backgrounds */
-                .stMetric [data-testid="stMetricChart"] {
-                    background-color: transparent !important;
+                /* Target Input Fields Backgrounds */
+                div[data-baseweb="input"], [data-testid="stSegmentedControl"], .stDateInput div {
+                    background-color: #262730 !important;
                 }
-                canvas {
-                    filter: invert(0) !important; /* Ensure canvas doesn't double invert */
+                div[data-baseweb="input"] input, .stDateInput input {
+                    color: #e6edf3 !important;
+                }
+                /* Target Sparkline backgrounds */
+                [data-testid="stMetricChart"] {
+                    background-color: transparent !important;
+                    filter: invert(1) brightness(2); /* Invert sparklines for visibility if needed, or keep green */
+                }
+                /* Fix white box under sparklines */
+                .stMetric svg {
+                    background-color: transparent !important;
                 }
             </style>
         """, unsafe_allow_html=True)
@@ -105,7 +114,8 @@ with tab1:
                 "Conversion rate", 
                 f"{(len(hubspot_df) / ga4_df['sessions'].sum()):.2%}", 
                 "+0.5%", 
-                border=True
+                border=True,
+                chart_data=[random.uniform(0.02, 0.04) for _ in range(7)]
             )
         
         # Funnel Chart in a card

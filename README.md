@@ -93,13 +93,31 @@ Answering this requires joining data from 5+ platforms, building attribution mod
 
 ### ⌨️ AI-Powered Analytical Commands
 
-This project includes specialized "Slash Commands" that turn your AI clients into expert marketing analysts. See the [**Full Command Guide**](file:///home/duds0/agents/projects/full-funnel-ai-analytics/COMMANDS_GUIDE.md) for details.
+Type these in this chat (Claude CLI or Antigravity) to instantly generate a deep-dive analysis artifact:
 
-| Command | Focus | Primary Goal |
-| :--- | :--- | :--- |
-| `/marketing` | **Blended Perf** | Joins Google + Meta + GA4 for Blended CAC and ROAS. |
-| `/attribution` | **Models** | Compares First-Touch, Last-Touch, and Linear revenue credit. |
-| `/pipeline` | **Lead-to-Cash** | Identifies funnel bottlenecks from HubSpot to Salesforce. |
+| Command | What it does |
+| :--- | :--- |
+| `/marketing` | **Full exec dashboard** — KPIs, spend, funnel, pipeline |
+| `/attribution` | **Channel attribution deep-dive** — scatter, waterfall, insights |
+| `/pipeline` | **Sales pipeline** — funnel stages, deal velocity, lifecycle |
+| `/campaign` | **Paid campaign performance** — Google vs Meta, budget pacing |
+| `/traffic` | **GA4 traffic** — sessions trend, channel breakdown, anomalies |
+
+> These live in `.claude/commands/` (for Claude CLI) and `.opencode/commands/` and work in any session inside this project.
+
+### 🟣 Claude Desktop — How to get shortcuts
+Since Claude Desktop doesn't support command files, use **Projects**:
+1. In Claude Desktop → click **Projects** in sidebar → **New Project**.
+2. Set the **Project Instructions** to describe your data sources (the 7 MCP servers).
+3. **Pin** your most-used prompts as saved chats for instant data pulls.
+
+### 📊 Pre-generated static dashboards
+Run this any time to regenerate a static HTML dashboard from live CSV data:
+```bash
+.venv/bin/python dashboards/generate_dashboards.py
+```
+**Accessing the result (WSL):**
+`\\wsl.localhost\Ubuntu\home\duds0\agents\projects\full-funnel-ai-analytics\dashboards\marketing_dashboard.html`
 
 ### AI Client Comparison
 

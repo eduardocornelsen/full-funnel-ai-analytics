@@ -48,7 +48,6 @@ with st.sidebar:
 
     date_range = st.date_input(
         "Select date range", 
-        value=st.session_state.date_selector,
         min_value=DATA_MIN,
         max_value=DATA_MAX,
         key="date_selector" # Linked to session state
@@ -221,6 +220,8 @@ with tab2:
             col1, col2 = st.columns(2)
             past_orders = col1.number_input("Past orders", min_value=0, max_value=50, value=2)
             revenue_to_date = col2.number_input("Revenue to date ($)", min_value=0.0, max_value=5000.0, value=150.0)
+            state = col1.selectbox("Customer state", ["SP", "RJ", "MG", "RS", "PR", "Other"])
+            segment = col2.segmented_control("Segment", ["Economy", "Standard", "Premium"], default="Standard")
             submitted = st.form_submit_button("Predict conversion score", type="primary")
             if submitted:
                 prob = min(0.3 + (past_orders * 0.1) + (revenue_to_date * 0.0001), 0.98)
@@ -245,10 +246,23 @@ with tab4:
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"], avatar=":material/robot:" if msg["role"] == "assistant" else None): st.markdown(msg["content"])
     if not st.session_state.messages:
-        selected = st.pills("Quick questions:", ["What is our average ROAS?", "How much did we spend?", "Funnel conversion stats"], label_visibility="collapsed")
+        SUGGESTIONS = {
+            "📈 What is our average ROAS?": "What is our average ROAS?", 
+            "💰 How much did we spend?": "How much did we spend?", 
+            "🎯 Funnel conversion stats": "Tell me about funnel conversion."
+        }
+        selected = st.pills("Quick questions:", list(SUGGESTIONS.keys()), label_visibility="collapsed")
         if selected:
-            st.session_state.messages.append({"role": "user", "content": selected})
+            st.session_state.messages.append({"role": "user", "content": SUGGESTIONS[selected]})
             st.rerun()
+
+    if prompt := st.chat_input("Ask about ROAS, CAC, or Lead trends..."):
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"): st.markdown(prompt)
+        with st.chat_message("assistant", avatar=":material/robot:"):
+            response = "I've analyzed the unified warehouse data. Performance across all channels is now synchronized."
+            st.markdown(response)
+        st.session_state.messages.append({"role": "assistant", "content": response})
 
 with tab5:
     st.subheader("Data Explorer")

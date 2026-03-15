@@ -39,7 +39,7 @@ with st.sidebar:
                 }
                 
                 /* Cards & Borders */
-                .st-emotion-cache-1vt76ie, [data-testid="stMetric"] {
+                .st-emotion-cache-1vt76ie, [data-testid="stMetric"], [data-testid="stMetricChart"] {
                     background-color: #161b22 !important;
                     border-color: #30363d !important;
                 }
@@ -49,53 +49,42 @@ with st.sidebar:
                     color: #e6edf3 !important;
                 }
                 
-                /* Deep Override for ALL Input Fields */
-                div[data-baseweb="input"], 
+                /* Aggressive Widget Overrides (Segmented Control, Pills, Buttons) */
+                div[data-testid="stSegmentedControl"] button, 
+                div[data-testid="stPills"] button, 
+                div[data-testid="stChatInput"] textarea,
+                div[data-testid="stChatInput"] div,
+                div[data-baseweb="input"],
                 div[data-baseweb="select"] > div,
-                div[data-testid="stSegmentedControl"] > div,
                 .stNumberInput input,
-                .stDateInput input,
-                div[data-testid="stTextInput"] input {
+                .stDateInput input {
                     background-color: #262730 !important;
                     color: #ffffff !important;
                     border-color: #30363d !important;
-                }
-                
-                /* Specific fix for Date Input text */
-                .stDateInput input {
-                    color: #ffffff !important;
                     -webkit-text-fill-color: #ffffff !important;
                 }
                 
-                /* Segmented Control / Pills / Environment Buttons */
-                div[data-testid="stSegmentedControl"] button {
-                    background-color: #262730 !important;
-                    color: #e6edf3 !important; /* Visible text for unselected */
-                    border-color: #30363d !important;
-                    box-shadow: none !important;
+                /* Unselected State Visibility */
+                div[data-testid="stSegmentedControl"] button p, 
+                div[data-testid="stPills"] button p {
+                    color: #e6edf3 !important;
                 }
-                div[data-testid="stSegmentedControl"] button[aria-checked="true"] {
+                
+                /* Selected State (Primary) */
+                div[data-testid="stSegmentedControl"] button[aria-checked="true"],
+                div[data-testid="stPills"] button[aria-checked="true"] {
                     background-color: #0078d4 !important;
                     color: white !important;
                 }
-                div[data-testid="stSegmentedControl"] div[role="radiogroup"] {
-                    background-color: #262730 !important;
-                }
 
-                /* Number Input Buttons (+/-) */
+                /* Number Input +/- Controls */
                 .stNumberInput button {
                     background-color: #262730 !important;
-                    color: #ffffff !important;
+                    color: white !important;
                     border-color: #30363d !important;
                 }
-                .stNumberInput button:hover {
-                    background-color: #30363d !important;
-                }
 
-                /* Metric Chart (Sparklines) */
-                [data-testid="stMetricChart"] {
-                    background-color: transparent !important;
-                }
+                /* Metric Chart (Sparklines) Transparency */
                 [data-testid="stMetricChart"] svg {
                     background-color: transparent !important;
                 }
@@ -103,6 +92,12 @@ with st.sidebar:
                 /* Global Button Polish */
                 button {
                     border-color: #30363d !important;
+                }
+                
+                /* Chat Input Fix */
+                div[data-testid="stChatInput"] {
+                    background-color: #161b22 !important;
+                    border-top: 1px solid #30363d !important;
                 }
             </style>
         """, unsafe_allow_html=True)

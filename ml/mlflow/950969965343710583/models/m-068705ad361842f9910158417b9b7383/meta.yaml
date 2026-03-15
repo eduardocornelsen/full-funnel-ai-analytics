@@ -1,0 +1,10 @@
+artifact_location: file:///home/duds0/agents/projects/full-funnel-ai-analytics/ml/mlflow/950969965343710583/models/m-068705ad361842f9910158417b9b7383/artifacts
+creation_timestamp: 1773583833821
+experiment_id: '950969965343710583'
+last_updated_timestamp: 1773583837598
+model_id: m-068705ad361842f9910158417b9b7383
+model_type: null
+name: lead_scoring_xgb_model
+source_run_id: ceae082f05ea4464aac80d3c6e23374a
+status: 2
+status_message: null

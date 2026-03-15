@@ -1,0 +1,53 @@
+{
+  "name": "Full-Funnel Lead Routing",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "http://api:8000/score",
+        "method": "POST",
+        "body": "={\n  \"sessions\": {{$node[\"Contact Hook\"].json[\"sessions\"]}},\n  \"engaged_sessions\": {{$node[\"Contact Hook\"].json[\"engaged\"]}},\n  \"page_views\": {{$node[\"Contact Hook\"].json[\"views\"]}},\n  \"channel\": \"{{$node[\"Contact Hook\"].json[\"source\"]}}\",\n  \"is_first_visit\": true\n}"
+      },
+      "name": "ML Score API",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$node[\"ML Score API\"].json[\"score\"]}}",
+              "operation": "larger",
+              "value2": 0.8
+            }
+          ]
+        }
+      },
+      "name": "High Score?",
+      "type": "n8n-nodes-base.if",
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "channel": "sales-notifications",
+        "text": "=🚀 High Value Lead Found! \nEmail: {{$node[\"Contact Hook\"].json[\"email\"]}}\nScore: {{$node[\"ML Score API\"].json[\"score\"]}}\nAction: Immediate follow-up required!"
+      },
+      "name": "Slack Alert",
+      "type": "n8n-nodes-base.slack",
+      "position": [850, 200]
+    }
+  ],
+  "connections": {
+    "ML Score API": {
+      "main": [
+        [
+          {
+            "node": "High Score?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

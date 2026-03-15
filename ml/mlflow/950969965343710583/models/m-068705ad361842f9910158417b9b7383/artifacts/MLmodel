@@ -1,0 +1,22 @@
+artifact_path: file:///home/duds0/agents/projects/full-funnel-ai-analytics/ml/mlflow/950969965343710583/models/m-068705ad361842f9910158417b9b7383/artifacts
+flavors:
+  python_function:
+    data: model.ubj
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.xgboost
+    python_version: 3.13.5
+  xgboost:
+    code: null
+    data: model.ubj
+    model_class: xgboost.sklearn.XGBClassifier
+    model_format: ubj
+    xgb_version: 3.2.0
+mlflow_version: 3.10.1
+model_id: m-068705ad361842f9910158417b9b7383
+model_size_bytes: 244960
+model_uuid: m-068705ad361842f9910158417b9b7383
+prompts: null
+run_id: ceae082f05ea4464aac80d3c6e23374a
+utc_time_created: '2026-03-15 14:10:33.832069'

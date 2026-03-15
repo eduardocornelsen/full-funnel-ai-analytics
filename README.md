@@ -204,6 +204,8 @@ Enterprise warehouse demos use free trials: Snowflake (30-day, ~$400 credits) an
 
 ## Quick Start
 
+**New!** See the [Step-by-Step Setup & Execution Guide](file:///home/duds0/agents/projects/full-funnel-ai-analytics/SETUP_GUIDE.md) for full instructions.
+
 ```bash
 # 1. Clone
 git clone https://github.com/YOUR_USERNAME/full-funnel-ai-analytics.git

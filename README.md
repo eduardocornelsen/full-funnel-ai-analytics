@@ -32,9 +32,9 @@
 
 | Phase | Status | Description |
 |-------|--------|-------------|
-| Phase 1: Data Foundation | 🔲 Not started | Olist dataset + synthetic marketing data + warehouse loading |
-| Phase 2: dbt Semantic Layer | 🔲 Not started | 14 staging + 4 intermediate + 11 mart models + MetricFlow |
-| Phase 3: AI Layer (MCP) | 🔲 Not started | 7 MCP servers + 4 client configs (Claude, OpenCode, Gemini, Antigravity) |
+| Phase 1: Data Foundation | ✅ Complete | Olist dataset + synthetic marketing data + warehouse loading |
+| Phase 2: dbt Semantic Layer | ✅ Complete | 14 staging + 4 intermediate + 11 mart models + Core Build |
+| Phase 3: AI Layer (MCP) | 🟡 In progress | 7 MCP servers + 4 client configs (Claude, OpenCode, Gemini, Antigravity) |
 | Phase 4: ML Scoring | 🔲 Not started | XGBoost + MLflow + FastAPI endpoint |
 | Phase 5: Dashboards & Automation | 🔲 Not started | Looker Studio + Streamlit + n8n routing |
 | Phase 6: Portability & Polish | 🔲 Not started | Snowflake/Databricks demos + documentation + video |
@@ -55,42 +55,7 @@ Answering this requires joining data from 5+ platforms, building attribution mod
 ![full_funnel_architecture_flow](full_funnel_architecture_flow.svg)
 
 
-### Data Sources → MCP Servers → AI Clients
 
-```
-                         ┌─────────────────────────────┐
-                         │      7 MCP SERVERS           │
-                         │   (standard protocol,        │
-                         │    works with ANY client)     │
-┌──────────────┐         │                              │         ┌───────────────────────┐
-│ DATA SOURCES │         │  ┌────────────────────────┐  │         │    AI CLIENTS          │
-│              │         │  │ 📊 BigQuery MCP        │  │         │                       │
-│  Google Ads ─┼── mock ─┼─▶│    Query warehouse     │  │◀── ────┼─ 🟣 Claude Desktop    │
-│  Meta Ads ───┼── mock ─┼─▶│                        │  │         │   Cowork plugin       │
-│  GA4 ────────┼── mock ─┼─▶│ 📐 dbt MCP            │  │         │   React artifacts     │
-│  HubSpot ────┼── mock ─┼─▶│    Semantic layer      │  │         │   BEST: dashboards    │
-│  Salesforce ─┼── mock ─┼─▶│    60+ governed tools  │  │         │                       │
-│              │         │  │                        │  │◀── ────┼─ 🟢 OpenCode CLI      │
-│  Olist ──────┼── real ─┼─▶│ 📈 Google Ads MCP     │  │         │   75+ LLM models      │
-│  (100K orders│         │  │ 📱 Meta Ads MCP       │  │         │   Terminal-native      │
-│   Kaggle)    │         │  │ 🌐 GA4 MCP            │  │         │   BEST: flexibility   │
-│              │         │  │ 👥 HubSpot MCP        │  │         │                       │
-│  Weather ────┼── live ─┼─▶│ 💼 Salesforce MCP     │  │◀── ────┼─ 🔵 Gemini CLI        │
-│  (Open-Meteo)│         │  │ 🌤️ Weather MCP        │  │         │   Native BigQuery     │
-└──────────────┘         │  └────────────────────────┘  │         │   Free generous limits│
-                         │                              │         │   BEST: quick queries │
-                         └──────────────────────────────┘         │                       │
-                                                                  │ 🟡 Antigravity IDE   │
-                         ┌─────────────────────────────┐          │   Parallel agents     │
-                         │     5 DATA WAREHOUSES        │          │   Manager View        │
-                         │                              │          │   BEST: building code │
-                         │  BigQuery ···· free 10GB     │          └───────────────────────┘
-                         │  DuckDB ······ free local    │
-                         │  Supabase ···· free 500MB    │
-                         │  Snowflake ··· 30-day trial  │
-                         │  Databricks ·· 14-day trial  │
-                         └─────────────────────────────┘
-```
 
 ### MCP Server Details
 
@@ -125,7 +90,10 @@ Answering this requires joining data from 5+ platforms, building attribution mod
 | **🧠 ML Scoring** | Predict which leads become high-value customers | XGBoost → MLflow → FastAPI `/score` endpoint → n8n auto-routing |
 | **📊 BI Dashboards** | Self-serve dashboards for marketing and sales teams | Looker Studio + Streamlit (4 pages) + Claude React artifacts |
 
-## Architecture
+## 🏗️ Architecture & Technical Stack
+
+This project implements a modern data stack centered around a unified semantic layer, serving insights through AI, Machine Learning, and traditional BI—all running at a **$0/month base cost**.
+
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -165,6 +133,35 @@ Answering this requires joining data from 5+ platforms, building attribution mod
    │ Antigravity│  │           │  │             │
    └─────────────┘  └───────────┘  └─────────────┘
 ```
+
+---
+
+### ☁️ Data Warehouse Strategy
+We leverage a multi-warehouse approach to balance cost-efficiency with high-performance processing.
+
+| Provider | Recommendation | Pricing & Limits |
+| :--- | :--- | :--- |
+| **BigQuery** | Primary warehouse for scaled analytics | **Free 10GB** storage + 1TB query/mo |
+| **DuckDB** | High-speed local processing & testing | **Free** (Local/Open Source) |
+| **Supabase** | Backend for Postgres-centric apps | **Free 500MB** database |
+| **Snowflake** | Professional/Enterprise scale | **30-day trial** |
+| **Databricks** | Spark workloads & heavy ML modeling | **14-day trial** |
+
+---
+
+### 🧠 The Three Pillars ("Three Heads, One Spine")
+
+| Pillar | Focus | Core Tech Stack |
+| :--- | :--- | :--- |
+| **🤖 AI Layer** | Natural language queries & automated insights | 7 MCP Servers, Claude Desktop, OpenCode, Gemini CLI, Antigravity |
+| **🧠 ML Layer** | Predictive lead scoring & automated routing | XGBoost, Polars, MLflow, FastAPI (`/score`), n8n |
+| **📊 BI Layer** | Executive reporting & interactive tools | Looker Studio, Streamlit, Plotly, React Artifacts |
+
+### 🛠️ Key Technical Details
+* **Data Origin:** Real dataset via **Olist (Kaggle)**, live API via **Open-Meteo**, and mock marketing APIs.
+* **Semantic Layer:** Powered by **dbt + MetricFlow**, ensuring governed metrics are consumed identically by AI, ML, and BI layers.
+* **Protocol:** Built entirely on the **Model Context Protocol (MCP)** for zero-friction tool integration.
+
 
 ## Demo
 

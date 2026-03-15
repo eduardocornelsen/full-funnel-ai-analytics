@@ -1,0 +1,32 @@
+version: 2
+
+sources:
+  - name: olist
+    schema: main
+    description: "Olist Brazilian E-Commerce dataset (Kaggle)"
+    tables:
+      - name: orders
+      - name: order_items
+      - name: order_payments
+      - name: order_reviews
+      - name: customers
+      - name: sellers
+      - name: products
+      - name: geolocation
+      - name: category_translation
+        identifier: "product_category_name_translation"
+
+  - name: marketing
+    schema: main
+    description: "Synthetic marketing platform data"
+    tables:
+      - name: google_ads_daily_performance
+      - name: google_ads_campaigns
+      - name: meta_ads_daily_performance
+      - name: meta_ads_campaigns
+      - name: ga4_daily_sessions
+      - name: hubspot_contacts
+      - name: hubspot_deals
+      - name: salesforce_opportunities
+      - name: salesforce_accounts
+      - name: marketing_attribution

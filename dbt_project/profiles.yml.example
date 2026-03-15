@@ -1,0 +1,40 @@
+olist_analytics:
+  target: duckdb
+  outputs:
+    duckdb:
+      type: duckdb
+      path: "data/olist_analytics.duckdb"
+      threads: 4
+    bigquery:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('GCP_PROJECT_ID') }}"
+      dataset: olist_analytics
+      threads: 4
+      location: US
+    supabase:
+      type: postgres
+      host: "db.{{ env_var('SUPABASE_PROJECT_REF') }}.supabase.co"
+      user: postgres
+      password: "{{ env_var('SUPABASE_DB_PASSWORD') }}"
+      port: 5432
+      dbname: postgres
+      schema: public
+      threads: 4
+    snowflake:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
+      password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
+      warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE') }}"
+      database: "{{ env_var('SNOWFLAKE_DATABASE') }}"
+      schema: "{{ env_var('SNOWFLAKE_SCHEMA') }}"
+      threads: 4
+    databricks:
+      type: databricks
+      host: "{{ env_var('DATABRICKS_HOST') }}"
+      http_path: "/sql/1.0/warehouses/{{ env_var('DATABRICKS_SQL_WAREHOUSE_ID') }}"
+      token: "{{ env_var('DATABRICKS_TOKEN') }}"
+      catalog: olist_analytics
+      schema: public
+      threads: 4

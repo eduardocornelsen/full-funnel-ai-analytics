@@ -22,6 +22,9 @@ with st.sidebar:
     st.header(":material/settings: Configuration")
     date_range = st.date_input("Select date range", [])
     st.segmented_control("Environment", ["Production", "Staging", "Dev"], default="Production")
+    
+    # Explicit UI Toggle for Dark Mode
+    is_dark = st.toggle("Dark mode", value=False, help="Toggle between light and dark visualization modes")
 
 # Dashboard Tabs with Icons
 tab1, tab2, tab3, tab4 = st.tabs([
@@ -39,12 +42,6 @@ with tab1:
         ga4_df = pd.read_csv(DATA_DIR / "mock_marketing" / "ga4_daily_sessions.csv")
         hubspot_df = pd.read_csv(DATA_DIR / "mock_marketing" / "hubspot_contacts.csv")
         
-        # Robust theme detection (st.context.theme.base may not be available)
-        try:
-            is_dark = st.context.theme.backgroundColor in ["#0d1117", "#161b22"]
-        except:
-            is_dark = False
-            
         chart_color = "#58a6ff" if is_dark else "#0078d4"
         
         # Metric row with sparklines
@@ -124,12 +121,6 @@ with tab3:
             "Linear": [10500, 9500, 12500, 6500, 3000]
         })
         
-        # Robust theme detection
-        try:
-            is_dark = st.context.theme.backgroundColor in ["#0d1117", "#161b22"]
-        except:
-            is_dark = False
-            
         main_color = "#58a6ff" if is_dark else "#0078d4"
         
         fig = px.bar(attr_df, x="Channel", y=["First-Touch", "Last-Touch", "Linear"], 

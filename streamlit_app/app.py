@@ -78,30 +78,28 @@ with st.sidebar:
 
 # Database Querying Logic
 try:
-    # 0. Global Conversion Ratios from Pipeline (Unbiased by time-lag)
-    pipeline_globals = get_db_data("""
+    # 1. Marketing & Engagement Daily Trends (GA4)
+    # This serves as the source for Sessions, Leads (New Users), and Opportunities (Engaged)
+    ga4_daily = get_db_data(f"""
         SELECT 
-            SUM(total_touches) as total_touches,
-            SUM(total_leads) as total_leads,
-            SUM(total_opportunities) as total_opportunities,
-            SUM(closed_won) as total_orders
-        FROM fct_pipeline
-    """).iloc[0]
+            date, 
+            SUM(sessions) as total_sessions,
+            SUM(new_users) as total_leads,
+            SUM(engaged_sessions) as total_opportunities
+        FROM stg_ga4_sessions
+        WHERE date BETWEEN '{sql_start}' AND '{sql_end}'
+        GROUP BY 1 ORDER BY 1 ASC
+    """)
     
-    # Ratios relative to Orders (Backwards projection for logically consistent funnel)
-    # We use these to estimate Leads/Opps from actual Order counts in the filtered range
-    lead_per_order = pipeline_globals['total_leads'] / pipeline_globals['total_orders'] if pipeline_globals['total_orders'] > 0 else 1
-    opp_per_order = pipeline_globals['total_opportunities'] / pipeline_globals['total_orders'] if pipeline_globals['total_orders'] > 0 else 1
-
-    # 1. Sessions & Daily Spend (Marketing)
-    marketing_daily = get_db_data(f"""
-        SELECT date, ga4_total_sessions, total_spend 
+    # 2. Marketing Spend (From daily summary)
+    spending_daily = get_db_data(f"""
+        SELECT date, total_spend 
         FROM fct_marketing_daily 
         WHERE date BETWEEN '{sql_start}' AND '{sql_end}'
         ORDER BY date ASC
     """)
     
-    # 2. Daily Orders & Trends (The Anchor of Truth)
+    # 3. Daily Orders (The conversion goal)
     orders_daily = get_db_data(f"""
         SELECT order_date as date, COUNT(DISTINCT order_id) as order_count 
         FROM fct_orders 
@@ -109,23 +107,18 @@ try:
         GROUP BY 1 ORDER BY 1 ASC
     """)
 
-    # 3. Calculate Funnel Stages based on State-Linked logic
-    sessions_total = marketing_daily['ga4_total_sessions'].sum() if not marketing_daily.empty else 0
+    # Aggregates for BANs and Funnel
+    sessions_total = ga4_daily['total_sessions'].sum() if not ga4_daily.empty else 0
+    leads_total = ga4_daily['total_leads'].sum() if not ga4_daily.empty else 0
+    opps_total = ga4_daily['total_opportunities'].sum() if not ga4_daily.empty else 0
     orders_total = orders_daily['order_count'].sum() if not orders_daily.empty else 0
+    spend_total = spending_daily['total_spend'].sum() if not spending_daily.empty else 0
     
-    # Estimate intermediate stages based on actual orders + global ratios
-    # But ensure they are at least >= orders and <= sessions
-    calculated_leads = int(orders_total * lead_per_order)
-    calculated_opps = int(orders_total * opp_per_order)
-    
-    # Adjust for logical sanity (Funnel must stay a triangle)
-    leads_final = max(calculated_leads, calculated_opps, orders_total)
-    opps_final = max(calculated_opps, orders_total)
-    
-    # Final check: Leads cannot exceed sessions if sessions is non-zero
-    if sessions_total > 0:
-        leads_final = min(leads_final, int(sessions_total * 0.98)) # Cap at 98% conversion
-        opps_final = min(opps_final, leads_final)
+    # Final logical check: Ensure descending order just in case of data anomalies
+    # (Though new_users and engaged_sessions are naturally subsets of sessions)
+    leads_final = min(int(leads_total), int(sessions_total))
+    opps_final = min(int(opps_total), leads_final)
+    orders_final = min(int(orders_total), opps_final)
     
     # 4. Normalized Channel Performance
     channel_perf_raw = get_db_data(f"""
@@ -182,27 +175,28 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
 with tab1:
     st.subheader("Unified marketing funnel")
     
-    # Metics Row with State-Linked Numbers
+    # Metrics Row with Engagement-Based Numbers
     col1, col2, col3, col4 = st.columns(4)
     
     col1.metric("Total sessions", f"{sessions_total:,}", border=True, 
-               chart_data=marketing_daily['ga4_total_sessions'].tail(14).tolist() if not marketing_daily.empty else None)
+               chart_data=ga4_daily['total_sessions'].tail(14).tolist() if not ga4_daily.empty else None)
     
-    col2.metric("Total spend", f"${marketing_daily['total_spend'].sum():,.0f}" if not marketing_daily.empty else "$0", border=True, 
-               chart_data=marketing_daily['total_spend'].tail(14).tolist() if not marketing_daily.empty else None)
+    col2.metric("Total spend", f"${spend_total:,.0f}", border=True, 
+               chart_data=spending_daily['total_spend'].tail(14).tolist() if not spending_daily.empty else None)
     
     col3.metric("Total leads", f"{leads_final:,}", border=True, 
-               help="Leads are calculated based on session-to-order cohort conversion ratios.")
+               help="Leads are based on GA4 'New Users' (Total unique people visiting for the first time).",
+               chart_data=ga4_daily['total_leads'].tail(14).tolist() if not ga4_daily.empty else None)
     
-    conv_rate = (orders_total / sessions_total) if sessions_total > 0 else 0
+    conv_rate = (orders_final / sessions_total) if sessions_total > 0 else 0
     col4.metric("Conversion rate", f"{conv_rate:.2%}", border=True, 
                chart_data=orders_daily['order_count'].tail(14).tolist() if not orders_daily.empty else None)
     
     # Funnel Chart
     with st.container(border=True):
-        st.markdown("**Conversion journey (State-Linked Funnel Logic)**")
-        stages = ["Sessions", "Leads", "Opportunities", "Orders"]
-        values = [sessions_total, leads_final, opps_final, orders_total]
+        st.markdown("**Conversion journey (Real Engagement-Based Funnel)**")
+        stages = ["Sessions", "Leads (New Users)", "Opportunities (Engaged)", "Orders"]
+        values = [sessions_total, leads_final, opps_final, orders_final]
         
         chart_color = "#58a6ff" if is_dark else "#0078d4"
         plotly_template = "plotly_dark" if is_dark else "plotly_white"

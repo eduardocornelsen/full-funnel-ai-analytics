@@ -33,10 +33,10 @@ with st.sidebar:
     st.header(":material/settings: Configuration")
     
     # Strictly defined data bounds
-    DATA_MIN = datetime(2016, 9, 1)
-    DATA_MAX = datetime(2018, 12, 31)
-    DEFAULT_START = datetime(2017, 1, 1)
-    DEFAULT_END = datetime(2018, 12, 31)
+    DATA_MIN = datetime(2016, 9, 1).date()
+    DATA_MAX = datetime(2018, 12, 31).date()
+    DEFAULT_START = datetime(2017, 1, 1).date()
+    DEFAULT_END = datetime(2018, 12, 31).date()
 
     # Initialize session state for date range
     if "date_selector" not in st.session_state:

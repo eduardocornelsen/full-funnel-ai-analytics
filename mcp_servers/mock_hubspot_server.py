@@ -6,7 +6,7 @@ from pathlib import Path
 mcp = FastMCP("HubSpot")
 
 # Path to the data directory
-DATA_DIR = Path(__file__).parent.parent / "data"
+DATA_DIR = Path(__file__).parent.parent / "data" / "mock_marketing"
 
 @mcp.tool()
 def get_contacts_summary():

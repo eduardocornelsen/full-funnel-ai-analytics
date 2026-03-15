@@ -6,7 +6,7 @@ from pathlib import Path
 mcp = FastMCP("GA4")
 
 # Path to the data directory
-DATA_DIR = Path(__file__).parent.parent / "data"
+DATA_DIR = Path(__file__).parent.parent / "data" / "mock_marketing"
 
 @mcp.tool()
 def get_traffic_by_channel(start_date: str = None, end_date: str = None):

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/home/duds0/agents/projects/full-funnel-ai-analytics/.venv/bin/python:*)",
+      "Bash(do echo:*)",
+      "Bash(python3:*)"
+    ]
+  }
+}

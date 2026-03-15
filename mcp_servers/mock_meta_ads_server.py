@@ -6,7 +6,7 @@ from pathlib import Path
 mcp = FastMCP("Meta Ads")
 
 # Path to the data directory
-DATA_DIR = Path(__file__).parent.parent / "data"
+DATA_DIR = Path(__file__).parent.parent / "data" / "mock_marketing"
 
 @mcp.tool()
 def get_campaign_insights(start_date: str = None, end_date: str = None):

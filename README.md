@@ -23,10 +23,10 @@
 ![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
 ![Cost](https://img.shields.io/badge/cost-%240%2Fmo%20base-brightgreen?style=flat-square)
 
-**Natural language marketing analytics powered by MCP, dbt Semantic Layer, and ML lead scoring. Works with Claude Desktop, OpenCode, Gemini CLI, and Antigravity IDE.**
+  **Natural language marketing analytics powered by MCP, dbt Semantic Layer, and ML lead scoring. Works with Claude Desktop, OpenCode, Gemini CLI, and Antigravity IDE.**
 
-> *"Which channels actually drive revenue, not just clicks?"*
-> This system answers that question in 15 seconds via natural language — backed by multi-touch attribution, a production ML scoring API, and dashboards fed from a single governed semantic layer across 5 data warehouses.
+  > *"Which channels actually drive revenue, not just clicks?"*
+  > This system answers that question in 15 seconds via natural language — backed by multi-touch attribution, a production ML scoring API, and dashboards fed from a single governed semantic layer across 5 data warehouses.
 
 ### 📊 Build Progress
 
@@ -35,9 +35,9 @@
 | Phase 1: Data Foundation | ✅ Complete | Olist dataset + synthetic marketing data + warehouse loading |
 | Phase 2: dbt Semantic Layer | ✅ Complete | 14 staging + 4 intermediate + 11 mart models + Core Build |
 | Phase 3: AI Layer (MCP) | ✅ Complete | 7 MCP servers + 4 client configs (Claude, OpenCode, Gemini, Antigravity) |
-| Phase 4: ML Scoring | 🟡 In progress | XGBoost + MLflow + FastAPI endpoint |
-| Phase 5: Dashboards & Automation | 🔲 Not started | Looker Studio + Streamlit + n8n routing |
-| Phase 6: Portability & Polish | 🔲 Not started | Snowflake/Databricks demos + documentation + video |
+| Phase 4: ML Scoring | ✅ Complete | XGBoost + MLflow + FastAPI endpoint |
+| Phase 5: Dashboards & Automation | ✅ Complete | Looker Studio + Streamlit + n8n routing |
+| Phase 6: Portability & Polish | ✅ Complete | Snowflake/Databricks demos + documentation + video |
 
 > Update status: 🔲 Not started · 🟡 In progress · ✅ Complete
 

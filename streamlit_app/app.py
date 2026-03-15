@@ -24,10 +24,11 @@ with st.sidebar:
     st.segmented_control("Environment", ["Production", "Staging", "Dev"], default="Production")
 
 # Dashboard Tabs with Icons
-tab1, tab2, tab3 = st.tabs([
+tab1, tab2, tab3, tab4 = st.tabs([
     ":material/dashboard: Marketing funnel", 
     ":material/psychology: Lead scoring", 
-    ":material/compare_arrows: Channel attribution"
+    ":material/compare_arrows: Channel attribution",
+    ":material/chat: AI analyst"
 ])
 
 with tab1:
@@ -37,6 +38,9 @@ with tab1:
     try:
         ga4_df = pd.read_csv(DATA_DIR / "mock_marketing" / "ga4_daily_sessions.csv")
         hubspot_df = pd.read_csv(DATA_DIR / "mock_marketing" / "hubspot_contacts.csv")
+        
+        # Color palette that adapts to theme
+        chart_color = "#0078d4" if st.context.theme.base == "light" else "#58a6ff"
         
         # Metric row with sparklines
         with st.container(horizontal=True):
@@ -71,9 +75,9 @@ with tab1:
                 y=stages,
                 x=values,
                 textinfo="value+percent initial",
-                marker={"color": ["#0078d4", "#29b5e8", "#71c8e5", "#a5ddf2"]}
+                marker={"color": [chart_color, "#29b5e8", "#71c8e5", "#a5ddf2"]}
             ))
-            fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
+            fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
             st.plotly_chart(fig, use_container_width=True)
     except Exception as e:
         st.error(f"Error loading funnel data: {e}")
@@ -115,10 +119,60 @@ with tab3:
             "Linear": [10500, 9500, 12500, 6500, 3000]
         })
         
+        main_color = "#0078d4" if st.context.theme.base == "light" else "#58a6ff"
+        
         fig = px.bar(attr_df, x="Channel", y=["First-Touch", "Last-Touch", "Linear"], 
-                    barmode="group", color_discrete_sequence=["#0078d4", "#29b5e8", "#a5ddf2"])
-        fig.update_layout(legend_title_text="Model", margin=dict(l=0, r=0, t=30, b=0))
+                    barmode="group", color_discrete_sequence=[main_color, "#29b5e8", "#a5ddf2"])
+        fig.update_layout(
+            legend_title_text="Model", 
+            margin=dict(l=0, r=0, t=30, b=0),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)'
+        )
         st.plotly_chart(fig, use_container_width=True)
+
+with tab4:
+    st.subheader("Governed AI analyst")
+    st.caption("Ask natural language questions about your marketing performance.")
+    
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+    # Display chat history
+    for msg in st.session_state.messages:
+        with st.chat_message(msg["role"], avatar=":material/robot:" if msg["role"] == "assistant" else None):
+            st.markdown(msg["content"])
+
+    # Suggestion Chips (only on empty chat)
+    if not st.session_state.messages:
+        SUGGESTIONS = {
+            "📈 What's our blended ROAS?": "Calculate the blended ROAS for last month across all channels.",
+            "🎯 Compare attribution models": "Show me the difference between first-touch and last-touch revenue.",
+            "🧬 Analyze funnel drops": "Where are leads dropping off in the HubSpot-to-Salesforce pipeline?"
+        }
+        selected = st.pills("Try asking:", list(SUGGESTIONS.keys()), label_visibility="collapsed")
+        if selected:
+            st.session_state.messages.append({"role": "user", "content": SUGGESTIONS[selected]})
+            st.rerun()
+
+    # Chat Input
+    if prompt := st.chat_input("Ask a question about your data..."):
+        with st.chat_message("user"):
+            st.markdown(prompt)
+        st.session_state.messages.append({"role": "user", "content": prompt})
+
+        with st.chat_message("assistant", avatar=":material/robot:"):
+            # Mocking the AI "brain" response based on the dbt logic
+            if "roas" in prompt.lower():
+                response = "Based on the dbt Semantic Layer, your **Blended ROAS is 4.2x**. \n\n*   **Google Ads:** 3.8x\n*   **Meta Ads:** 4.1x\n*   **Organic:** 5.5x"
+            elif "attribution" in prompt.lower():
+                response = "Our data shows that **Organic Search** is undervalued by 25% in last-touch models compared to first-touch credit. I recommend increasing top-of-funnel SEO spend."
+            else:
+                response = "I've analyzed your warehouse data. We've seen a **12% increase in Qualified Leads** from HubSpot this week, primarily driven by the 'Summer Campaign' on Paid Social."
+            
+            st.markdown(response)
+            st.feedback("thumbs")
+        st.session_state.messages.append({"role": "assistant", "content": response})
 
 st.space(50)
 st.caption("Built with :material/favorite: by AI. Data governed by **dbt Semantic Layer**.")

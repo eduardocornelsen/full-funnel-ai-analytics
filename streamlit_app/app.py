@@ -55,7 +55,7 @@ with tab2:
         engaged = col1.number_input("Engaged Sessions", min_value=0, max_value=sessions, value=2)
         channel = col2.selectbox("Channel", ["Direct", "Organic Search", "Paid Search", "Paid Social"])
         
-        submitted = st.form_submit_with_button("Predict Conversion Score")
+        submitted = st.form_submit_button("Predict Conversion Score")
         
         if submitted:
             # Mocking the API call for the dashboard

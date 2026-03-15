@@ -52,6 +52,10 @@ Answering this requires joining data from 5+ platforms, building attribution mod
 ## What This Project Does
 
 ### Data Sources → MCP Servers → AI Clients
+![full_funnel_architecture_flow](full_funnel_architecture_flow.svg)
+
+
+### Data Sources → MCP Servers → AI Clients
 
 ```
                          ┌─────────────────────────────┐

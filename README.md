@@ -107,9 +107,24 @@ Type these in this chat (Claude CLI or Antigravity) to instantly generate a deep
 
 ### 🟣 Claude Desktop — How to get shortcuts
 Since Claude Desktop doesn't support command files, use **Projects**:
-1. In Claude Desktop → click **Projects** in sidebar → **New Project**.
-2. Set the **Project Instructions** to describe your data sources (the 7 MCP servers).
-3. **Pin** your most-used prompts as saved chats for instant data pulls.
+
+**Setup steps:**
+1. **Install Claude Desktop** (if not yet) — download from [claude.ai/download](https://claude.ai/download).
+2. **Restart Claude Desktop** — it will pick up the config and show the MCP servers connected (look for the plug icon in the bottom of the chat).
+3. **Create a Project in Claude Desktop**:
+   - Click **Projects** → **New Project**.
+   - Paste the contents of `claude_desktop_project_instructions.md` into **Project Instructions**.
+4. **Use it** — instead of `/marketing`, just type natural phrases:
+
+| Claude Code CLI | Claude Desktop Chat |
+| :--- | :--- |
+| `/marketing` | "marketing dashboard" |
+| `/attribution` | "attribution" or "which channels are working?" |
+| `/traffic` | "web traffic" or "show me sessions" |
+| `/campaign` | "campaign performance" or "google vs meta" |
+| `/pipeline` | "pipeline" or "show me deals" |
+
+Claude Desktop will query the live MCP data and render the React/Recharts artifact inline in the chat.
 
 ### 📊 Pre-generated static dashboards
 Run this any time to regenerate a static HTML dashboard from live CSV data:

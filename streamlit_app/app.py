@@ -39,8 +39,13 @@ with tab1:
         ga4_df = pd.read_csv(DATA_DIR / "mock_marketing" / "ga4_daily_sessions.csv")
         hubspot_df = pd.read_csv(DATA_DIR / "mock_marketing" / "hubspot_contacts.csv")
         
-        # Color palette that adapts to theme
-        chart_color = "#0078d4" if st.context.theme.base == "light" else "#58a6ff"
+        # Robust theme detection (st.context.theme.base may not be available)
+        try:
+            is_dark = st.context.theme.backgroundColor in ["#0d1117", "#161b22"]
+        except:
+            is_dark = False
+            
+        chart_color = "#58a6ff" if is_dark else "#0078d4"
         
         # Metric row with sparklines
         with st.container(horizontal=True):
@@ -119,7 +124,13 @@ with tab3:
             "Linear": [10500, 9500, 12500, 6500, 3000]
         })
         
-        main_color = "#0078d4" if st.context.theme.base == "light" else "#58a6ff"
+        # Robust theme detection
+        try:
+            is_dark = st.context.theme.backgroundColor in ["#0d1117", "#161b22"]
+        except:
+            is_dark = False
+            
+        main_color = "#58a6ff" if is_dark else "#0078d4"
         
         fig = px.bar(attr_df, x="Channel", y=["First-Touch", "Last-Touch", "Linear"], 
                     barmode="group", color_discrete_sequence=[main_color, "#29b5e8", "#a5ddf2"])

@@ -91,6 +91,16 @@ Answering this requires joining data from 5+ platforms, building attribution mod
 
 > All mock servers use the same tool interface as real platform APIs. Swap mock → production with zero code changes.
 
+### ⌨️ AI-Powered Analytical Commands
+
+This project includes specialized "Slash Commands" that turn your AI clients into expert marketing analysts. See the [**Full Command Guide**](file:///home/duds0/agents/projects/full-funnel-ai-analytics/COMMANDS_GUIDE.md) for details.
+
+| Command | Focus | Primary Goal |
+| :--- | :--- | :--- |
+| `/marketing` | **Blended Perf** | Joins Google + Meta + GA4 for Blended CAC and ROAS. |
+| `/attribution` | **Models** | Compares First-Touch, Last-Touch, and Linear revenue credit. |
+| `/pipeline` | **Lead-to-Cash** | Identifies funnel bottlenecks from HubSpot to Salesforce. |
+
 ### AI Client Comparison
 
 | Client | MCP Support | Unique Strength | Primary Use | Cost |

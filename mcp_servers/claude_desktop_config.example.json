@@ -1,0 +1,36 @@
+{
+  "mcpServers": {
+    "google-ads": {
+      "command": "python",
+      "args": ["/home/duds0/agents/projects/full-funnel-ai-analytics/mcp_servers/mock_google_ads_server.py"]
+    },
+    "meta-ads": {
+      "command": "python",
+      "args": ["/home/duds0/agents/projects/full-funnel-ai-analytics/mcp_servers/mock_meta_ads_server.py"]
+    },
+    "ga4": {
+      "command": "python",
+      "args": ["/home/duds0/agents/projects/full-funnel-ai-analytics/mcp_servers/mock_ga4_server.py"]
+    },
+    "hubspot": {
+      "command": "python",
+      "args": ["/home/duds0/agents/projects/full-funnel-ai-analytics/mcp_servers/mock_hubspot_server.py"]
+    },
+    "salesforce": {
+      "command": "python",
+      "args": ["/home/duds0/agents/projects/full-funnel-ai-analytics/mcp_servers/mock_salesforce_server.py"]
+    },
+    "weather": {
+      "command": "python",
+      "args": ["/home/duds0/agents/projects/full-funnel-ai-analytics/mcp_servers/weather_server.py"]
+    },
+    "bigquery": {
+      "command": "uvx",
+      "args": ["mcp-server-bigquery", "--project", "YOUR_PROJECT_ID"]
+    },
+    "dbt-semantic-layer": {
+      "command": "uvx",
+      "args": ["dbt-mcp", "--project-dir", "/home/duds0/agents/projects/full-funnel-ai-analytics/dbt_project", "--profiles-dir", "/home/duds0/agents/projects/full-funnel-ai-analytics/dbt_project", "--target", "duckdb"]
+    }
+  }
+}

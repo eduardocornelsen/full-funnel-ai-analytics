@@ -34,8 +34,8 @@
 |-------|--------|-------------|
 | Phase 1: Data Foundation | ✅ Complete | Olist dataset + synthetic marketing data + warehouse loading |
 | Phase 2: dbt Semantic Layer | ✅ Complete | 14 staging + 4 intermediate + 11 mart models + Core Build |
-| Phase 3: AI Layer (MCP) | 🟡 In progress | 7 MCP servers + 4 client configs (Claude, OpenCode, Gemini, Antigravity) |
-| Phase 4: ML Scoring | 🔲 Not started | XGBoost + MLflow + FastAPI endpoint |
+| Phase 3: AI Layer (MCP) | ✅ Complete | 7 MCP servers + 4 client configs (Claude, OpenCode, Gemini, Antigravity) |
+| Phase 4: ML Scoring | 🟡 In progress | XGBoost + MLflow + FastAPI endpoint |
 | Phase 5: Dashboards & Automation | 🔲 Not started | Looker Studio + Streamlit + n8n routing |
 | Phase 6: Portability & Polish | 🔲 Not started | Snowflake/Databricks demos + documentation + video |
 

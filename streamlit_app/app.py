@@ -29,44 +29,60 @@ with st.sidebar:
     if is_dark:
         st.markdown("""
             <style>
-                [data-testid="stAppViewContainer"] {
-                    background-color: #0d1117;
-                    color: #e6edf3;
+                /* Main Backgrounds */
+                [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
+                    background-color: #0d1117 !important;
+                    color: #e6edf3 !important;
                 }
                 [data-testid="stSidebar"] {
-                    background-color: #161b22;
+                    background-color: #161b22 !important;
                 }
-                [data-testid="stHeader"] {
-                    background-color: rgba(13, 17, 23, 0.8);
-                }
-                .st-emotion-cache-1vt76ie { /* Cards/Borders */
+                
+                /* Cards & Borders */
+                .st-emotion-cache-1vt76ie, [data-testid="stMetric"] {
                     background-color: #161b22 !important;
                     border-color: #30363d !important;
                 }
-                .stMarkdown, p, h1, h2, h3, h4, h5, h6, span, label {
+                
+                /* Global Typography */
+                .stMarkdown, p, h1, h2, h3, h4, h5, h6, span, label, .stMetric label {
                     color: #e6edf3 !important;
                 }
-                .stMetric {
-                    background-color: #161b22;
-                }
-                button {
+                
+                /* Deep Override for ALL Input Fields */
+                div[data-baseweb="input"], 
+                div[data-baseweb="select"] > div,
+                div[data-testid="stSegmentedControl"] > div,
+                .stNumberInput input,
+                .stDateInput input,
+                div[data-testid="stTextInput"] input {
+                    background-color: #262730 !important;
+                    color: #ffffff !important;
                     border-color: #30363d !important;
                 }
-                /* Target Input Fields Backgrounds */
-                div[data-baseweb="input"], [data-testid="stSegmentedControl"], .stDateInput div {
+                
+                /* Segmented Control / Pills */
+                div[data-testid="stSegmentedControl"] button {
                     background-color: #262730 !important;
-                }
-                div[data-baseweb="input"] input, .stDateInput input {
                     color: #e6edf3 !important;
+                    border-color: #30363d !important;
                 }
-                /* Target Sparkline backgrounds */
+                div[data-testid="stSegmentedControl"] button[aria-checked="true"] {
+                    background-color: #0078d4 !important;
+                    color: white !important;
+                }
+
+                /* Metric Chart (Sparklines) */
                 [data-testid="stMetricChart"] {
                     background-color: transparent !important;
-                    filter: invert(1) brightness(2); /* Invert sparklines for visibility if needed, or keep green */
                 }
-                /* Fix white box under sparklines */
-                .stMetric svg {
+                [data-testid="stMetricChart"] svg {
                     background-color: transparent !important;
+                }
+                
+                /* Button Borders */
+                button {
+                    border-color: #30363d !important;
                 }
             </style>
         """, unsafe_allow_html=True)

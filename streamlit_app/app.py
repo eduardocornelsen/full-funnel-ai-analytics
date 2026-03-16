@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -18,6 +19,28 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# Sidebar overlays content instead of squeezing it
+st.markdown("""<style>
+section[data-testid="stSidebar"]{position:fixed!important;z-index:999!important;top:2.875rem!important;height:calc(100vh - 2.875rem)!important;overflow-y:auto!important}
+</style>""", unsafe_allow_html=True)
+
+# Click outside sidebar to close it
+components.html("""<script>
+(function() {
+    const doc = window.parent.document;
+    if (doc._sbClose) doc.removeEventListener('mousedown', doc._sbClose);
+    doc._sbClose = function(e) {
+        const sb = doc.querySelector('section[data-testid="stSidebar"]');
+        if (!sb || sb.getBoundingClientRect().width === 0) return;
+        if (!sb.contains(e.target)) {
+            const btn = doc.querySelector('[data-testid="stSidebarCollapseButton"] button');
+            if (btn) btn.click();
+        }
+    };
+    doc.addEventListener('mousedown', doc._sbClose);
+})();
+</script>""", height=0)
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 DATA_DIR = Path(__file__).parent.parent / "data"
@@ -60,9 +83,51 @@ def run_sql(sql: str):
 def fmt_m(v): return f"${v/1e6:.2f}M" if v >= 1e6 else f"${v/1e3:.1f}K"
 def fmt_k(v): return f"{v/1e3:.1f}K" if v >= 1000 else str(int(v))
 
+_kpi_seq = {"n": 0}  # resets on every full Streamlit rerun (module-level init)
+
 def spark(series: pd.Series, n: int = 14) -> list:
     """Return last n values of a series as a plain list for chart_data."""
     return series.dropna().tail(n).tolist()
+
+def spark_xy(df: pd.DataFrame, date_col: str, val_col: str, n: int = 14):
+    """Return (dates, values) tuple for last n non-null rows — used for interactive sparklines."""
+    sub = df[[date_col, val_col]].dropna().tail(n)
+    return sub[date_col].tolist(), sub[val_col].tolist()
+
+def kpi_card(col, label: str, value: str, xy=None, chart_type: str = "bar",
+             color: str = None, delta=None, hover_fmt: str = ",.1f"):
+    """Metric card with an optional interactive Plotly sparkline showing date on hover."""
+    _kpi_seq["n"] += 1
+    _color = color or PALETTE[0]
+    with col:
+        with st.container(border=True):
+            st.metric(label, value, delta=delta)
+            if xy and len(xy) == 2 and xy[0] and xy[1]:
+                dates, vals = xy
+                fig = go.Figure()
+                ht = "<b>%{x|Week of %b %d, %Y}</b><br>%" + "{y:" + hover_fmt + "}<extra></extra>"
+                if chart_type == "bar":
+                    fig.add_trace(go.Bar(
+                        x=dates, y=vals, marker_color=_color, opacity=0.85,
+                        hovertemplate=ht,
+                    ))
+                else:
+                    fig.add_trace(go.Scatter(
+                        x=dates, y=vals, mode="lines",
+                        line=dict(color=_color, width=2),
+                        fill="tozeroy", fillcolor=_color, opacity=0.5,
+                        hovertemplate=ht,
+                    ))
+                fig.update_layout(
+                    height=70, margin=dict(l=0, r=0, t=2, b=0),
+                    paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                    showlegend=False,
+                    xaxis=dict(visible=False),
+                    yaxis=dict(visible=False),
+                )
+                st.plotly_chart(fig, use_container_width=True,
+                                key=f"kpi_spark_{_kpi_seq['n']}",
+                                config={"displayModeBar": False})
 
 
 # ── Sidebar ────────────────────────────────────────────────────────────────────
@@ -77,6 +142,10 @@ with st.sidebar:
 
     if "date_selector" not in st.session_state:
         st.session_state.date_selector = (DEFAULT_START, DEFAULT_END)
+
+    if st.button("Clear cache", use_container_width=True, icon=":material/cached:"):
+        st.cache_data.clear()
+        st.rerun()
 
     if st.button("Reset range", use_container_width=True, icon=":material/refresh:"):
         st.session_state.date_selector = (DEFAULT_START, DEFAULT_END)
@@ -305,9 +374,9 @@ hubspot_stages = q("""
 
 sf_stages = q("""
     SELECT stage,
-        COUNT(*)          as opportunities,
-        SUM(amount)       as pipeline_value,
-        AVG(probability)  as avg_probability
+        COUNT(*)               as opportunities,
+        SUM(amount)            as pipeline_value,
+        AVG(probability)*100   as avg_probability_pct
     FROM stg_salesforce_opportunities
     GROUP BY 1 ORDER BY pipeline_value DESC
 """)
@@ -348,9 +417,10 @@ lead_sources = q("""
     SELECT lead_source,
         COUNT(*)    as customers,
         SUM(total_revenue)   as revenue,
-        AVG(total_orders)    as avg_orders,
+        AVG(total_revenue)   as avg_revenue,
         SUM(CASE WHEN is_high_value THEN 1 ELSE 0 END)*100.0/COUNT(*) as high_value_pct
     FROM fct_lead_scoring_features
+    WHERE lead_source IS NOT NULL
     GROUP BY 1 ORDER BY revenue DESC
 """)
 
@@ -407,6 +477,35 @@ sp_groas   = spark(gads_weekly["google_roas"]) if not gads_weekly.empty else []
 sp_mroas   = spark(meta_weekly["meta_roas"]) if not meta_weekly.empty else []
 sp_aov     = spark(weekly_aov["aov"]) if not weekly_aov.empty else []
 
+# Interactive sparkline (date, value) pairs for Plotly hover
+_EMPTY_XY = ([], [])
+sp_rev_xy     = spark_xy(weekly_rev, "week", "total_revenue")
+sp_orders_xy  = spark_xy(weekly_rev, "week", "order_count")
+sp_spend_xy   = spark_xy(spend_weekly, "week", "total_spend") if not spend_weekly.empty else _EMPTY_XY
+sp_sess_xy    = spark_xy(ga4_weekly_totals, "week", "sessions") if not ga4_weekly_totals.empty else _EMPTY_XY
+sp_pipe_xy    = spark_xy(hs_weekly, "week", "value") if not hs_weekly.empty else _EMPTY_XY
+sp_new_usr_xy = spark_xy(ga4_weekly_totals, "week", "new_users") if not ga4_weekly_totals.empty else _EMPTY_XY
+sp_engaged_xy = spark_xy(ga4_weekly_totals, "week", "engaged_sessions") if not ga4_weekly_totals.empty else _EMPTY_XY
+sp_eng_rt_xy  = spark_xy(ga4_weekly_totals, "week", "engagement_rate") if not ga4_weekly_totals.empty else _EMPTY_XY
+sp_gspend_xy  = spark_xy(gads_weekly, "week", "google_spend") if not gads_weekly.empty else _EMPTY_XY
+sp_mspend_xy  = spark_xy(meta_weekly, "week", "meta_spend") if not meta_weekly.empty else _EMPTY_XY
+sp_gconv_xy   = spark_xy(gads_weekly, "week", "google_conv") if not gads_weekly.empty else _EMPTY_XY
+sp_mpurch_xy  = spark_xy(meta_weekly, "week", "meta_purch") if not meta_weekly.empty else _EMPTY_XY
+sp_groas_xy   = spark_xy(gads_weekly, "week", "google_roas") if not gads_weekly.empty else _EMPTY_XY
+sp_mroas_xy   = spark_xy(meta_weekly, "week", "meta_roas") if not meta_weekly.empty else _EMPTY_XY
+sp_aov_xy     = spark_xy(weekly_aov, "week", "aov") if not weekly_aov.empty else _EMPTY_XY
+
+if not spend_weekly.empty and not weekly_rev.empty:
+    _wr = weekly_rev[["week", "total_revenue"]].copy()
+    _wr["week"] = pd.to_datetime(_wr["week"])
+    _sw = spend_weekly[["week", "total_spend"]].copy()
+    _sw["week"] = pd.to_datetime(_sw["week"])
+    _roas_df = _wr.merge(_sw, on="week", how="inner")
+    _roas_df["roas"] = _roas_df["total_revenue"] / _roas_df["total_spend"].replace(0, float("nan"))
+    sp_roas_xy = spark_xy(_roas_df.dropna(subset=["roas"]), "week", "roas")
+else:
+    sp_roas_xy = _EMPTY_XY
+
 total_attr_rev = attribution["linear_revenue"].sum() if not attribution.empty else 0
 top_channel    = attribution.iloc[0]["channel"] if not attribution.empty else "N/A"
 
@@ -438,13 +537,13 @@ tabs = st.tabs([
 with tabs[0]:
     st.subheader("Executive overview")
 
-    with st.container(horizontal=True):
-        st.metric("Total revenue",   fmt_m(total_revenue),  border=True, chart_data=sp_rev,    chart_type="bar")
-        st.metric("Total orders",    fmt_k(total_orders),   border=True, chart_data=sp_orders,  chart_type="bar")
-        st.metric("Total spend",     fmt_m(total_spend),    border=True, chart_data=sp_spend,   chart_type="line")
-        st.metric("Blended ROAS",    f"{blended_roas:.2f}x",border=True, chart_data=sp_roas_w,  chart_type="line")
-        st.metric("Sessions",        fmt_k(int(total_sessions)), border=True, chart_data=sp_sess, chart_type="line")
-        st.metric("Open pipeline",   fmt_m(pipeline_total), border=True, chart_data=sp_pipe,   chart_type="bar")
+    _c = st.columns(6)
+    kpi_card(_c[0], "Total revenue",   fmt_m(total_revenue),       sp_rev_xy,   "bar",  PALETTE[0], hover_fmt="$,.0f")
+    kpi_card(_c[1], "Total orders",    fmt_k(total_orders),        sp_orders_xy,"bar",  PALETTE[1], hover_fmt=",.0f")
+    kpi_card(_c[2], "Total spend",     fmt_m(total_spend),         sp_spend_xy, "line", PALETTE[2], hover_fmt="$,.0f")
+    kpi_card(_c[3], "Blended ROAS",    f"{blended_roas:.2f}x",     sp_roas_xy,  "line", PALETTE[3], hover_fmt=".2f")
+    kpi_card(_c[4], "Sessions",        fmt_k(int(total_sessions)), sp_sess_xy,  "line", PALETTE[0], hover_fmt=",.0f")
+    kpi_card(_c[5], "Open pipeline",   fmt_m(pipeline_total),      sp_pipe_xy,  "bar",  PALETTE[4], hover_fmt="$,.0f")
 
     col_a, col_b = st.columns([2, 1])
 
@@ -453,9 +552,13 @@ with tabs[0]:
             st.markdown("**Weekly revenue & orders**")
             fig = make_subplots(specs=[[{"secondary_y": True}]])
             fig.add_trace(go.Bar(x=weekly_rev["week"], y=weekly_rev["total_revenue"],
-                                 name="Revenue", marker_color=PALETTE[0], opacity=0.85), secondary_y=False)
+                                 name="Revenue", marker_color=PALETTE[0], opacity=0.85,
+                                 hovertemplate="<b>%{x|Week of %b %d, %Y}</b><br>Revenue: $%{y:,.0f}<extra></extra>"),
+                          secondary_y=False)
             fig.add_trace(go.Scatter(x=weekly_rev["week"], y=weekly_rev["order_count"],
-                                     name="Orders", line=dict(color=PALETTE[1], width=2), mode="lines"), secondary_y=True)
+                                     name="Orders", line=dict(color=PALETTE[1], width=2), mode="lines",
+                                     hovertemplate="<b>%{x|Week of %b %d, %Y}</b><br>Orders: %{y:,.0f}<extra></extra>"),
+                          secondary_y=True)
             fig.update_layout(template=tmpl, paper_bgcolor=BG, plot_bgcolor=BG,
                               margin=dict(l=0, r=0, t=10, b=0), height=280,
                               legend=dict(orientation="h", y=1.1))
@@ -482,6 +585,9 @@ with tabs[0]:
             fig = px.bar(top_cats.head(10), x="revenue", y="category", orientation="h",
                          color="revenue", color_continuous_scale="Blues",
                          labels={"revenue": "Revenue ($)", "category": ""})
+            fig.update_traces(
+                hovertemplate="<b>%{y}</b><br>Revenue: $%{x:,.0f}<br><i>Period: " + S + " → " + E + "</i><extra></extra>"
+            )
             fig.update_layout(template=tmpl, paper_bgcolor=BG, plot_bgcolor=BG,
                               margin=dict(l=0, r=0, t=10, b=0), height=300,
                               coloraxis_showscale=False, yaxis=dict(autorange="reversed"))
@@ -518,11 +624,11 @@ with tabs[1]:
 
     avg_engagement = (engaged / total_sessions * 100) if total_sessions > 0 else 0
 
-    with st.container(horizontal=True):
-        st.metric("Total sessions",    fmt_k(int(total_sessions)), border=True, chart_data=sp_sess,    chart_type="line")
-        st.metric("New users",         fmt_k(int(new_users)),      border=True, chart_data=sp_new_usr, chart_type="bar")
-        st.metric("Engaged sessions",  fmt_k(int(engaged)),        border=True, chart_data=sp_engaged, chart_type="line")
-        st.metric("Avg engagement rate", f"{avg_engagement:.1f}%", border=True, chart_data=sp_eng_rt,  chart_type="line")
+    _c = st.columns(4)
+    kpi_card(_c[0], "Total sessions",     fmt_k(int(total_sessions)), sp_sess_xy,    "line", PALETTE[0], hover_fmt=",.0f")
+    kpi_card(_c[1], "New users",          fmt_k(int(new_users)),      sp_new_usr_xy, "bar",  PALETTE[1], hover_fmt=",.0f")
+    kpi_card(_c[2], "Engaged sessions",   fmt_k(int(engaged)),        sp_engaged_xy, "line", PALETTE[2], hover_fmt=",.0f")
+    kpi_card(_c[3], "Avg engagement rate",f"{avg_engagement:.1f}%",   sp_eng_rt_xy,  "line", PALETTE[3], hover_fmt=".1f")
 
     with st.container(border=True):
         st.markdown("**Weekly sessions by channel (stacked area)**")
@@ -536,7 +642,8 @@ with tabs[1]:
                 fig.add_trace(go.Scatter(x=ga4_pivot["week"], y=ga4_pivot[ch], name=ch,
                                          mode="lines", stackgroup="one",
                                          line=dict(color=PALETTE[i % len(PALETTE)], width=0),
-                                         fillcolor=PALETTE[i % len(PALETTE)]))
+                                         fillcolor=PALETTE[i % len(PALETTE)],
+                                         hovertemplate="<b>%{x|Week of %b %d, %Y}</b><br>" + ch + ": %{y:,.0f} sessions<extra></extra>"))
             fig.update_layout(template=tmpl, paper_bgcolor=BG, plot_bgcolor=BG,
                               margin=dict(l=0, r=0, t=10, b=0), height=320,
                               legend=dict(orientation="h", y=-0.2))
@@ -606,17 +713,17 @@ with tabs[2]:
 
     with col_g:
         st.markdown("**:material/ads_click: Google Ads**")
-        with st.container(horizontal=True):
-            st.metric("Spend",        fmt_m(total_spend_g),         border=True, chart_data=sp_gspend, chart_type="bar")
-            st.metric("Conversions",  fmt_k(int(total_conversions_g)), border=True, chart_data=sp_gconv,  chart_type="bar")
-            st.metric("ROAS",         f"{avg_roas_g:.2f}x",          border=True, chart_data=sp_groas,  chart_type="line")
+        _cg = st.columns(3)
+        kpi_card(_cg[0], "Spend",       fmt_m(total_spend_g),            sp_gspend_xy, "bar",  PALETTE[0], hover_fmt="$,.0f")
+        kpi_card(_cg[1], "Conversions", fmt_k(int(total_conversions_g)), sp_gconv_xy,  "bar",  PALETTE[1], hover_fmt=",.0f")
+        kpi_card(_cg[2], "ROAS",        f"{avg_roas_g:.2f}x",            sp_groas_xy,  "line", PALETTE[2], hover_fmt=".2f")
 
     with col_m:
         st.markdown("**:material/groups: Meta Ads**")
-        with st.container(horizontal=True):
-            st.metric("Spend",     fmt_m(total_spend_m),          border=True, chart_data=sp_mspend, chart_type="bar")
-            st.metric("Purchases", fmt_k(int(total_conversions_m)), border=True, chart_data=sp_mpurch, chart_type="bar")
-            st.metric("ROAS",      f"{avg_roas_m:.2f}x",           border=True, chart_data=sp_mroas,  chart_type="line")
+        _cm = st.columns(3)
+        kpi_card(_cm[0], "Spend",     fmt_m(total_spend_m),            sp_mspend_xy, "bar",  PALETTE[0], hover_fmt="$,.0f")
+        kpi_card(_cm[1], "Purchases", fmt_k(int(total_conversions_m)), sp_mpurch_xy, "bar",  PALETTE[1], hover_fmt=",.0f")
+        kpi_card(_cm[2], "ROAS",      f"{avg_roas_m:.2f}x",            sp_mroas_xy,  "line", PALETTE[2], hover_fmt=".2f")
 
     with st.container(border=True):
         st.markdown("**Weekly spend — Google vs Meta**")
@@ -624,8 +731,10 @@ with tabs[2]:
             spend_weekly_copy = spend_weekly.copy()
             spend_weekly_copy["week"] = pd.to_datetime(spend_weekly_copy["week"])
             fig = go.Figure()
-            fig.add_trace(go.Bar(x=spend_weekly_copy["week"], y=spend_weekly_copy["google_spend"], name="Google Ads", marker_color=PALETTE[0]))
-            fig.add_trace(go.Bar(x=spend_weekly_copy["week"], y=spend_weekly_copy["meta_spend"],   name="Meta Ads",   marker_color=PALETTE[1]))
+            fig.add_trace(go.Bar(x=spend_weekly_copy["week"], y=spend_weekly_copy["google_spend"], name="Google Ads", marker_color=PALETTE[0],
+                                 hovertemplate="<b>%{x|Week of %b %d, %Y}</b><br>Google spend: $%{y:,.0f}<extra></extra>"))
+            fig.add_trace(go.Bar(x=spend_weekly_copy["week"], y=spend_weekly_copy["meta_spend"],   name="Meta Ads",   marker_color=PALETTE[1],
+                                 hovertemplate="<b>%{x|Week of %b %d, %Y}</b><br>Meta spend: $%{y:,.0f}<extra></extra>"))
             fig.update_layout(barmode="stack", template=tmpl, paper_bgcolor=BG, plot_bgcolor=BG,
                               margin=dict(l=0, r=0, t=10, b=0), height=280,
                               legend=dict(orientation="h", y=1.1))
@@ -640,6 +749,9 @@ with tabs[2]:
                 fig = px.bar(gads_perf.sort_values("roas"), x="roas", y="campaign_name",
                              orientation="h", color="campaign_type", color_discrete_sequence=PALETTE,
                              labels={"roas": "ROAS", "campaign_name": ""})
+                fig.update_traces(
+                    hovertemplate="<b>%{y}</b><br>ROAS: %{x:.2f}x<br><i>Period: " + S + " → " + E + "</i><extra></extra>"
+                )
                 fig.update_layout(template=tmpl, paper_bgcolor=BG, plot_bgcolor=BG,
                                   margin=dict(l=0, r=0, t=10, b=0), height=260)
                 st.plotly_chart(fig, use_container_width=True)
@@ -649,12 +761,12 @@ with tabs[2]:
                 column_config={
                     "campaign_name":     st.column_config.TextColumn("Campaign", pinned=True),
                     "campaign_type":     st.column_config.TextColumn("Type"),
-                    "cost":              st.column_config.NumberColumn("Spend",       format="$%,.0f"),
-                    "conversions":       st.column_config.NumberColumn("Conv.",       format="%,.0f"),
-                    "conversion_value":  st.column_config.NumberColumn("Conv. value", format="$%,.0f"),
-                    "roas":              st.column_config.NumberColumn("ROAS",         format="%.2fx"),
-                    "avg_ctr":           st.column_config.NumberColumn("CTR",          format="%.2f%%"),
-                    "avg_cpc":           st.column_config.NumberColumn("CPC",          format="$%.2f"),
+                    "cost":              st.column_config.NumberColumn("Spend ($)",       format="$%.0f"),
+                    "conversions":       st.column_config.NumberColumn("Conv.",           format="%.0f"),
+                    "conversion_value":  st.column_config.NumberColumn("Conv. value ($)", format="$%.0f"),
+                    "roas":              st.column_config.NumberColumn("ROAS",            format="%.2f"),
+                    "avg_ctr":           st.column_config.NumberColumn("CTR %",           format="%.2f"),
+                    "avg_cpc":           st.column_config.NumberColumn("CPC ($)",         format="$%.2f"),
                     "impressions":       None,
                     "clicks":            None,
                 },
@@ -668,6 +780,9 @@ with tabs[2]:
                 fig = px.bar(meta_perf.sort_values("roas"), x="roas", y="campaign_name",
                              orientation="h", color="objective", color_discrete_sequence=PALETTE[1:],
                              labels={"roas": "ROAS", "campaign_name": ""})
+                fig.update_traces(
+                    hovertemplate="<b>%{y}</b><br>ROAS: %{x:.2f}x<br><i>Period: " + S + " → " + E + "</i><extra></extra>"
+                )
                 fig.update_layout(template=tmpl, paper_bgcolor=BG, plot_bgcolor=BG,
                                   margin=dict(l=0, r=0, t=10, b=0), height=260)
                 st.plotly_chart(fig, use_container_width=True)
@@ -677,12 +792,12 @@ with tabs[2]:
                 column_config={
                     "campaign_name":  st.column_config.TextColumn("Campaign", pinned=True),
                     "objective":      st.column_config.TextColumn("Objective"),
-                    "spend":          st.column_config.NumberColumn("Spend",        format="$%,.0f"),
-                    "purchases":      st.column_config.NumberColumn("Purchases",    format="%,.0f"),
-                    "purchase_value": st.column_config.NumberColumn("Purch. value", format="$%,.0f"),
-                    "roas":           st.column_config.NumberColumn("ROAS",          format="%.2fx"),
-                    "avg_ctr":        st.column_config.NumberColumn("CTR",           format="%.2f%%"),
-                    "avg_cpm":        st.column_config.NumberColumn("CPM",           format="$%.2f"),
+                    "spend":          st.column_config.NumberColumn("Spend ($)",        format="$%.0f"),
+                    "purchases":      st.column_config.NumberColumn("Purchases",        format="%.0f"),
+                    "purchase_value": st.column_config.NumberColumn("Purch. value ($)", format="$%.0f"),
+                    "roas":           st.column_config.NumberColumn("ROAS",             format="%.2f"),
+                    "avg_ctr":        st.column_config.NumberColumn("CTR %",            format="%.2f"),
+                    "avg_cpm":        st.column_config.NumberColumn("CPM ($)",          format="$%.2f"),
                     "impressions":    None,
                     "reach":          None,
                     "link_clicks":    None,
@@ -695,22 +810,34 @@ with tabs[2]:
         with st.container(border=True):
             st.markdown("**Google spend by campaign type**")
             if not gads_perf.empty:
-                type_spend = gads_perf.groupby("campaign_type")["cost"].sum().reset_index()
-                fig = px.pie(type_spend, names="campaign_type", values="cost", hole=0.4,
-                             color_discrete_sequence=PALETTE)
-                fig.update_layout(template=tmpl, paper_bgcolor=BG, margin=dict(l=0, r=0, t=10, b=0), height=240)
-                fig.update_traces(textinfo="label+percent")
+                type_spend = gads_perf.groupby("campaign_type")["cost"].sum().reset_index().sort_values("cost")
+                fig = px.bar(type_spend, x="cost", y="campaign_type", orientation="h",
+                             color="campaign_type", color_discrete_sequence=PALETTE,
+                             labels={"cost": "Spend ($)", "campaign_type": ""},
+                             text="cost")
+                fig.update_traces(
+                    texttemplate="$%{text:,.0f}", textposition="outside",
+                    hovertemplate="<b>%{y}</b><br>Spend: $%{x:,.0f}<extra></extra>",
+                )
+                fig.update_layout(template=tmpl, paper_bgcolor=BG, plot_bgcolor=BG,
+                                  margin=dict(l=0, r=0, t=10, b=40), height=240, showlegend=False)
                 st.plotly_chart(fig, use_container_width=True)
 
     with col_f:
         with st.container(border=True):
             st.markdown("**Meta spend by objective**")
             if not meta_perf.empty:
-                obj_spend = meta_perf.groupby("objective")["spend"].sum().reset_index()
-                fig = px.pie(obj_spend, names="objective", values="spend", hole=0.4,
-                             color_discrete_sequence=PALETTE[1:])
-                fig.update_layout(template=tmpl, paper_bgcolor=BG, margin=dict(l=0, r=0, t=10, b=0), height=240)
-                fig.update_traces(textinfo="label+percent")
+                obj_spend = meta_perf.groupby("objective")["spend"].sum().reset_index().sort_values("spend")
+                fig = px.bar(obj_spend, x="spend", y="objective", orientation="h",
+                             color="objective", color_discrete_sequence=PALETTE[1:],
+                             labels={"spend": "Spend ($)", "objective": ""},
+                             text="spend")
+                fig.update_traces(
+                    texttemplate="$%{text:,.0f}", textposition="outside",
+                    hovertemplate="<b>%{y}</b><br>Spend: $%{x:,.0f}<extra></extra>",
+                )
+                fig.update_layout(template=tmpl, paper_bgcolor=BG, plot_bgcolor=BG,
+                                  margin=dict(l=0, r=0, t=10, b=40), height=240, showlegend=False)
                 st.plotly_chart(fig, use_container_width=True)
 
 
@@ -720,11 +847,11 @@ with tabs[2]:
 with tabs[3]:
     st.subheader("Multi-touch attribution")
 
-    with st.container(horizontal=True):
-        st.metric("Attributed revenue",  fmt_m(total_attr_rev), border=True, chart_data=sp_rev,    chart_type="bar")
-        st.metric("Top channel (linear)", top_channel,           border=True)
-        st.metric("Channels tracked",    str(len(attribution)), border=True)
-        st.metric("Pipeline touchpoints", fmt_k(pipeline_ch["total_touches"].sum() if not pipeline_ch.empty else 0), border=True)
+    _c = st.columns(4)
+    kpi_card(_c[0], "Attributed revenue",   fmt_m(total_attr_rev), sp_rev_xy, "bar", PALETTE[0], hover_fmt="$,.0f")
+    kpi_card(_c[1], "Top channel (linear)", top_channel)
+    kpi_card(_c[2], "Channels tracked",     str(len(attribution)))
+    kpi_card(_c[3], "Pipeline touchpoints", fmt_k(pipeline_ch["total_touches"].sum() if not pipeline_ch.empty else 0))
 
     with st.container(border=True):
         st.markdown("**Revenue by channel — 4 attribution models**")
@@ -744,6 +871,9 @@ with tabs[3]:
             fig = px.bar(attr_long, x="channel", y="revenue", color="model",
                          barmode="group", color_discrete_sequence=PALETTE,
                          labels={"revenue": "Revenue ($)", "channel": "Channel", "model": "Model"})
+            fig.update_traces(
+                hovertemplate="<b>%{x}</b><br>Model: %{fullData.name}<br>Revenue: $%{y:,.0f}<br><i>Period: " + S + " → " + E + "</i><extra></extra>"
+            )
             fig.update_layout(template=tmpl, paper_bgcolor=BG, plot_bgcolor=BG,
                               margin=dict(l=0, r=0, t=10, b=0), height=360,
                               legend=dict(orientation="h", y=1.08))
@@ -759,11 +889,11 @@ with tabs[3]:
                     attribution,
                     column_config={
                         "channel":              st.column_config.TextColumn("Channel", pinned=True),
-                        "first_touch_revenue":  st.column_config.NumberColumn("First touch",  format="$%,.0f"),
-                        "last_touch_revenue":   st.column_config.NumberColumn("Last touch",   format="$%,.0f"),
-                        "linear_revenue":       st.column_config.NumberColumn("Linear",       format="$%,.0f"),
-                        "time_decay_revenue":   st.column_config.NumberColumn("Time decay",   format="$%,.0f"),
-                        "total_orders":         st.column_config.NumberColumn("Orders",       format="%,.0f"),
+                        "first_touch_revenue":  st.column_config.NumberColumn("First touch ($)",  format="$%.0f"),
+                        "last_touch_revenue":   st.column_config.NumberColumn("Last touch ($)",   format="$%.0f"),
+                        "linear_revenue":       st.column_config.NumberColumn("Linear ($)",       format="$%.0f"),
+                        "time_decay_revenue":   st.column_config.NumberColumn("Time decay ($)",   format="$%.0f"),
+                        "total_orders":         st.column_config.NumberColumn("Orders",           format="%.0f"),
                     },
                     hide_index=True, use_container_width=True,
                 )
@@ -809,18 +939,19 @@ with tabs[3]:
 with tabs[4]:
     st.subheader("Revenue & product analytics")
 
-    with st.container(horizontal=True):
-        st.metric("Total revenue",    fmt_m(total_revenue), border=True, chart_data=sp_rev,    chart_type="bar")
-        st.metric("Avg order value",  f"${avg_aov:.2f}",   border=True, chart_data=sp_aov,    chart_type="line")
-        st.metric("Avg delivery time", f"{avg_delivery:.1f} days", border=True)
-        st.metric("Late delivery rate", f"{late_pct:.1f}%", border=True)
+    _c = st.columns(4)
+    kpi_card(_c[0], "Total revenue",     fmt_m(total_revenue),         sp_rev_xy, "bar",  PALETTE[0], hover_fmt="$,.0f")
+    kpi_card(_c[1], "Avg order value",   f"${avg_aov:.2f}",            sp_aov_xy, "line", PALETTE[1], hover_fmt="$,.2f")
+    kpi_card(_c[2], "Avg delivery time", f"{avg_delivery:.1f} days")
+    kpi_card(_c[3], "Late delivery rate",f"{late_pct:.1f}%")
 
     with st.container(border=True):
         st.markdown("**Daily revenue trend**")
         fig = px.area(daily_rev, x="order_date", y="total_revenue",
                       color_discrete_sequence=[PALETTE[2]],
                       labels={"order_date": "", "total_revenue": "Revenue ($)"})
-        fig.update_traces(line_color=PALETTE[2], fillcolor=PALETTE[2], opacity=0.7)
+        fig.update_traces(line_color=PALETTE[2], fillcolor=PALETTE[2], opacity=0.7,
+                          hovertemplate="<b>%{x|%b %d, %Y}</b><br>Revenue: $%{y:,.0f}<extra></extra>")
         fig.update_layout(template=tmpl, paper_bgcolor=BG, plot_bgcolor=BG,
                           margin=dict(l=0, r=0, t=10, b=0), height=260)
         st.plotly_chart(fig, use_container_width=True)
@@ -883,12 +1014,12 @@ with tabs[5]:
     hs_total_deals  = int(hubspot_stages["deals"].sum()) if not hubspot_stages.empty else 0
     sf_total_opps   = int(sf_stages["opportunities"].sum()) if not sf_stages.empty else 0
 
-    with st.container(horizontal=True):
-        st.metric("HubSpot deals",    fmt_k(hs_total_deals),   border=True, chart_data=sp_pipe, chart_type="bar")
-        st.metric("SF opportunities", fmt_k(sf_total_opps),    border=True)
-        st.metric("HS closed won",    fmt_m(hs_won),           border=True)
-        st.metric("SF closed won",    fmt_m(sf_won),           border=True)
-        st.metric("Open pipeline",    fmt_m(pipeline_total),   border=True, chart_data=sp_pipe, chart_type="line")
+    _c = st.columns(5)
+    kpi_card(_c[0], "HubSpot deals",    fmt_k(hs_total_deals), sp_pipe_xy, "bar",  PALETTE[0], hover_fmt=",.0f")
+    kpi_card(_c[1], "SF opportunities", fmt_k(sf_total_opps))
+    kpi_card(_c[2], "HS closed won",    fmt_m(hs_won))
+    kpi_card(_c[3], "SF closed won",    fmt_m(sf_won))
+    kpi_card(_c[4], "Open pipeline",    fmt_m(pipeline_total), sp_pipe_xy, "line", PALETTE[4], hover_fmt="$,.0f")
 
     col_a, col_b = st.columns(2)
 
@@ -909,8 +1040,11 @@ with tabs[5]:
             st.markdown("**Salesforce — pipeline by stage**")
             if not sf_stages.empty:
                 fig = px.bar(sf_stages, x="pipeline_value", y="stage", orientation="h",
-                             color="avg_probability", color_continuous_scale="Greens",
-                             labels={"pipeline_value": "Value ($)", "stage": "Stage", "avg_probability": "Avg close %"})
+                             color="avg_probability_pct", color_continuous_scale="Greens",
+                             labels={"pipeline_value": "Value ($)", "stage": "Stage", "avg_probability_pct": "Avg close %"})
+                fig.update_traces(
+                    hovertemplate="<b>%{y}</b><br>Pipeline: $%{x:,.0f}<br>Avg close: %{marker.color:.0f}%<extra></extra>"
+                )
                 fig.update_layout(template=tmpl, paper_bgcolor=BG, plot_bgcolor=BG,
                                   margin=dict(l=0, r=0, t=10, b=0), height=300,
                                   yaxis=dict(autorange="reversed"))
@@ -922,37 +1056,69 @@ with tabs[5]:
         with st.container(border=True):
             st.markdown("**HubSpot — deals by lead source**")
             if not hubspot_source.empty:
-                fig = px.pie(hubspot_source, names="lead_source", values="value",
-                             hole=0.4, color_discrete_sequence=PALETTE)
-                fig.update_layout(template=tmpl, paper_bgcolor=BG,
-                                  margin=dict(l=0, r=0, t=10, b=0), height=260)
-                fig.update_traces(textinfo="label+percent")
+                hs_src = hubspot_source.sort_values("value")
+                fig = px.bar(hs_src, x="value", y="lead_source", orientation="h",
+                             color="deals", color_continuous_scale="Blues",
+                             labels={"value": "Pipeline value ($)", "lead_source": "", "deals": "Deals"},
+                             text="deals")
+                fig.update_traces(
+                    texttemplate="%{text:,.0f} deals", textposition="outside",
+                    hovertemplate="<b>%{y}</b><br>Value: $%{x:,.0f}<br>Deals: %{text:,.0f}<extra></extra>",
+                )
+                fig.update_layout(template=tmpl, paper_bgcolor=BG, plot_bgcolor=BG,
+                                  margin=dict(l=0, r=0, t=10, b=0), height=260,
+                                  coloraxis_showscale=False)
                 st.plotly_chart(fig, use_container_width=True)
 
     with col_d:
         with st.container(border=True):
             st.markdown("**Salesforce — opportunities by lead source**")
             if not sf_source.empty:
-                fig = px.pie(sf_source, names="lead_source", values="value",
-                             hole=0.4, color_discrete_sequence=PALETTE[1:])
-                fig.update_layout(template=tmpl, paper_bgcolor=BG,
-                                  margin=dict(l=0, r=0, t=10, b=0), height=260)
-                fig.update_traces(textinfo="label+percent")
+                sf_src = sf_source.sort_values("value")
+                fig = px.bar(sf_src, x="value", y="lead_source", orientation="h",
+                             color="opps", color_continuous_scale="Greens",
+                             labels={"value": "Pipeline value ($)", "lead_source": "", "opps": "Opportunities"},
+                             text="opps")
+                fig.update_traces(
+                    texttemplate="%{text:,.0f} opps", textposition="outside",
+                    hovertemplate="<b>%{y}</b><br>Value: $%{x:,.0f}<br>Opps: %{text:,.0f}<extra></extra>",
+                )
+                fig.update_layout(template=tmpl, paper_bgcolor=BG, plot_bgcolor=BG,
+                                  margin=dict(l=0, r=0, t=10, b=0), height=260,
+                                  coloraxis_showscale=False)
                 st.plotly_chart(fig, use_container_width=True)
 
-    with st.container(border=True):
-        st.markdown("**Salesforce — stage details**")
-        if not sf_stages.empty:
-            st.dataframe(
-                sf_stages,
-                column_config={
-                    "stage":           st.column_config.TextColumn("Stage", pinned=True),
-                    "opportunities":   st.column_config.NumberColumn("Opportunities",   format="%,.0f"),
-                    "pipeline_value":  st.column_config.NumberColumn("Pipeline value",  format="$%,.0f"),
-                    "avg_probability": st.column_config.ProgressColumn("Avg close %",   min_value=0, max_value=100, format="%.1f%%"),
-                },
-                hide_index=True, use_container_width=True,
-            )
+    col_e, col_f = st.columns(2)
+
+    with col_e:
+        with st.container(border=True):
+            st.markdown("**HubSpot — stage details**")
+            if not hubspot_stages.empty:
+                st.dataframe(
+                    hubspot_stages,
+                    column_config={
+                        "deal_stage":     st.column_config.TextColumn("Stage", pinned=True),
+                        "deals":          st.column_config.NumberColumn("Deals",          format="%.0f"),
+                        "pipeline_value": st.column_config.NumberColumn("Pipeline value ($)", format="$%.0f"),
+                    },
+                    hide_index=True, use_container_width=True,
+                )
+
+    with col_f:
+        with st.container(border=True):
+            st.markdown("**Salesforce — stage details**")
+            st.caption("Avg close % = mean probability assigned per stage (fixed per stage: Prospecting 10%, Qualification 20%, … Closed Won 100%)")
+            if not sf_stages.empty:
+                st.dataframe(
+                    sf_stages,
+                    column_config={
+                        "stage":                st.column_config.TextColumn("Stage", pinned=True),
+                        "opportunities":        st.column_config.NumberColumn("Opportunities",    format="%.0f"),
+                        "pipeline_value":       st.column_config.NumberColumn("Pipeline value ($)", format="$%.0f"),
+                        "avg_probability_pct":  st.column_config.ProgressColumn("Avg close %", min_value=0, max_value=100, format="%.0f"),
+                    },
+                    hide_index=True, use_container_width=True,
+                )
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -961,11 +1127,11 @@ with tabs[5]:
 with tabs[6]:
     st.subheader("Lead intelligence & scoring")
 
-    with st.container(horizontal=True):
-        st.metric("Total customers",    fmt_k(int(total_customers)), border=True)
-        st.metric("High-value customers", fmt_k(int(high_value)),   border=True)
-        st.metric("High-value rate",    f"{high_value_pct:.1f}%",   border=True)
-        st.metric("Avg customer LTV",   f"${avg_ltv:.0f}",          border=True)
+    _c = st.columns(4)
+    kpi_card(_c[0], "Total customers",     fmt_k(int(total_customers)))
+    kpi_card(_c[1], "High-value customers",fmt_k(int(high_value)))
+    kpi_card(_c[2], "High-value rate",     f"{high_value_pct:.1f}%")
+    kpi_card(_c[3], "Avg customer LTV",    f"${avg_ltv:.0f}")
 
     col_a, col_b = st.columns(2)
 
@@ -998,11 +1164,15 @@ with tabs[6]:
         if not lead_sources.empty:
             col_x, col_y = st.columns(2)
             with col_x:
-                fig = px.scatter(lead_sources, x="avg_orders", y="high_value_pct",
+                fig = px.scatter(lead_sources, x="avg_revenue", y="high_value_pct",
                                  size="customers", color="lead_source",
                                  color_discrete_sequence=PALETTE,
-                                 labels={"avg_orders": "Avg orders", "high_value_pct": "High-value %"},
-                                 hover_data=["revenue"])
+                                 labels={"avg_revenue": "Avg customer revenue ($)", "high_value_pct": "High-value %",
+                                         "customers": "Customers", "lead_source": "Lead source"},
+                                 hover_data={"customers": True, "revenue": True, "avg_revenue": ":.0f"})
+                fig.update_traces(
+                    hovertemplate="<b>%{customdata[2]}</b><br>Avg revenue: $%{x:,.0f}<br>High-value: %{y:.1f}%<br>Customers: %{marker.size:,.0f}<extra></extra>"
+                )
                 fig.update_layout(template=tmpl, paper_bgcolor=BG, plot_bgcolor=BG,
                                   margin=dict(l=0, r=0, t=10, b=0), height=280)
                 st.plotly_chart(fig, use_container_width=True)

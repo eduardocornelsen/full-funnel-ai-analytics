@@ -70,10 +70,10 @@ with st.sidebar:
     st.markdown("## :material/analytics: Full-funnel AI")
     st.space("small")
 
-    DATA_MIN = datetime(2016, 9, 1).date()
-    DATA_MAX = datetime(2018, 12, 31).date()
-    DEFAULT_START = datetime(2017, 1, 1).date()
-    DEFAULT_END = datetime(2018, 12, 31).date()
+    DATA_MIN = datetime(2024, 3, 30).date()
+    DATA_MAX = datetime(2026, 3, 15).date()
+    DEFAULT_START = datetime(2024, 7, 16).date()
+    DEFAULT_END = datetime(2026, 3, 15).date()
 
     if "date_selector" not in st.session_state:
         st.session_state.date_selector = (DEFAULT_START, DEFAULT_END)
@@ -108,7 +108,7 @@ with st.sidebar:
 
     env = st.segmented_control("Environment", ["Production", "Staging", "Dev"], default="Production")
     st.space("small")
-    st.caption(f"Data: Sep 2016 – Dec 2018")
+    st.caption(f"Data: Mar 2024 – Mar 2026")
 
 
 # ── Load data ──────────────────────────────────────────────────────────────────
@@ -1099,7 +1099,7 @@ with tabs[7]:
                 with st.spinner("Querying the warehouse…"):
                     schema = get_db_schema()
                     system_prompt = f"""You are an analytics assistant for a full-funnel marketing platform.
-The DuckDB warehouse covers e-commerce and marketing data from 2016-09-01 to 2018-12-31.
+The DuckDB warehouse covers e-commerce and marketing data from 2024-03-30 to 2026-03-15.
 ALWAYS use the query_database tool to fetch real numbers — never guess or invent data.
 Write clean DuckDB SQL. Limit results to 20 rows unless asked otherwise.
 After fetching data, give a concise business-focused answer (2–4 sentences).

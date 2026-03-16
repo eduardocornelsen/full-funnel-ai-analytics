@@ -3,7 +3,18 @@
     "allow": [
       "Bash(/home/duds0/agents/projects/full-funnel-ai-analytics/.venv/bin/python:*)",
       "Bash(do echo:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Read(//usr/bin/**)",
+      "Read(//usr/local/bin/**)",
+      "Read(//home/duds0/**)",
+      "Read(//opt/**)",
+      "Bash(wsl.exe:*)",
+      "Bash(powershell.exe:*)",
+      "mcp__google-ads__list_campaigns",
+      "mcp__meta-ads__list_campaigns",
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(.venv/bin/python3 -c \"import fastmcp; print\\('fastmcp OK'\\)\")"
     ]
   }
 }

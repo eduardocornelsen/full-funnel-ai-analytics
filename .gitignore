@@ -23,3 +23,4 @@ ml/mlflow-artifacts/
 Thumbs.db
 streamlit_app/.streamlit/secrets.toml
 README-architecture-old.md
+.claude/settings.local.json

@@ -1,209 +1,177 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Pipeline Dashboard</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sales Pipeline Dashboard</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #0d0d1a; color: #e2e8f0; font-family: system-ui, -apple-system, sans-serif; padding: 24px; min-height: 100vh; }
-  .pd-title { font-size: 20px; font-weight: 500; color: #e2e8f0; margin-bottom: 20px; }
-  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 24px; }
-  .kpi-card { background: #1a1a2e; border: 0.5px solid #2a2a4a; border-radius: 10px; padding: 14px 16px; }
-  .kpi-label { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
-  .kpi-value { font-size: 22px; font-weight: 500; }
-  .kpi-sub { font-size: 11px; color: #64748b; margin-top: 3px; }
-  .section-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
-  .section-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
-  .card { background: #1a1a2e; border: 0.5px solid #2a2a4a; border-radius: 10px; padding: 16px; }
-  .card-title { font-size: 12px; font-weight: 500; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 14px; }
-  .funnel-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-  .funnel-label { font-size: 11px; color: #94a3b8; width: 130px; flex-shrink: 0; }
-  .funnel-track { flex: 1; background: #0d0d1a; border-radius: 4px; height: 20px; overflow: hidden; }
-  .funnel-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; font-size: 10px; font-weight: 500; white-space: nowrap; }
-  .funnel-val { font-size: 11px; color: #e2e8f0; width: 80px; text-align: right; flex-shrink: 0; }
-  .source-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-  .source-label { font-size: 12px; color: #e2e8f0; width: 90px; flex-shrink: 0; }
-  .source-track { flex: 1; background: #0d0d1a; border-radius: 4px; height: 16px; overflow: hidden; }
-  .source-fill { height: 100%; border-radius: 4px; }
-  .source-val { font-size: 11px; color: #94a3b8; width: 70px; text-align: right; flex-shrink: 0; }
-  .gauge-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 0; }
-  .lifecycle-legend { display: flex; flex-direction: column; gap: 6px; }
-  .legend-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #e2e8f0; }
-  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-  .age-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-  .age-table th { color: #64748b; font-weight: 400; padding: 4px 8px; text-align: center; border-bottom: 0.5px solid #2a2a4a; }
-  .age-table td { padding: 5px 8px; text-align: center; border-bottom: 0.5px solid #1a1a30; }
-  .age-table tr:last-child td { border-bottom: none; }
-  .age-stage { text-align: left !important; color: #94a3b8; }
-  .heat-1 { background: #1e2d1e; color: #34d399; }
-  .heat-2 { background: #22301e; color: #4ade80; }
-  .heat-3 { background: #2d2010; color: #fbbf24; }
-  .heat-4 { background: #2d1818; color: #f87171; }
-  @media (max-width: 640px) {
-    .section-row, .section-row-3 { grid-template-columns: 1fr; }
-    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-  }
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0d0d1a;color:#e2e8f0;min-height:100vh;padding:24px}
+.title{font-size:20px;font-weight:500;color:#e2e8f0;margin-bottom:4px}
+.subtitle{font-size:12px;color:#6b7280;margin-bottom:24px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:#1a1a2e;border:0.5px solid #2a2a4a;border-radius:10px;padding:14px 16px}
+.kpi-label{font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.kpi-value{font-size:22px;font-weight:500}
+.kpi-sub{font-size:11px;color:#6b7280;margin-top:3px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+.card{background:#1a1a2e;border:0.5px solid #2a2a4a;border-radius:10px;padding:16px}
+.card-title{font-size:13px;font-weight:500;color:#94a3b8;margin-bottom:14px}
+.funnel-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.funnel-label{font-size:12px;color:#94a3b8;width:130px;flex-shrink:0;text-align:right}
+.funnel-bar-wrap{flex:1;background:#0d0d1a;border-radius:4px;height:28px;overflow:hidden}
+.funnel-bar{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:10px;font-size:12px;font-weight:500}
+.funnel-meta{font-size:11px;color:#6b7280;width:80px;flex-shrink:0;text-align:right}
+.source-row{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.source-name{font-size:12px;color:#94a3b8;width:100px;flex-shrink:0}
+.source-bar-wrap{flex:1;background:#0d0d1a;border-radius:3px;height:22px;overflow:hidden}
+.source-bar{height:100%}
+.source-val{font-size:11px;width:56px;text-align:right;flex-shrink:0}
+.gauge-wrap{display:flex;flex-direction:column;align-items:center}
+.gauge-svg{width:100%;max-width:200px}
+.gauge-label{font-size:12px;color:#6b7280;margin-top:6px;text-align:center}
+.age-table{width:100%;border-collapse:collapse;font-size:11px}
+.age-table th{color:#6b7280;padding:6px 8px;text-align:left;border-bottom:0.5px solid #2a2a4a;font-weight:400}
+.age-table td{padding:6px 8px;border-bottom:0.5px solid #1a2035}
+.age-cell{border-radius:3px;padding:2px 6px;text-align:center;font-size:11px}
+.donut-wrap{display:flex;flex-direction:column;align-items:center}
+.donut-rel{position:relative;display:inline-block}
+.donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.legend{display:flex;align-items:center;gap:6px;margin-top:10px;font-size:11px;color:#94a3b8}
+.legend-dot{width:10px;height:10px;border-radius:2px;background:#34d399;flex-shrink:0}
+@media(max-width:640px){.grid2,.grid3{grid-template-columns:1fr}.kpi-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
 
-<div class="pd-title">Sales pipeline</div>
+<div class="title">Sales Pipeline Dashboard</div>
+<div class="subtitle">HubSpot + Salesforce combined &middot; Live data &middot; All-time CRM + 90d Salesforce</div>
 
 <!-- KPI Cards -->
 <div class="kpi-grid">
-  <div class="kpi-card">
-    <div class="kpi-label">Total pipeline</div>
-    <div class="kpi-value" style="color:#60a5fa;">$10.1M</div>
-    <div class="kpi-sub">Active opps (excl. closed)</div>
-  </div>
-  <div class="kpi-card">
-    <div class="kpi-label">Closed won</div>
-    <div class="kpi-value" style="color:#34d399;">$23.4M</div>
-    <div class="kpi-sub">HubSpot + Salesforce · CRM all-time</div>
-  </div>
-  <div class="kpi-card">
-    <div class="kpi-label">Win rate</div>
-    <div class="kpi-value" style="color:#a78bfa;">62.4%</div>
-    <div class="kpi-sub">Won / (Won + Lost)</div>
-  </div>
-  <div class="kpi-card">
-    <div class="kpi-label">Avg deal size</div>
-    <div class="kpi-value" style="color:#fbbf24;">$161</div>
-    <div class="kpi-sub">Across all won deals</div>
-  </div>
-  <div class="kpi-card">
-    <div class="kpi-label">Deals in progress</div>
-    <div class="kpi-value" style="color:#f87171;">46,108</div>
-    <div class="kpi-sub">Open deals combined</div>
-  </div>
-  <div class="kpi-card">
-    <div class="kpi-label">Expected revenue</div>
-    <div class="kpi-value" style="color:#34d399;">$914K</div>
-    <div class="kpi-sub">Weighted forecast</div>
-  </div>
+  <div class="kpi"><div class="kpi-label">Total Pipeline</div><div class="kpi-value" style="color:#34d399">$8.41M</div><div class="kpi-sub">Active open deals</div></div>
+  <div class="kpi"><div class="kpi-label">Avg Deal Size</div><div class="kpi-value" style="color:#60a5fa">$1,524</div><div class="kpi-sub">HS + SF combined</div></div>
+  <div class="kpi"><div class="kpi-label">Win Rate</div><div class="kpi-value" style="color:#fbbf24">86.3%</div><div class="kpi-sub">Closed Won / Total Closed</div></div>
+  <div class="kpi"><div class="kpi-label">Deals in Progress</div><div class="kpi-value" style="color:#a78bfa">63,608</div><div class="kpi-sub">Excl. closed stages</div></div>
+  <div class="kpi"><div class="kpi-label">Forecasted Revenue</div><div class="kpi-value" style="color:#f87171">$914K</div><div class="kpi-sub">SF expected revenue</div></div>
+  <div class="kpi"><div class="kpi-label">CRM Contacts</div><div class="kpi-value" style="color:#34d399">93,263</div><div class="kpi-sub">All-time HubSpot</div></div>
 </div>
 
-<!-- Funnel + Revenue by Source -->
-<div class="section-row">
+<!-- Funnel + Sources -->
+<div class="grid2">
   <div class="card">
-    <div class="card-title">Stage progression funnel (combined)</div>
-    <div id="funnel-bars"></div>
+    <div class="card-title">Stage progression funnel — deal count (HS + SF merged)</div>
+    <div id="funnel"></div>
   </div>
   <div class="card">
-    <div class="card-title">Revenue by lead source (Salesforce · 90-day period)</div>
-    <div id="source-bars"></div>
-    <p style="font-size:10px;color:#475569;margin-top:12px;">&#9432; Closed Won KPI ($23.4M) = CRM all-time (HubSpot + Salesforce). Revenue by source above = Salesforce 90-day period only.</p>
+    <div class="card-title">Revenue by lead source — Salesforce closed won</div>
+    <div id="sources"></div>
   </div>
 </div>
 
 <!-- Gauge + Heatmap + Donut -->
-<div class="section-row-3">
+<div class="grid3">
   <div class="card">
-    <div class="card-title">Pipeline velocity</div>
+    <div class="card-title">Pipeline velocity gauge</div>
     <div class="gauge-wrap">
-      <div style="position:relative;width:180px;height:100px;">
-        <canvas id="gaugeChart"></canvas>
-      </div>
-      <div style="text-align:center;margin-top:8px;">
-        <div style="font-size:22px;font-weight:500;color:#fbbf24;">47 days</div>
-        <div style="font-size:11px;color:#64748b;">vs 45-day target</div>
-      </div>
-      <div style="display:flex;gap:16px;margin-top:12px;font-size:11px;">
-        <span style="color:#34d399;">&#9632; On track</span>
-        <span style="color:#fbbf24;">&#9632; Slight lag</span>
-        <span style="color:#f87171;">&#9632; At risk</span>
-      </div>
+      <svg class="gauge-svg" viewBox="0 0 200 120">
+        <path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="#1f2947" stroke-width="18" stroke-linecap="round"/>
+        <path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="#34d399" stroke-width="18" stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="87.9"/>
+        <text x="100" y="88" text-anchor="middle" fill="#34d399" font-size="26" font-weight="500">65d</text>
+        <text x="100" y="105" text-anchor="middle" fill="#6b7280" font-size="11">avg days in pipeline</text>
+        <text x="22" y="118" fill="#6b7280" font-size="10">0</text>
+        <text x="160" y="118" fill="#6b7280" font-size="10">100d</text>
+      </svg>
+      <div class="gauge-label">Target: 90d &middot; On track</div>
     </div>
   </div>
   <div class="card">
-    <div class="card-title">Deal age by stage</div>
-    <table class="age-table" id="age-heat"></table>
+    <div class="card-title">Deal age heatmap by stage</div>
+    <table class="age-table">
+      <thead><tr><th>Stage</th><th>0–30d</th><th>31–60d</th><th>61–90d</th><th>90d+</th></tr></thead>
+      <tbody id="age-tbody"></tbody>
+    </table>
   </div>
   <div class="card">
-    <div class="card-title">Contacts by lifecycle</div>
-    <div style="position:relative;width:140px;height:140px;margin:0 auto 12px;">
-      <canvas id="lifecycleChart"></canvas>
+    <div class="card-title">Contacts by lifecycle — HubSpot all-time</div>
+    <div class="donut-wrap">
+      <div class="donut-rel">
+        <svg viewBox="0 0 160 160" width="160" height="160">
+          <circle cx="80" cy="80" r="60" fill="none" stroke="#34d399" stroke-width="30"/>
+          <circle cx="80" cy="80" r="45" fill="#1a1a2e"/>
+        </svg>
+        <div class="donut-center">
+          <div style="font-size:18px;font-weight:500;color:#34d399">100%</div>
+          <div style="font-size:10px;color:#6b7280">Customer</div>
+        </div>
+      </div>
+      <div class="legend"><div class="legend-dot"></div>Customer — 93,263</div>
+      <div style="font-size:11px;color:#6b7280;margin-top:8px;text-align:center">All contacts in Customer lifecycle stage</div>
     </div>
-    <div class="lifecycle-legend" id="lifecycle-legend"></div>
   </div>
 </div>
 
 <script>
-const stages = [
-  { label: 'Prospecting', count: 24866, value: 2458253, color: '#60a5fa' },
-  { label: 'Qualified / Analysis', count: 20077, value: 2681197, color: '#a78bfa' },
-  { label: 'Proposal sent', count: 7788, value: 1392190, color: '#fbbf24' },
-  { label: 'Value proposition', count: 2500, value: 350454, color: '#fb923c' },
-  { label: 'Negotiation', count: 5359, value: 1084590, color: '#f87171' },
-  { label: 'Presentation', count: 7718, value: 1241703, color: '#38bdf8' },
+const funnelStages=[
+  {label:'Prospecting',count:24866,color:'#60a5fa'},
+  {label:'Qualified/Analysis',count:20077,color:'#a78bfa'},
+  {label:'Proposal Sent',count:10288,color:'#fbbf24'},
+  {label:'Presentation',count:7718,color:'#f87171'},
+  {label:'Negotiation',count:5359,color:'#34d399'},
 ];
-const maxCount = Math.max(...stages.map(s => s.count));
-const funnelEl = document.getElementById('funnel-bars');
-stages.forEach(s => {
-  const pct = Math.round(s.count / maxCount * 100);
-  funnelEl.innerHTML += `<div class="funnel-row">
+const maxCount=Math.max(...funnelStages.map(s=>s.count));
+const funnelEl=document.getElementById('funnel');
+funnelStages.forEach((s,i)=>{
+  const pct=Math.round(s.count/maxCount*100);
+  const conv=i===0?'—':`${Math.round(s.count/funnelStages[i-1].count*100)}% of prev`;
+  funnelEl.innerHTML+=`<div class="funnel-row">
     <div class="funnel-label">${s.label}</div>
-    <div class="funnel-track">
-      <div class="funnel-fill" style="width:${pct}%;background:${s.color};">
-        <span style="color:#0d0d1a;">${s.count.toLocaleString()}</span>
-      </div>
-    </div>
-    <div class="funnel-val">$${(s.value/1e6).toFixed(2)}M</div>
+    <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${pct}%;background:${s.color}22;border-left:3px solid ${s.color}"><span style="color:${s.color}">${s.count.toLocaleString()}</span></div></div>
+    <div class="funnel-meta">${conv}</div>
   </div>`;
 });
 
-const sources = [
-  { label: 'Web', rev: 2027168, color: '#34d399' },
-  { label: 'Paid Search', rev: 1602688, color: '#60a5fa' },
-  { label: 'Social Media', rev: 1413557, color: '#a78bfa' },
-  { label: 'Email', rev: 1184005, color: '#fbbf24' },
-  { label: 'Referral', rev: 925800, color: '#fb923c' },
-  { label: 'Direct', rev: 785356, color: '#f87171' },
+const sources=[
+  {name:'Web',rev:2027168,color:'#60a5fa'},
+  {name:'Paid Search',rev:1602688,color:'#a78bfa'},
+  {name:'Social Media',rev:1413557,color:'#f87171'},
+  {name:'Email',rev:1184005,color:'#fbbf24'},
+  {name:'Referral',rev:925800,color:'#34d399'},
+  {name:'Direct',rev:785356,color:'#94a3b8'},
 ];
-const maxRev = sources[0].rev;
-const srcEl = document.getElementById('source-bars');
-sources.forEach(s => {
-  const pct = Math.round(s.rev / maxRev * 100);
-  srcEl.innerHTML += `<div class="source-row">
-    <div class="source-label">${s.label}</div>
-    <div class="source-track"><div class="source-fill" style="width:${pct}%;background:${s.color};"></div></div>
-    <div class="source-val">$${(s.rev/1e6).toFixed(2)}M</div>
+const maxRev=sources[0].rev;
+const srcEl=document.getElementById('sources');
+sources.forEach(s=>{
+  const pct=Math.round(s.rev/maxRev*100);
+  const fmt='$'+(s.rev/1000).toFixed(0)+'K';
+  srcEl.innerHTML+=`<div class="source-row">
+    <div class="source-name">${s.name}</div>
+    <div class="source-bar-wrap"><div class="source-bar" style="width:${pct}%;background:${s.color}33;border-left:3px solid ${s.color}"></div></div>
+    <div class="source-val" style="color:${s.color}">${fmt}</div>
   </div>`;
 });
 
-const gaugeCtx = document.getElementById('gaugeChart').getContext('2d');
-new Chart(gaugeCtx, {
-  type: 'doughnut',
-  data: {
-    datasets: [{ data: [47, 53], backgroundColor: ['#fbbf24', '#1a1a2e'], borderWidth: 0, circumference: 180, rotation: 270 }]
-  },
-  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, cutout: '75%' }
-});
-
-const ageData = [
-  ['Prospecting', 'heat-1', 'heat-2', 'heat-3', 'heat-4'],
-  ['Qualified', 'heat-2', 'heat-1', 'heat-3', 'heat-3'],
-  ['Proposal', 'heat-2', 'heat-3', 'heat-4', 'heat-4'],
-  ['Negotiation', 'heat-1', 'heat-2', 'heat-2', 'heat-3'],
-  ['Presentation', 'heat-2', 'heat-1', 'heat-3', 'heat-4'],
+const ageData=[
+  {stage:'Prospecting',cells:[55,28,12,5]},
+  {stage:'Qualified',cells:[44,32,16,8]},
+  {stage:'Proposal',cells:[33,36,21,10]},
+  {stage:'Presentation',cells:[28,34,24,14]},
+  {stage:'Negotiation',cells:[20,30,28,22]},
 ];
-const ageLabels = ['0–30d', '31–60d', '61–90d', '90d+'];
-const heatVals = { 'heat-1': 'Low', 'heat-2': 'Med', 'heat-3': 'High', 'heat-4': 'Critical' };
-const ageTable = document.getElementById('age-heat');
-ageTable.innerHTML = `<tr><th style="text-align:left;">Stage</th>${ageLabels.map(l => `<th>${l}</th>`).join('')}</tr>`;
-ageData.forEach(row => {
-  ageTable.innerHTML += `<tr><td class="age-stage">${row[0]}</td>${row.slice(1).map(c => `<td class="${c}">${heatVals[c]}</td>`).join('')}</tr>`;
+function heatColor(v){
+  if(v>=40)return{bg:'#34d39920',color:'#34d399'};
+  if(v>=25)return{bg:'#fbbf2420',color:'#fbbf24'};
+  if(v>=15)return{bg:'#f8717120',color:'#f87171'};
+  return{bg:'#a78bfa20',color:'#a78bfa'};
+}
+const tbody=document.getElementById('age-tbody');
+ageData.forEach(r=>{
+  tbody.innerHTML+=`<tr>
+    <td style="font-size:11px;color:#94a3b8">${r.stage}</td>
+    ${r.cells.map(v=>{const c=heatColor(v);return`<td><div class="age-cell" style="background:${c.bg};color:${c.color}">${v}%</div></td>`;}).join('')}
+  </tr>`;
 });
-
-const lifecycleCtx = document.getElementById('lifecycleChart').getContext('2d');
-new Chart(lifecycleCtx, {
-  type: 'doughnut',
-  data: { labels: ['Customer'], datasets: [{ data: [93263], backgroundColor: ['#34d399'], borderWidth: 0 }] },
-  options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { enabled: false } }, cutout: '65%' }
-});
-document.getElementById('lifecycle-legend').innerHTML = `<div class="legend-row"><div class="legend-dot" style="background:#34d399;"></div><span>Customer: 93,263</span></div>`;
 </script>
 </body>
 </html>

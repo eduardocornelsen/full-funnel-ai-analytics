@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GA4 Traffic Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0d0d1a;color:#e2e8f0}
+.dash{min-height:100vh;padding:24px;max-width:1400px;margin:0 auto}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.header-title{font-size:20px;font-weight:600;color:#e2e8f0}
+.header-sub{font-size:12px;color:#475569;margin-top:3px}
+.badge{display:inline-block;font-size:11px;color:#334155;background:#1a1a2e;border:1px solid #2a2a4a;padding:4px 10px;border-radius:6px}
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px}
+.kpi{background:#1a1a2e;border:1px solid #2a2a4a;border-radius:10px;padding:14px 16px}
+.kpi-label{font-size:11px;color:#64748b;margin-bottom:6px;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+.kpi-value{font-size:22px;font-weight:600;line-height:1}
+.kpi-sub{font-size:11px;color:#475569;margin-top:4px}
+.blue{color:#60a5fa}.green{color:#34d399}.amber{color:#fbbf24}.coral{color:#f87171}.purple{color:#a78bfa}
+.chart-card{background:#1a1a2e;border:1px solid #2a2a4a;border-radius:10px;padding:16px;margin-bottom:20px}
+.chart-title{font-size:13px;font-weight:500;color:#94a3b8;margin-bottom:14px}
+.anomaly-card{background:#1a1a2e;border:1px solid #f87171;border-radius:10px;padding:14px 16px;margin-bottom:20px;display:flex;gap:12px;align-items:flex-start}
+.anomaly-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.anomaly-title{font-size:12px;font-weight:600;color:#f87171;margin-bottom:4px}
+.anomaly-text{font-size:12px;color:#94a3b8;line-height:1.5}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.channel-table{width:100%;border-collapse:collapse;font-size:12px}
+.channel-table th{color:#475569;font-weight:500;text-align:left;padding:6px 10px;border-bottom:1px solid #2a2a4a;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.channel-table td{padding:8px 10px;border-bottom:1px solid #1e1e32;color:#94a3b8;vertical-align:middle}
+.channel-table tr:last-child td{border-bottom:none}
+.channel-table tr:hover td{background:rgba(255,255,255,.02)}
+.ch-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+.cvr-badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:600}
+.badge-good{background:rgba(52,211,153,.15);color:#34d399}
+.badge-mid{background:rgba(251,191,36,.12);color:#fbbf24}
+.badge-low{background:rgba(248,113,113,.12);color:#f87171}
+.legend-row{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px;font-size:11px;color:#64748b}
+.legend-item{display:flex;align-items:center;gap:5px}
+.legend-sq{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+@media(max-width:640px){
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .two-col{grid-template-columns:1fr}
+  .header{flex-direction:column;align-items:flex-start;gap:8px}
+}
+</style>
+</head>
+<body>
+<div class="dash">
+  <div class="header">
+    <div>
+      <div class="header-title">Web Traffic Dashboard</div>
+      <div class="header-sub">GA4 · Last 90 days · All channels</div>
+    </div>
+    <div class="badge">CVR = session-based</div>
+  </div>
+
+  <div class="kpi-grid" id="kpis"></div>
+  <div id="anomaly-box"></div>
+
+  <div class="chart-card">
+    <div class="chart-title">Sessions over time — daily + 7-day rolling average</div>
+    <div class="legend-row">
+      <span class="legend-item"><span class="legend-sq" style="background:#60a5fa"></span>Sessions</span>
+      <span class="legend-item"><span class="legend-sq" style="background:#fbbf24"></span>7-day avg</span>
+    </div>
+    <div style="position:relative;width:100%;height:260px"><canvas id="trendChart"></canvas></div>
+  </div>
+
+  <div class="two-col">
+    <div class="chart-card" style="margin-bottom:0">
+      <div class="chart-title">Sessions vs Conversions by channel</div>
+      <div class="legend-row">
+        <span class="legend-item"><span class="legend-sq" style="background:rgba(96,165,250,.5)"></span>Sessions (÷100)</span>
+        <span class="legend-item"><span class="legend-sq" style="background:rgba(167,139,250,.5)"></span>Conversions</span>
+      </div>
+      <div style="position:relative;width:100%;height:280px"><canvas id="barChart"></canvas></div>
+    </div>
+    <div class="chart-card" style="margin-bottom:0">
+      <div class="chart-title">Channel share — sessions</div>
+      <div id="donut-legend" class="legend-row" style="margin-bottom:8px"></div>
+      <div style="position:relative;width:100%;height:240px"><canvas id="donutChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card" style="margin-top:20px">
+    <div class="chart-title">Channel breakdown — CVR (session)</div>
+    <table class="channel-table">
+      <thead><tr>
+        <th>Channel</th>
+        <th style="text-align:right">Sessions</th>
+        <th style="text-align:right">Engaged</th>
+        <th style="text-align:right">Conversions</th>
+        <th style="text-align:right">Eng. Rate</th>
+        <th style="text-align:right">CVR (session)</th>
+      </tr></thead>
+      <tbody id="channelRows"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const CH_DATA = [
+  {name:'Organic Search',sessions:743373,engaged:408531,conv:17575,er:0.5496,cvr:0.02364,color:'#60a5fa'},
+  {name:'Paid Search',sessions:596369,engaged:369406,conv:18292,er:0.6194,cvr:0.03067,color:'#34d399'},
+  {name:'Direct',sessions:448961,engaged:313632,conv:14810,er:0.6986,cvr:0.03299,color:'#a78bfa'},
+  {name:'Paid Social',sessions:532470,engaged:238282,conv:8638,er:0.4475,cvr:0.01622,color:'#fbbf24'},
+  {name:'Email',sessions:295253,engaged:220792,conv:11543,er:0.7478,cvr:0.03910,color:'#f87171'},
+  {name:'Referral',sessions:207840,engaged:103021,conv:3169,er:0.4957,cvr:0.01525,color:'#fb923c'},
+  {name:'Organic Social',sessions:147369,engaged:58079,conv:951,er:0.3941,cvr:0.00645,color:'#38bdf8'},
+];
+
+const totalSess=CH_DATA.reduce((s,c)=>s+c.sessions,0);
+const totalEng=CH_DATA.reduce((s,c)=>s+c.engaged,0);
+const totalConv=CH_DATA.reduce((s,c)=>s+c.conv,0);
+const overallEr=totalEng/totalSess;
+const overallCvr=totalConv/totalSess;
+
+const fmt=n=>n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n;
+const pct=n=>(n*100).toFixed(2)+'%';
+
+document.getElementById('kpis').innerHTML=`
+  <div class="kpi"><div class="kpi-label">Total Sessions</div><div class="kpi-value blue">${fmt(totalSess)}</div><div class="kpi-sub">All channels · 90d</div></div>
+  <div class="kpi"><div class="kpi-label">Engaged Sessions</div><div class="kpi-value green">${fmt(totalEng)}</div><div class="kpi-sub">Eng. rate ${pct(overallEr)}</div></div>
+  <div class="kpi"><div class="kpi-label">Total Conversions</div><div class="kpi-value amber">${fmt(totalConv)}</div><div class="kpi-sub">All channels · 90d</div></div>
+  <div class="kpi"><div class="kpi-label">CVR (session)</div><div class="kpi-value coral">${pct(overallCvr)}</div><div class="kpi-sub">Conversions / Sessions</div></div>
+  <div class="kpi"><div class="kpi-label">Engagement Rate</div><div class="kpi-value purple">${pct(overallEr)}</div><div class="kpi-sub">Engaged / Total sessions</div></div>
+`;
+
+const DAILY=[{"date":"2026-01-01","sessions":5510},{"date":"2026-01-02","sessions":5449},{"date":"2026-01-03","sessions":5775},{"date":"2026-01-04","sessions":5603},{"date":"2026-01-05","sessions":4192},{"date":"2026-01-06","sessions":4073},{"date":"2026-01-07","sessions":5214},{"date":"2026-01-08","sessions":5450},{"date":"2026-01-09","sessions":5612},{"date":"2026-01-10","sessions":5968},{"date":"2026-01-11","sessions":5668},{"date":"2026-01-12","sessions":3858},{"date":"2026-01-13","sessions":3682},{"date":"2026-01-14","sessions":4991},{"date":"2026-01-15","sessions":4817},{"date":"2026-01-16","sessions":4850},{"date":"2026-01-17","sessions":4955},{"date":"2026-01-18","sessions":5041},{"date":"2026-01-19","sessions":3851},{"date":"2026-01-20","sessions":3600},{"date":"2026-01-21","sessions":4780},{"date":"2026-01-22","sessions":4498},{"date":"2026-01-23","sessions":4796},{"date":"2026-01-24","sessions":5145},{"date":"2026-01-25","sessions":4794},{"date":"2026-01-26","sessions":4009},{"date":"2026-01-27","sessions":3935},{"date":"2026-01-28","sessions":5137},{"date":"2026-01-29","sessions":5168},{"date":"2026-01-30","sessions":4843},{"date":"2026-01-31","sessions":4701},{"date":"2026-02-01","sessions":5228},{"date":"2026-02-02","sessions":3796},{"date":"2026-02-03","sessions":3620},{"date":"2026-02-04","sessions":4849},{"date":"2026-02-05","sessions":5289},{"date":"2026-02-06","sessions":5172},{"date":"2026-02-07","sessions":5343},{"date":"2026-02-08","sessions":5409},{"date":"2026-02-09","sessions":3506},{"date":"2026-02-10","sessions":3459},{"date":"2026-02-11","sessions":4764},{"date":"2026-02-12","sessions":5058},{"date":"2026-02-13","sessions":4941},{"date":"2026-02-14","sessions":5014},{"date":"2026-02-15","sessions":5109},{"date":"2026-02-16","sessions":3676},{"date":"2026-02-17","sessions":3623},{"date":"2026-02-18","sessions":4904},{"date":"2026-02-19","sessions":4866},{"date":"2026-02-20","sessions":5224},{"date":"2026-02-21","sessions":5001},{"date":"2026-02-22","sessions":4877},{"date":"2026-02-23","sessions":3689},{"date":"2026-02-24","sessions":3907},{"date":"2026-02-25","sessions":5231},{"date":"2026-02-26","sessions":4732},{"date":"2026-02-27","sessions":5411},{"date":"2026-02-28","sessions":4970},{"date":"2026-03-01","sessions":4843},{"date":"2026-03-02","sessions":3819},{"date":"2026-03-03","sessions":3839},{"date":"2026-03-04","sessions":5020},{"date":"2026-03-05","sessions":4839},{"date":"2026-03-06","sessions":4975},{"date":"2026-03-07","sessions":4778},{"date":"2026-03-08","sessions":4831},{"date":"2026-03-09","sessions":3945},{"date":"2026-03-10","sessions":3734},{"date":"2026-03-11","sessions":5209},{"date":"2026-03-12","sessions":5011},{"date":"2026-03-13","sessions":5236},{"date":"2026-03-14","sessions":5019},{"date":"2026-03-15","sessions":5176}];
+
+const labels90=DAILY.map(d=>d.date.slice(5));
+const sessions90=DAILY.map(d=>d.sessions);
+
+function rollingAvg(arr,w){
+  return arr.map((_,i)=>{
+    const start=Math.max(0,i-w+1);
+    const slice=arr.slice(start,i+1);
+    return Math.round(slice.reduce((a,b)=>a+b,0)/slice.length);
+  });
+}
+const rolling7=rollingAvg(sessions90,7);
+
+new Chart(document.getElementById('trendChart'),{
+  type:'line',
+  data:{
+    labels:labels90,
+    datasets:[
+      {label:'Sessions',data:sessions90,borderColor:'#60a5fa',backgroundColor:'rgba(96,165,250,.08)',borderWidth:1.5,pointRadius:0,tension:.3,fill:true},
+      {label:'7-day avg',data:rolling7,borderColor:'#fbbf24',borderWidth:2,borderDash:[4,3],pointRadius:0,tension:.3,fill:false},
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,backgroundColor:'#1a1a2e',borderColor:'#2a2a4a',borderWidth:1,titleColor:'#94a3b8',bodyColor:'#cbd5e1'}},
+    scales:{
+      x:{ticks:{color:'#475569',maxTicksLimit:10,maxRotation:0,font:{size:10}},grid:{color:'#1e1e32'}},
+      y:{ticks:{color:'#475569',font:{size:10},callback:v=>v>=1000?(v/1000).toFixed(0)+'K':v},grid:{color:'#1e1e32'}}
+    }
+  }
+});
+
+new Chart(document.getElementById('barChart'),{
+  type:'bar',
+  data:{
+    labels:CH_DATA.map(c=>c.name.split(' ')[0]),
+    datasets:[
+      {label:'Sessions (÷100)',data:CH_DATA.map(c=>Math.round(c.sessions/100)),backgroundColor:'rgba(96,165,250,.35)',borderColor:'#60a5fa',borderWidth:1},
+      {label:'Conversions',data:CH_DATA.map(c=>c.conv),backgroundColor:CH_DATA.map(c=>c.color+'55'),borderColor:CH_DATA.map(c=>c.color),borderWidth:1},
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a1a2e',borderColor:'#2a2a4a',borderWidth:1,titleColor:'#94a3b8',bodyColor:'#cbd5e1'}},
+    scales:{
+      x:{ticks:{color:'#475569',font:{size:10}},grid:{color:'#1e1e32'}},
+      y:{ticks:{color:'#475569',font:{size:10}},grid:{color:'#1e1e32'}}
+    }
+  }
+});
+
+const totalSessFull=CH_DATA.reduce((s,c)=>s+c.sessions,0);
+const donutData=CH_DATA.map(c=>Math.round(c.sessions/totalSessFull*1000)/10);
+const donutLegend=document.getElementById('donut-legend');
+CH_DATA.forEach((c,i)=>{
+  donutLegend.innerHTML+=`<span class="legend-item"><span class="legend-sq" style="background:${c.color}"></span>${c.name.split(' ').slice(-1)[0]} ${donutData[i]}%</span>`;
+});
+new Chart(document.getElementById('donutChart'),{
+  type:'doughnut',
+  data:{
+    labels:CH_DATA.map(c=>c.name),
+    datasets:[{data:donutData,backgroundColor:CH_DATA.map(c=>c.color+'cc'),borderColor:'#0d0d1a',borderWidth:2}]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a1a2e',borderColor:'#2a2a4a',borderWidth:1,titleColor:'#94a3b8',bodyColor:'#cbd5e1',callbacks:{label:ctx=>`${ctx.label}: ${ctx.formattedValue}%`}}}
+  }
+});
+
+const tbody=document.getElementById('channelRows');
+const sorted=[...CH_DATA].sort((a,b)=>b.sessions-a.sessions);
+sorted.forEach(c=>{
+  const cvrBadge=c.cvr>=0.035?'badge-good':c.cvr>=0.02?'badge-mid':'badge-low';
+  tbody.innerHTML+=`<tr>
+    <td><span class="ch-dot" style="background:${c.color}"></span>${c.name}</td>
+    <td style="text-align:right;color:#e2e8f0;font-weight:500">${fmt(c.sessions)}</td>
+    <td style="text-align:right">${fmt(c.engaged)}</td>
+    <td style="text-align:right;color:#e2e8f0">${fmt(c.conv)}</td>
+    <td style="text-align:right">${pct(c.er)}</td>
+    <td style="text-align:right"><span class="cvr-badge ${cvrBadge}">${pct(c.cvr)}</span></td>
+  </tr>`;
+});
+
+function detectAnomalies(data){
+  const results=[];
+  for(let i=7;i<data.length;i++){
+    const prev7=data.slice(i-7,i).map(d=>d.sessions);
+    const avg=prev7.reduce((a,b)=>a+b,0)/7;
+    const pctChg=(data[i].sessions-avg)/avg;
+    if(Math.abs(pctChg)>.30){
+      results.push({date:data[i].date,sessions:data[i].sessions,avg:Math.round(avg),pct:pctChg,dir:pctChg>0?'spike':'drop'});
+    }
+  }
+  return results;
+}
+const anomalies=detectAnomalies(DAILY);
+const abox=document.getElementById('anomaly-box');
+if(anomalies.length){
+  const last=anomalies[anomalies.length-1];
+  const col=last.dir==='spike'?'#34d399':'#f87171';
+  abox.innerHTML=`<div class="anomaly-card"><div class="anomaly-icon" style="color:${col}">${last.dir==='spike'?'▲':'▼'}</div><div><div class="anomaly-title">${last.dir==='spike'?'↑ Spike':'↓ Drop'} flagged — ${last.date}</div><div class="anomaly-text">Sessions on ${last.date}: <strong style="color:#e2e8f0">${last.sessions.toLocaleString()}</strong> vs prior 7-day avg of <strong style="color:#e2e8f0">${last.avg.toLocaleString()}</strong> — a ${(last.pct*100).toFixed(0)}% ${last.dir}. ${anomalies.length-1} other anomalies detected in the 90-day window.</div></div></div>`;
+}
+</script>
+</body>
+</html>

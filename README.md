@@ -61,6 +61,19 @@ Most AI-to-SQL tools fail because they lack a **"source of truth."** This projec
 
 > Update status: 🔲 Not started · 🟡 In progress · ✅ Complete
 
+### 🚀 Project Scale & Health
+
+| Component | Detail |
+| :--- | :--- |
+| **Data Volume** | 23 CSV files, **2.2M+ rows**, dates 2016–2018 aligned |
+| **DuckDB Warehouse** | **46 objects** (staging views + mart tables), all populated ✓ |
+| **dbt Models** | **29 models**, all materialized, column names verified end-to-end |
+| **MCP Servers** | **All 7 servers** — column references cross-checked against CSVs |
+| **Streamlit App** | 5 tabs, all DuckDB queries valid, AI analyst wired correctly |
+| **ML Pipeline** | XGBoost trained (**93K rows**), FastAPI `/score` endpoint ready |
+| **Semantic Layer** | **5 semantic models** + **13 metrics** defined & governed |
+| **Dependencies** | All **27 core packages** importable |
+
 ---
 
 ## The Problem

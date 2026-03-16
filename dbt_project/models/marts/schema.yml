@@ -1,0 +1,129 @@
+version: 2
+
+models:
+  - name: fct_orders
+    description: Central fact table — delivered orders with revenue, attribution, and review data
+    columns:
+      - name: order_id
+        tests:
+          - not_null
+      - name: customer_id
+        tests:
+          - not_null
+      - name: order_date
+        tests:
+          - not_null
+      - name: revenue
+        tests:
+          - not_null
+
+  - name: fct_marketing_daily
+    description: Daily spend, conversions, and session KPIs per channel
+    columns:
+      - name: date
+        tests:
+          - not_null
+      - name: total_spend
+        tests:
+          - not_null
+
+  - name: fct_channel_performance
+    description: Aggregated spend, revenue, orders, ROAS, and CAC per channel
+    columns:
+      - name: channel
+        tests:
+          - unique
+          - not_null
+      - name: total_spend
+        tests:
+          - not_null
+      - name: attributed_revenue
+        tests:
+          - not_null
+
+  - name: fct_marketing_attribution
+    description: Revenue credited to each channel under four attribution models
+    columns:
+      - name: channel
+        tests:
+          - unique
+          - not_null
+      - name: first_touch_revenue
+        tests:
+          - not_null
+      - name: last_touch_revenue
+        tests:
+          - not_null
+      - name: linear_revenue
+        tests:
+          - not_null
+      - name: time_decay_revenue
+        tests:
+          - not_null
+
+  - name: fct_pipeline
+    description: Funnel and pipeline counts by attribution channel
+    columns:
+      - name: attribution_channel
+        tests:
+          - unique
+          - not_null
+
+  - name: fct_lead_scoring_features
+    description: Feature table for XGBoost lead scoring model — one row per customer
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+      - name: total_orders
+        tests:
+          - not_null
+      - name: is_high_value
+        tests:
+          - not_null
+
+  - name: fct_daily_revenue
+    description: Daily revenue aggregation across all delivered orders
+    columns:
+      - name: order_date
+        tests:
+          - unique
+          - not_null
+      - name: total_revenue
+        tests:
+          - not_null
+
+  - name: dim_customers
+    description: Customer dimension with enrichment and LTV data
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+      - name: customer_state
+        tests:
+          - not_null
+
+  - name: dim_products
+    description: Product dimension with translated category names
+    columns:
+      - name: product_id
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_campaigns
+    description: Unified campaign dimension across Google Ads and Meta Ads
+    columns:
+      - name: campaign_id
+        tests:
+          - not_null
+
+  - name: metricflow_time_spine
+    description: MetricFlow-required time spine — one row per day from 2016-01-01 to 2019-12-31
+    columns:
+      - name: date_day
+        tests:
+          - unique
+          - not_null

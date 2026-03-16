@@ -19,6 +19,15 @@
     "salesforce": {
       "command": "python",
       "args": ["/home/duds0/agents/projects/full-funnel-ai-analytics/mcp_servers/mock_salesforce_server.py"]
+    },
+    "dbt-semantic-layer": {
+      "command": "uvx",
+      "args": [
+        "dbt-mcp",
+        "--project-dir", "/home/duds0/agents/projects/full-funnel-ai-analytics/dbt_project",
+        "--profiles-dir", "/home/duds0/agents/projects/full-funnel-ai-analytics/dbt_project",
+        "--target", "duckdb"
+      ]
     }
   }
 }

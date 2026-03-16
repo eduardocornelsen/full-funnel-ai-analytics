@@ -9,4 +9,5 @@ SELECT
     COUNT(DISTINCT CASE WHEN order_status = 'delivered' THEN order_id END) AS closed_won,
     SUM(CASE WHEN order_status = 'delivered' THEN 1 ELSE 0 END) AS total_conversions
 FROM funnel
+WHERE attribution_channel IS NOT NULL
 GROUP BY 1

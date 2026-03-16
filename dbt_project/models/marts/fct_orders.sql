@@ -20,11 +20,12 @@ payments AS (
     GROUP BY 1
 ),
 reviews AS (
-    SELECT 
-        order_id, 
-        review_score, 
-        is_positive 
+    SELECT
+        order_id,
+        MAX(review_score) AS review_score,
+        MAX(CASE WHEN review_score >= 4 THEN 1 ELSE 0 END) AS is_positive
     FROM {{ ref('stg_order_reviews') }}
+    GROUP BY 1
 ),
 customers AS (
     SELECT * FROM {{ ref('stg_customers') }}
@@ -42,7 +43,7 @@ SELECT
     o.order_id, o.customer_id, o.order_date, o.order_year, o.order_month,
     o.order_status, o.delivery_days, o.is_late_delivery,
     i.item_count, i.items_total, i.freight_total,
-    p.payment_total AS revenue, p.primary_payment_type,
+    COALESCE(p.payment_total, 0) AS revenue, p.primary_payment_type,
     r.review_score, r.is_positive AS positive_review,
     c.customer_city, c.customer_state,
     a.first_touch_channel, a.last_touch_channel, a.touchpoint_count

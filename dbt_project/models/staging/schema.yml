@@ -1,0 +1,189 @@
+version: 2
+
+models:
+  - name: stg_orders
+    description: Cleaned and typed orders from Olist
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        tests:
+          - not_null
+      - name: order_status
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['delivered', 'shipped', 'canceled', 'invoiced', 'processing',
+                       'approved', 'unavailable', 'created']
+      - name: order_date
+        tests:
+          - not_null
+
+  - name: stg_customers
+    description: Cleaned customer records
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+      - name: customer_state
+        tests:
+          - not_null
+
+  - name: stg_order_items
+    description: Individual line items per order
+    columns:
+      - name: order_id
+        tests:
+          - not_null
+      - name: price
+        tests:
+          - not_null
+
+  - name: stg_order_payments
+    description: Payment records per order
+    columns:
+      - name: order_id
+        tests:
+          - not_null
+      - name: payment_value
+        tests:
+          - not_null
+      - name: payment_type
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['credit_card', 'boleto', 'voucher', 'debit_card', 'not_defined']
+
+  - name: stg_order_reviews
+    description: Customer review scores per order
+    columns:
+      - name: order_id
+        tests:
+          - not_null
+      - name: review_score
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5]
+
+  - name: stg_products
+    description: Product catalog
+    columns:
+      - name: product_id
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_sellers
+    description: Seller records
+    columns:
+      - name: seller_id
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_ga4_sessions
+    description: Daily web sessions from GA4 by channel
+    columns:
+      - name: date
+        tests:
+          - not_null
+      - name: channel_group
+        tests:
+          - not_null
+      - name: sessions
+        tests:
+          - not_null
+
+  - name: stg_google_ads_performance
+    description: Daily Google Ads campaign performance
+    columns:
+      - name: date
+        tests:
+          - not_null
+      - name: campaign_id
+        tests:
+          - not_null
+      - name: cost
+        tests:
+          - not_null
+
+  - name: stg_meta_ads_performance
+    description: Daily Meta Ads campaign performance
+    columns:
+      - name: date
+        tests:
+          - not_null
+      - name: campaign_id
+        tests:
+          - not_null
+      - name: spend
+        tests:
+          - not_null
+
+  - name: stg_hubspot_contacts
+    description: CRM contacts from HubSpot
+    columns:
+      - name: contact_id
+        tests:
+          - unique
+          - not_null
+      - name: lifecycle_stage
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['subscriber', 'lead', 'marketing_qualified_lead',
+                       'sales_qualified_lead', 'opportunity', 'customer', 'evangelist']
+
+  - name: stg_hubspot_deals
+    description: CRM deals from HubSpot with pipeline stages
+    columns:
+      - name: deal_id
+        tests:
+          - unique
+          - not_null
+      - name: deal_stage
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['prospecting', 'qualified', 'presentation_scheduled',
+                       'proposal_sent', 'negotiation', 'closed_won', 'closed_lost']
+      - name: amount
+        tests:
+          - not_null
+
+  - name: stg_salesforce_opportunities
+    description: Opportunities from Salesforce with pipeline stages
+    columns:
+      - name: opportunity_id
+        tests:
+          - unique
+          - not_null
+      - name: stage
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Prospecting', 'Qualification', 'Needs Analysis',
+                       'Value Proposition', 'Proposal/Price Quote',
+                       'Negotiation/Review', 'Closed Won', 'Closed Lost']
+      - name: probability
+        tests:
+          - not_null
+
+  - name: stg_marketing_attribution
+    description: Multi-touch attribution touchpoints per order
+    columns:
+      - name: order_id
+        tests:
+          - not_null
+      - name: channel
+        tests:
+          - not_null

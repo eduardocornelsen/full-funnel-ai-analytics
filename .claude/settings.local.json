@@ -19,7 +19,12 @@
       "Read(//home/duds0/agents/projects/full-funnel-ai-analytics/**)",
       "Bash(done)",
       "Bash(wc:*)",
-      "Bash(head:*)"
+      "Bash(head:*)",
+      "Bash(cd:*)",
+      "Bash(dbt test:*)",
+      "Bash(dbt ls:*)",
+      "Bash(dbt parse:*)",
+      "Bash(dbt run:*)"
     ]
   }
 }

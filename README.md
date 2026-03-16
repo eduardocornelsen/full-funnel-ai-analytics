@@ -85,7 +85,7 @@ Answering this requires joining data from 5+ platforms, building attribution mod
 ## What This Project Does
 
 ### Data Sources → MCP Servers → AI Clients
-![full_funnel_architecture_flow](full_funnel_architecture_flow.svg)
+![full_funnel_architecture_flow](docs/images/full_funnel_architecture_flow.svg)
 
 
 
@@ -280,7 +280,7 @@ Enterprise warehouse demos use free trials: Snowflake (30-day, ~$400 credits) an
 
 ## Quick Start
 
-**New!** See the [Step-by-Step Setup & Execution Guide](file:///home/duds0/agents/projects/full-funnel-ai-analytics/SETUP_GUIDE.md) for full instructions.
+**New!** See the [Step-by-Step Setup & Execution Guide](docs/guides/setup_guide.md) for full instructions.
 
 ```bash
 # 1. Clone

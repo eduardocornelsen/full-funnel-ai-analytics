@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marketing Executive Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0d0d1a;color:#e2e8f0;font-family:system-ui,-apple-system,sans-serif;padding:20px;min-height:100vh}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:8px}
+.header-left h1{font-size:20px;font-weight:500;color:#f1f5f9}
+.header-left p{font-size:12px;color:#64748b;margin-top:3px}
+.badge{background:#1e1b4b;color:#818cf8;font-size:11px;padding:4px 12px;border-radius:20px;border:1px solid #312e81}
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.kpi{background:#111827;border:1px solid #1e293b;border-radius:10px;padding:16px}
+.kpi-label{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.kpi-value{font-size:24px;font-weight:500;line-height:1}
+.kpi-sub{font-size:11px;color:#475569;margin-top:6px}
+.coral{color:#f87171}.blue{color:#60a5fa}.amber{color:#fbbf24}.green{color:#34d399}.purple{color:#a78bfa}
+.section-label{font-size:11px;font-weight:500;color:#64748b;text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px}
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.chart-card{background:#111827;border:1px solid #1e293b;border-radius:10px;padding:16px}
+.chart-card.full{grid-column:1/-1}
+.chart-wrap{position:relative;width:100%}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px;font-size:11px;color:#94a3b8}
+.legend span{display:flex;align-items:center;gap:5px}
+.dot{width:8px;height:8px;border-radius:2px;display:inline-block;flex-shrink:0}
+.funnel-wrap{display:flex;flex-direction:column;gap:8px}
+.funnel-row{display:flex;align-items:center;gap:10px}
+.funnel-label{font-size:12px;color:#94a3b8;width:90px;flex-shrink:0;text-align:right}
+.funnel-bar-wrap{flex:1;background:#1e293b;border-radius:4px;height:28px;overflow:hidden}
+.funnel-bar{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:10px;font-size:11px;font-weight:500;color:#0d0d1a}
+.funnel-val{font-size:12px;color:#94a3b8;width:40px;flex-shrink:0;text-align:right}
+.attrib-grid{display:flex;flex-direction:column;gap:8px}
+.attrib-row{display:flex;align-items:center;gap:8px}
+.attrib-channel{font-size:12px;color:#94a3b8;width:90px;flex-shrink:0}
+.attrib-track{flex:1;background:#1e293b;border-radius:3px;height:8px;overflow:hidden}
+.attrib-fill{height:100%;border-radius:3px}
+.attrib-val{font-size:11px;color:#64748b;width:52px;text-align:right;flex-shrink:0}
+.footer{text-align:center;font-size:11px;color:#334155;margin-top:24px;padding-top:16px;border-top:1px solid #1e293b}
+@media(max-width:640px){
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .charts-row{grid-template-columns:1fr}
+  .chart-card.full{grid-column:1}
+  .kpi-value{font-size:20px}
+  .funnel-label{width:70px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>Marketing Executive Dashboard</h1>
+    <p>Google Ads · Meta Ads · GA4 · HubSpot · Salesforce</p>
+  </div>
+  <div class="badge">Live data · March 2026</div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi">
+    <div class="kpi-label">Total Ad Spend</div>
+    <div class="kpi-value coral">$742K</div>
+    <div class="kpi-sub">Google $352K · Meta $391K</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">SF Revenue (Won)</div>
+    <div class="kpi-value blue">$7.94M</div>
+    <div class="kpi-sub">Salesforce closed-won · 90-day · 6 sources</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Blended ROAS</div>
+    <div class="kpi-value amber">8.8×</div>
+    <div class="kpi-sub">SF Closed Won ÷ total spend · 90-day period</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">HubSpot Pipeline</div>
+    <div class="kpi-value purple">$15.4M</div>
+    <div class="kpi-sub">96,478 deals closed won (CRM all-time)</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Total Sessions (GA4)</div>
+    <div class="kpi-value blue">2.97M</div>
+    <div class="kpi-sub">74,978 total conversions</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">CRM Customers</div>
+    <div class="kpi-value green">93,263</div>
+    <div class="kpi-sub">Top city: São Paulo 14.5K</div>
+  </div>
+</div>
+
+<div class="charts-row">
+  <div class="chart-card full">
+    <div class="section-label">Ad Spend vs Revenue by Source</div>
+    <div class="legend">
+      <span><span class="dot" style="background:#f87171"></span>Ad spend ($K)</span>
+      <span><span class="dot" style="background:#60a5fa"></span>SF revenue ($K)</span>
+    </div>
+    <div class="chart-wrap" style="height:220px"><canvas id="spendChart"></canvas></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="section-label">Channel Attribution (GA4 Sessions)</div>
+    <div class="legend" id="attribLegend"></div>
+    <div class="chart-wrap" style="height:200px"><canvas id="attribChart"></canvas></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="section-label">Google Ads — Campaign Spend vs Conversions</div>
+    <div class="legend">
+      <span><span class="dot" style="background:#fbbf24"></span>Cost ($K)</span>
+      <span><span class="dot" style="background:#34d399"></span>Conversions</span>
+    </div>
+    <div class="chart-wrap" style="height:200px"><canvas id="gadsChart"></canvas></div>
+  </div>
+</div>
+
+<div class="charts-row">
+  <div class="chart-card">
+    <div class="section-label">Sales Funnel</div>
+    <div class="funnel-wrap" id="funnelWrap"></div>
+    <p style="font-size:11px;color:#334155;margin-top:10px;">&#9432; CRM Contacts: 93,263 (HubSpot all-time) — excluded from funnel; separate from GA4 conversions.</p>
+  </div>
+  <div class="chart-card">
+    <div class="section-label">Revenue by Lead Source (Salesforce · 90-day period)</div>
+    <div class="attrib-grid" id="sfAttrib"></div>
+  </div>
+</div>
+
+<div class="charts-row">
+  <div class="chart-card full">
+    <div class="section-label">Monthly Sessions Trend (GA4 · Historical dataset · 2017)</div>
+    <div class="chart-wrap" style="height:180px"><canvas id="trendChart"></canvas></div>
+  </div>
+</div>
+
+<div class="footer">Generated from live MCP data · Google Ads · Meta Ads · GA4 · HubSpot · Salesforce</div>
+
+<script>
+const gridColor='#1e293b',tickColor='#475569';
+
+new Chart(document.getElementById('spendChart'),{
+  type:'bar',
+  data:{
+    labels:['Direct','Email','Paid Search','Referral','Social','Web'],
+    datasets:[
+      {label:'Ad Spend',data:[0,0,352,0,391,0],backgroundColor:'#f87171',borderRadius:4,barPercentage:.4},
+      {label:'Revenue',data:[785,1184,1603,926,1414,2027],backgroundColor:'#60a5fa',borderRadius:4,barPercentage:.4}
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{ticks:{color:tickColor,font:{size:10}},grid:{color:gridColor}},
+      y:{ticks:{color:tickColor,font:{size:10},callback:v=>'$'+Math.round(v)+'K'},grid:{color:gridColor}}
+    }
+  }
+});
+
+const ga4=[
+  {ch:'Organic Search',sessions:743373,color:'#60a5fa'},
+  {ch:'Paid Search',sessions:596369,color:'#f87171'},
+  {ch:'Paid Social',sessions:532470,color:'#a78bfa'},
+  {ch:'Direct',sessions:448961,color:'#fbbf24'},
+  {ch:'Email',sessions:295253,color:'#34d399'},
+  {ch:'Referral',sessions:207840,color:'#fb923c'},
+  {ch:'Organic Social',sessions:147369,color:'#38bdf8'}
+];
+const totalSess=ga4.reduce((s,c)=>s+c.sessions,0);
+const leg=document.getElementById('attribLegend');
+ga4.forEach(c=>{
+  const pct=((c.sessions/totalSess)*100).toFixed(1);
+  leg.innerHTML+=`<span><span class="dot" style="background:${c.color}"></span>${c.ch} ${pct}%</span>`;
+});
+new Chart(document.getElementById('attribChart'),{
+  type:'doughnut',
+  data:{labels:ga4.map(c=>c.ch),datasets:[{data:ga4.map(c=>c.sessions),backgroundColor:ga4.map(c=>c.color),borderWidth:0,hoverOffset:4}]},
+  options:{
+    responsive:true,maintainAspectRatio:false,cutout:'65%',
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const pct=((ctx.parsed/totalSess)*100).toFixed(1);return ` ${ctx.label}: ${pct}%`}}}}
+  }
+});
+
+const campaigns=[
+  {name:'Brand',cost:77,conv:2797},
+  {name:'Electronics',cost:96,conv:2840},
+  {name:'Home & Garden',cost:93,conv:2786},
+  {name:'Shopping',cost:51,conv:1960},
+  {name:'Display',cost:17,conv:153},
+  {name:'YouTube',cost:18,conv:32}
+];
+new Chart(document.getElementById('gadsChart'),{
+  type:'bar',
+  data:{
+    labels:campaigns.map(c=>c.name),
+    datasets:[
+      {label:'Cost $K',data:campaigns.map(c=>c.cost),backgroundColor:'#fbbf24',borderRadius:3,yAxisID:'y',barPercentage:.45},
+      {label:'Conversions',data:campaigns.map(c=>c.conv),backgroundColor:'#34d399',borderRadius:3,yAxisID:'y1',barPercentage:.45}
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{ticks:{color:tickColor,font:{size:10}},grid:{color:gridColor}},
+      y:{ticks:{color:tickColor,font:{size:10},callback:v=>'$'+v+'K'},grid:{color:gridColor},position:'left'},
+      y1:{ticks:{color:tickColor,font:{size:10}},grid:{display:false},position:'right'}
+    }
+  }
+});
+
+// Removed 'Customers' step (93,263 CRM contacts > 74,978 GA4 conversions — different sources/scopes)
+const funnel=[
+  {label:'Sessions',val:2971635,color:'#60a5fa'},
+  {label:'Engaged',val:1711743,color:'#a78bfa'},
+  {label:'Conversions',val:74978,color:'#fbbf24'},
+  {label:'Deals Won',val:42000,color:'#f87171'}
+];
+const fmax=funnel[0].val;
+const fel=document.getElementById('funnelWrap');
+funnel.forEach(s=>{
+  const pct=Math.round((s.val/fmax)*100);
+  const lbl=s.val>=1e6?(s.val/1e6).toFixed(1)+'M':s.val>=1000?Math.round(s.val/1000)+'K':s.val;
+  fel.innerHTML+=`<div class="funnel-row">
+    <div class="funnel-label">${s.label}</div>
+    <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${pct}%;background:${s.color}">${lbl}</div></div>
+    <div class="funnel-val">${pct}%</div>
+  </div>`;
+});
+
+const sf=[
+  {src:'Web',rev:2027,color:'#60a5fa'},
+  {src:'Paid Search',rev:1603,color:'#f87171'},
+  {src:'Social',rev:1414,color:'#a78bfa'},
+  {src:'Email',rev:1184,color:'#34d399'},
+  {src:'Referral',rev:926,color:'#fbbf24'},
+  {src:'Direct',rev:785,color:'#fb923c'}
+];
+const sfmax=sf[0].rev;
+const sfel=document.getElementById('sfAttrib');
+sf.forEach(s=>{
+  const pct=Math.round((s.rev/sfmax)*100);
+  sfel.innerHTML+=`<div class="attrib-row">
+    <div class="attrib-channel">${s.src}</div>
+    <div class="attrib-track"><div class="attrib-fill" style="width:${pct}%;background:${s.color}"></div></div>
+    <div class="attrib-val">$${s.rev}K</div>
+  </div>`;
+});
+
+const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const mSessions=[2584,5305,4875,3982,5506,5552,4127,4653,4911,3910,9592,7024];
+new Chart(document.getElementById('trendChart'),{
+  type:'line',
+  data:{
+    labels:months,
+    datasets:[{
+      label:'Sessions',data:mSessions,
+      borderColor:'#60a5fa',backgroundColor:'rgba(96,165,250,0.08)',
+      borderWidth:2,pointRadius:3,pointBackgroundColor:'#60a5fa',fill:true,tension:.35
+    }]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{ticks:{color:tickColor,font:{size:10}},grid:{color:gridColor}},
+      y:{ticks:{color:tickColor,font:{size:10},callback:v=>Math.round(v/1000)+'K'},grid:{color:gridColor}}
+    }
+  }
+});
+</script>
+</body>
+</html>

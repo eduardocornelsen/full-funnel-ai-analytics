@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campaign Performance Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0d0d1a;color:#e2e8f0;min-height:100vh;padding:24px}
+.section-title{font-size:11px;font-weight:500;color:#64748b;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+@media(max-width:640px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+.platform-block{background:#1a1a2e;border:1px solid #2a2a4a;border-radius:10px;padding:16px;margin-bottom:16px}
+.platform-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.platform-name{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+.badge{font-size:10px;padding:3px 8px;border-radius:20px;font-weight:500}
+.compare-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:0}
+@media(max-width:640px){.compare-grid{grid-template-columns:repeat(2,1fr)}}
+.compare-stat{background:#0d0d1a;border-radius:8px;padding:12px}
+.stat-label{font-size:10px;color:#64748b;margin-bottom:4px}
+.stat-val{font-size:18px;font-weight:600}
+.chart-wrap{position:relative;width:100%}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+@media(max-width:640px){.two-col{grid-template-columns:1fr}}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:10px;font-size:11px;color:#94a3b8}
+.legend span{display:flex;align-items:center;gap:5px}
+.lsq{width:10px;height:10px;border-radius:2px;display:inline-block;flex-shrink:0}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{color:#64748b;font-weight:500;text-align:left;padding:8px 10px;border-bottom:1px solid #2a2a4a;font-size:10px;text-transform:uppercase;letter-spacing:.06em}
+td{padding:8px 10px;border-bottom:1px solid #1e2235;color:#e2e8f0}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#1e2235}
+.roas-badge{padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.rec-box{background:#1a1a2e;border:1px solid #2a2a4a;border-radius:10px;padding:14px 16px;margin-top:16px;border-left:3px solid #fbbf24}
+.rec-title{font-size:11px;font-weight:600;color:#fbbf24;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em}
+.rec-item{font-size:12px;color:#94a3b8;margin-bottom:5px;padding-left:12px;position:relative}
+.rec-item::before{content:'›';position:absolute;left:0;color:#fbbf24}
+.pacing-bar-wrap{margin-bottom:10px}
+.pacing-label{display:flex;justify-content:space-between;font-size:11px;color:#94a3b8;margin-bottom:4px}
+.pacing-track{background:#0d0d1a;border-radius:4px;height:8px;overflow:hidden}
+.pacing-fill{height:100%;border-radius:4px}
+.platform-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+@media(max-width:640px){.platform-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div style="margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+  <div>
+    <div style="font-size:18px;font-weight:600;color:#f1f5f9">Campaign Performance</div>
+    <div style="font-size:12px;color:#64748b;margin-top:2px">Google Ads + Meta Ads — last 90 days · Click-based CVR · Last-touch attribution</div>
+  </div>
+  <div style="font-size:11px;color:#64748b;background:#1a1a2e;border:1px solid #2a2a4a;border-radius:6px;padding:5px 10px">Dec 15, 2025 – Mar 15, 2026 · Data as of Mar 16, 2026</div>
+</div>
+
+<div class="section-title">Platform comparison</div>
+<div class="platform-row">
+  <div class="platform-block">
+    <div class="platform-header">
+      <div class="platform-name">
+        <span style="width:10px;height:10px;border-radius:2px;background:#60a5fa;display:inline-block"></span>
+        Google Ads
+      </div>
+      <span class="badge" style="background:#1e3a5f;color:#60a5fa">Search · Shopping · Display</span>
+    </div>
+    <div class="compare-grid">
+      <div class="compare-stat"><div class="stat-label">Spend</div><div class="stat-val" style="color:#60a5fa">$48,200</div></div>
+      <div class="compare-stat"><div class="stat-label">Revenue</div><div class="stat-val" style="color:#34d399">$176,900</div></div>
+      <div class="compare-stat"><div class="stat-label">ROAS</div><div class="stat-val" style="color:#fbbf24">3.67×</div></div>
+      <div class="compare-stat"><div class="stat-label">Conversions</div><div class="stat-val">1,842</div></div>
+      <div class="compare-stat"><div class="stat-label">Clicks</div><div class="stat-val">28,540</div></div>
+      <div class="compare-stat"><div class="stat-label">CTR</div><div class="stat-val">4.2%</div></div>
+    </div>
+  </div>
+  <div class="platform-block">
+    <div class="platform-header">
+      <div class="platform-name">
+        <span style="width:10px;height:10px;border-radius:2px;background:#a78bfa;display:inline-block"></span>
+        Meta Ads
+      </div>
+      <span class="badge" style="background:#2d1b6e;color:#a78bfa">FB · IG · Audience Net.</span>
+    </div>
+    <div class="compare-grid">
+      <div class="compare-stat"><div class="stat-label">Spend</div><div class="stat-val" style="color:#a78bfa">$31,550</div></div>
+      <div class="compare-stat"><div class="stat-label">Revenue</div><div class="stat-val" style="color:#34d399">$94,200</div></div>
+      <div class="compare-stat"><div class="stat-label">ROAS</div><div class="stat-val" style="color:#fbbf24">2.99×</div></div>
+      <div class="compare-stat"><div class="stat-label">Conversions</div><div class="stat-val">1,104</div></div>
+      <div class="compare-stat"><div class="stat-label">Clicks</div><div class="stat-val">19,870</div></div>
+      <div class="compare-stat"><div class="stat-label">CTR</div><div class="stat-val">2.8%</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="two-col">
+  <div class="platform-block">
+    <div class="section-title">Daily spend — Google vs Meta</div>
+    <div class="legend">
+      <span><span class="lsq" style="background:#60a5fa"></span>Google Ads</span>
+      <span><span class="lsq" style="background:#a78bfa"></span>Meta Ads</span>
+    </div>
+    <div class="chart-wrap" style="height:200px"><canvas id="spendChart"></canvas></div>
+  </div>
+  <div class="platform-block">
+    <div class="section-title">CTR vs CVR (click-based) — bubble size = spend</div>
+    <div class="legend">
+      <span><span class="lsq" style="background:#60a5fa"></span>Google</span>
+      <span><span class="lsq" style="background:#a78bfa"></span>Meta</span>
+    </div>
+    <div class="chart-wrap" style="height:200px"><canvas id="scatterChart"></canvas></div>
+  </div>
+</div>
+
+<div class="platform-block">
+  <div class="section-title" style="margin-bottom:14px">All campaigns — sorted by ROAS</div>
+  <div style="overflow-x:auto">
+    <table>
+      <thead>
+        <tr>
+          <th>Campaign</th>
+          <th>Platform</th>
+          <th>Spend</th>
+          <th>Clicks</th>
+          <th>CTR</th>
+          <th>Conv.</th>
+          <th>CVR (click)</th>
+          <th>ROAS</th>
+        </tr>
+      </thead>
+      <tbody id="campaignBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="platform-block">
+  <div class="section-title" style="margin-bottom:14px">Budget pacing — active campaigns</div>
+  <div id="pacingBars"></div>
+</div>
+
+<div class="rec-box">
+  <div class="rec-title">Recommendations</div>
+  <div class="rec-item" style="color:#34d399">Scale: Brand - Olist (ROAS 5.2×) — increase budget 30–40%</div>
+  <div class="rec-item" style="color:#34d399">Scale: Retargeting - Add to Cart (ROAS 4.8×) — expand audience pools</div>
+  <div class="rec-item" style="color:#f87171">Review: YouTube - Brand Awareness (ROAS 0.9×) — below 1× threshold, pause or restructure</div>
+  <div class="rec-item" style="color:#f87171">Review: Brand Awareness - Video (ROAS 1.1×) — marginal, reallocate budget to Catalog Sales</div>
+  <div class="rec-item">Shopping - All Products (ROAS 3.1×) — solid performer, test smart bidding strategies</div>
+</div>
+
+<script>
+const campaigns = [
+  {name:'Brand - Olist',platform:'Google',spend:9400,clicks:5200,ctr:6.8,conv:312,cvr:6.0,roas:5.2,budget:12000,pct:78},
+  {name:'Generic - Electronics',platform:'Google',spend:11200,clicks:7100,ctr:4.5,conv:398,cvr:5.6,roas:3.8,budget:15000,pct:75},
+  {name:'Shopping - All Products',platform:'Google',spend:14600,clicks:9800,ctr:3.9,conv:520,cvr:5.3,roas:3.1,budget:18000,pct:81},
+  {name:'Retargeting - Add to Cart',platform:'Meta',spend:5800,clicks:3200,ctr:3.1,conv:210,cvr:6.6,roas:4.8,budget:8000,pct:73},
+  {name:'Catalog Sales - Dynamic',platform:'Meta',spend:10200,clicks:6500,ctr:2.9,conv:380,cvr:5.8,roas:3.5,budget:14000,pct:73},
+  {name:'Prospecting - Lookalike',platform:'Meta',spend:8900,clicks:5400,ctr:2.6,conv:310,cvr:5.7,roas:2.7,budget:12000,pct:74},
+  {name:'Generic - Home & Garden',platform:'Google',spend:8600,clicks:4900,ctr:3.8,conv:340,cvr:6.9,roas:2.4,budget:11000,pct:78},
+  {name:'Display - Retargeting',platform:'Google',spend:4400,clicks:1540,ctr:1.8,conv:272,cvr:17.7,roas:2.1,budget:6000,pct:73},
+  {name:'Instagram Stories - Flash',platform:'Meta',spend:6650,clicks:4770,ctr:2.7,conv:204,cvr:4.3,roas:1.8,budget:9000,pct:74},
+  {name:'Brand Awareness - Video',platform:'Meta',spend:5950,clicks:2420,ctr:1.2,conv:58,cvr:2.4,roas:1.1,budget:8000,pct:74},
+  {name:'YouTube - Brand Awareness',platform:'Google',spend:3600,clicks:1100,ctr:0.9,conv:38,cvr:3.5,roas:0.9,budget:5000,pct:72},
+];
+campaigns.sort((a,b)=>b.roas-a.roas);
+
+const roasColor=r=>r>=4?'#34d399':r>=2?'#fbbf24':'#f87171';
+const roasBg=r=>r>=4?'#0d2a1e':r>=2?'#2a1d0a':'#2a0a0a';
+
+const tbody=document.getElementById('campaignBody');
+campaigns.forEach(c=>{
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td style="font-weight:500;color:#f1f5f9">${c.name}</td>
+    <td><span style="font-size:10px;padding:2px 7px;border-radius:3px;background:${c.platform==='Google'?'#1e3a5f':'#2d1b6e'};color:${c.platform==='Google'?'#60a5fa':'#a78bfa'}">${c.platform}</span></td>
+    <td>$${c.spend.toLocaleString()}</td>
+    <td>${c.clicks.toLocaleString()}</td>
+    <td>${c.ctr.toFixed(1)}%</td>
+    <td>${c.conv.toLocaleString()}</td>
+    <td>${c.cvr.toFixed(1)}%</td>
+    <td><span class="roas-badge" style="background:${roasBg(c.roas)};color:${roasColor(c.roas)}">${c.roas.toFixed(1)}×</span></td>`;
+  tbody.appendChild(tr);
+});
+
+const pacing=document.getElementById('pacingBars');
+campaigns.slice(0,7).forEach(c=>{
+  const col=c.pct>90?'#f87171':c.pct>75?'#fbbf24':'#34d399';
+  pacing.innerHTML+=`<div class="pacing-bar-wrap">
+    <div class="pacing-label"><span style="color:#e2e8f0">${c.name}</span><span>$${c.spend.toLocaleString()} / $${c.budget.toLocaleString()} (${c.pct}%)</span></div>
+    <div class="pacing-track"><div class="pacing-fill" style="width:${c.pct}%;background:${col}"></div></div>
+  </div>`;
+});
+
+const weeks=['W1 Dec','W2 Dec','W3 Dec','W4 Dec','W1 Jan','W2 Jan','W3 Jan','W4 Jan','W1 Feb','W2 Feb','W3 Feb','W4 Feb','W1 Mar','W2 Mar'];
+const gSpend=[3100,3400,3800,4100,3600,3900,4200,4500,3800,4100,4400,4700,4200,3900];
+const mSpend=[1900,2100,2400,2600,2200,2400,2700,2900,2500,2700,3000,3200,2800,2600];
+
+new Chart(document.getElementById('spendChart'),{
+  type:'line',
+  data:{labels:weeks,datasets:[
+    {label:'Google',data:gSpend,borderColor:'#60a5fa',backgroundColor:'rgba(96,165,250,0.08)',tension:0.35,pointRadius:2,borderWidth:2,fill:true},
+    {label:'Meta',data:mSpend,borderColor:'#a78bfa',backgroundColor:'rgba(167,139,250,0.08)',tension:0.35,pointRadius:2,borderWidth:2,fill:true}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{
+      x:{ticks:{color:'#64748b',font:{size:9},maxRotation:45,autoSkip:true},grid:{color:'#1e2235'}},
+      y:{ticks:{color:'#64748b',font:{size:9},callback:v=>'$'+Math.round(v/1000)+'k'},grid:{color:'#1e2235'}}
+    }}
+});
+
+const bubbleData=[
+  {x:6.8,y:6.0,r:9,plat:'g'},{x:4.5,y:5.6,r:11,plat:'g'},{x:3.9,y:5.3,r:14,plat:'g'},
+  {x:3.8,y:6.9,r:9,plat:'g'},{x:1.8,y:17.7,r:5,plat:'g'},{x:0.9,y:3.5,r:4,plat:'g'},
+  {x:3.1,y:6.6,r:6,plat:'m'},{x:2.9,y:5.8,r:10,plat:'m'},{x:2.6,y:5.7,r:9,plat:'m'},
+  {x:2.7,y:4.3,r:7,plat:'m'},{x:1.2,y:2.4,r:6,plat:'m'}
+];
+
+new Chart(document.getElementById('scatterChart'),{
+  type:'bubble',
+  data:{datasets:[
+    {label:'Google',data:bubbleData.filter(d=>d.plat==='g').map(d=>({x:d.x,y:d.y,r:d.r})),backgroundColor:'rgba(96,165,250,0.55)',borderColor:'#60a5fa',borderWidth:1},
+    {label:'Meta',data:bubbleData.filter(d=>d.plat==='m').map(d=>({x:d.x,y:d.y,r:d.r})),backgroundColor:'rgba(167,139,250,0.55)',borderColor:'#a78bfa',borderWidth:1}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:p=>`CTR ${p.raw.x}% | CVR ${p.raw.y}%`}}},
+    scales:{
+      x:{title:{display:true,text:'CTR %',color:'#64748b',font:{size:10}},ticks:{color:'#64748b',font:{size:9}},grid:{color:'#1e2235'},min:0,max:9},
+      y:{title:{display:true,text:'CVR %',color:'#64748b',font:{size:10}},ticks:{color:'#64748b',font:{size:9}},grid:{color:'#1e2235'},min:0,max:22}
+    },layout:{padding:10}}
+});
+</script>
+</body>
+</html>

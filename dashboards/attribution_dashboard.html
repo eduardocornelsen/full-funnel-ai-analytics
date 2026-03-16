@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attribution Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="js/metrics.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0d0d1a;color:#e2e8f0;padding:24px;min-height:100vh}
+.header{margin-bottom:20px}
+.header h1{font-size:20px;font-weight:500;color:#e2e8f0;margin-bottom:4px}
+.header p{font-size:13px;color:#6b7280}
+.section-title{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin:0 0 10px}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+@media(max-width:640px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:#1a1a2e;border:1px solid #2a2a4a;border-radius:10px;padding:14px 16px}
+.kpi-label{font-size:11px;color:#6b7280;margin-bottom:6px}
+.kpi-val{font-size:22px;font-weight:500}
+.kpi-sub{font-size:11px;color:#6b7280;margin-top:3px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:640px){.grid2{grid-template-columns:1fr}}
+.card{background:#1a1a2e;border:1px solid #2a2a4a;border-radius:10px;padding:16px}
+.card-full{background:#1a1a2e;border:1px solid #2a2a4a;border-radius:10px;padding:16px;margin-bottom:14px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px;font-size:11px;color:#9ca3af}
+.leg-dot{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:4px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;color:#6b7280;font-weight:400;padding:6px 8px;border-bottom:1px solid #2a2a4a}
+td{padding:7px 8px;border-bottom:1px solid #1e1e35;color:#e2e8f0}
+tr:last-child td{border-bottom:none}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500}
+.badge-green{background:#064e3b;color:#34d399}
+.badge-red{background:#450a0a;color:#f87171}
+.badge-amber{background:#451a03;color:#fbbf24}
+.badge-blue{background:#0c2447;color:#60a5fa}
+.insight-box{background:#13132a;border:1px solid #2a2a4a;border-left:3px solid #a78bfa;border-radius:8px;padding:14px 16px;margin-top:14px}
+.insight-label{font-size:11px;color:#a78bfa;font-weight:500;margin-bottom:4px}
+.insight-text{font-size:13px;color:#c4b5fd;line-height:1.5}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Channel Attribution Dashboard</h1>
+  <p>Last 90 days · All channels · Google Ads + Meta Ads + GA4 · Linear attribution</p>
+</div>
+
+<div class="section-title">Attribution summary</div>
+<div class="kpi-grid">
+  <div class="kpi">
+    <div class="kpi-label">Total sessions</div>
+    <div class="kpi-val" style="color:#60a5fa">2.97M</div>
+    <div class="kpi-sub">All channels combined</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Total conversions</div>
+    <div class="kpi-val" style="color:#34d399">74,978</div>
+    <div class="kpi-sub">Avg CVR: 2.52% (session-based: conversions ÷ sessions)</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Paid revenue (est.)</div>
+    <div class="kpi-val" style="color:#fbbf24">$2.84M</div>
+    <div class="kpi-sub">Paid channels · linear attribution · AOV $100</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Blended ROAS</div>
+    <div class="kpi-val" style="color:#a78bfa">8.6×</div>
+    <div class="kpi-sub">Linear attribution · 90-day window</div>
+  </div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <div class="section-title">Channel performance</div>
+    <div class="legend">
+      <span><span class="leg-dot" style="background:#60a5fa"></span>Sessions (K)</span>
+      <span><span class="leg-dot" style="background:#34d399"></span>Conversions (×100)</span>
+      <span><span class="leg-dot" style="background:#fbbf24"></span>Eng. rate %</span>
+    </div>
+    <div style="position:relative;height:220px"><canvas id="barChart"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="section-title">Efficiency — spend vs. ROAS (bubble = conversions)</div>
+    <div class="legend">
+      <span><span class="leg-dot" style="background:#f87171"></span>Meta campaigns</span>
+      <span><span class="leg-dot" style="background:#60a5fa"></span>Google campaigns</span>
+    </div>
+    <div style="position:relative;height:220px"><canvas id="scatterChart"></canvas></div>
+  </div>
+</div>
+
+<div class="card-full">
+  <div class="section-title">Top & bottom performers by ROAS</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Campaign</th>
+        <th>Platform</th>
+        <th>Spend</th>
+        <th>Conversions</th>
+        <th>ROAS</th>
+        <th>Rating</th>
+      </tr>
+    </thead>
+    <tbody id="perf-table"></tbody>
+  </table>
+</div>
+
+<div class="card-full">
+  <div class="section-title">Channel mix — spend share over time (estimated weekly)</div>
+  <div class="legend">
+    <span><span class="leg-dot" style="background:#60a5fa"></span>Google Search</span>
+    <span><span class="leg-dot" style="background:#f87171"></span>Meta Social</span>
+    <span><span class="leg-dot" style="background:#34d399"></span>Organic</span>
+    <span><span class="leg-dot" style="background:#fbbf24"></span>Email / Direct</span>
+  </div>
+  <div style="position:relative;height:180px"><canvas id="areaChart"></canvas></div>
+</div>
+
+<div class="insight-box">
+  <div class="insight-label">✦ Biggest optimization opportunity</div>
+  <div class="insight-text">
+    Meta's <strong style="color:#fbbf24">Brand Awareness – Video</strong> campaign leads all campaigns with a <strong style="color:#34d399">11.84× ROAS</strong> at just $53K spend — significantly under-allocated vs. Catalog Sales ($93K, 6.9× ROAS). Reallocating 20–30% of Catalog budget to Video awareness could improve blended ROAS by ~0.8–1.2×. On Google, the <strong style="color:#f87171">Display Retargeting</strong> campaign shows a 0.26× CVR against $17K spend with only 153 conversions — a strong pause candidate.
+  </div>
+</div>
+
+<script>
+const ga4 = [
+  {ch:'Paid search',   sessions:596369, cvr:3.07, eng:61.9, conv:18292},
+  {ch:'Organic',       sessions:743373, cvr:2.36, eng:54.9, conv:17575},
+  {ch:'Direct',        sessions:448961, cvr:3.30, eng:69.9, conv:14810},
+  {ch:'Email',         sessions:295253, cvr:3.91, eng:74.8, conv:11543},
+  {ch:'Paid social',   sessions:532470, cvr:1.62, eng:44.8, conv:8638},
+  {ch:'Referral',      sessions:207840, cvr:1.52, eng:49.6, conv:3169},
+  {ch:'Organic social',sessions:147369, cvr:0.65, eng:39.4, conv:951},
+];
+
+const metaCampaigns = [
+  {name:'Prospecting – Lookalike',   spend:90797,  conv:6748,  roas:7.43},
+  {name:'Retargeting – Add to Cart', spend:70862,  conv:6802,  roas:9.60},
+  {name:'Brand Awareness – Video',   spend:53042,  conv:6281,  roas:11.84},
+  {name:'Catalog Sales – Dynamic',   spend:92622,  conv:6400,  roas:6.91},
+  {name:'Instagram Stories – Flash', spend:83513,  conv:6666,  roas:7.98},
+];
+
+const googleCampaigns = [
+  {name:'Brand – Olist',            spend:76994, conv:2797},
+  {name:'Generic – Electronics',    spend:96036, conv:2840},
+  {name:'Generic – Home & Garden',  spend:92668, conv:2786},
+  {name:'Shopping – All Products',  spend:50952, conv:1960},
+  {name:'Display – Retargeting',    spend:17136, conv:153},
+  {name:'YouTube – Brand Awareness',spend:18445, conv:32},
+];
+
+const allCampaigns = [
+  ...metaCampaigns.map(c=>({...c, platform:'Meta'})),
+  ...googleCampaigns.map(c=>({
+    ...c, platform:'Google', roas: Metrics.googleROAS(c.conv, c.spend)
+  }))
+];
+const sorted = [...allCampaigns].sort((a,b)=>b.roas-a.roas);
+const display = [...sorted.slice(0,5), ...sorted.slice(-3)];
+const tbody = document.getElementById('perf-table');
+display.forEach((c,i)=>{
+  const isTop = i < 5;
+  const roasVal = c.roas.toFixed(2);
+  let badge, rat;
+  if(c.roas >= 8){badge='badge-green';rat='Top'}
+  else if(c.roas >= 3){badge='badge-blue';rat='Good'}
+  else if(c.roas >= 1){badge='badge-amber';rat='Fair'}
+  else{badge='badge-red';rat='Pause'}
+  tbody.innerHTML += `<tr>
+    <td style="color:${isTop?'#e2e8f0':'#9ca3af'}">${c.name}</td>
+    <td><span class="badge ${c.platform==='Meta'?'badge-blue':'badge-amber'}">${c.platform}</span></td>
+    <td>$${Math.round(c.spend/1000)}K</td>
+    <td>${c.conv.toLocaleString()}</td>
+    <td style="font-weight:500;color:${c.roas>=3?'#34d399':'#f87171'}">${roasVal}×</td>
+    <td><span class="badge ${badge}">${rat}</span></td>
+  </tr>`;
+});
+
+const labels = ga4.map(d=>{const w=d.ch.split(' ');return w.length>2?[w[0]+' '+w[1],w.slice(2).join(' ')]:d.ch});
+new Chart(document.getElementById('barChart'),{
+  type:'bar',
+  data:{
+    labels,
+    datasets:[
+      {label:'Sessions (K)',data:ga4.map(d=>Math.round(d.sessions/1000)),backgroundColor:'#1d4ed855',borderColor:'#60a5fa',borderWidth:1.5,borderRadius:3},
+      {label:'Conv (×100)',data:ga4.map(d=>Math.round(d.conv/100)),backgroundColor:'#06593055',borderColor:'#34d399',borderWidth:1.5,borderRadius:3},
+      {label:'Eng rate',data:ga4.map(d=>parseFloat(d.eng.toFixed(1))),backgroundColor:'#92400e55',borderColor:'#fbbf24',borderWidth:1.5,borderRadius:3},
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{
+      if(c.datasetIndex===0) return `Sessions: ${(c.raw*1000).toLocaleString()}`;
+      if(c.datasetIndex===1) return `Conversions: ${(c.raw*100).toLocaleString()}`;
+      return `Eng rate: ${c.raw}%`;
+    }}}},
+    scales:{
+      x:{ticks:{color:'#6b7280',font:{size:10},maxRotation:0},grid:{color:'#1e1e35'}},
+      y:{ticks:{color:'#6b7280',font:{size:10}},grid:{color:'#1e1e35'}}
+    }
+  }
+});
+
+new Chart(document.getElementById('scatterChart'),{
+  type:'bubble',
+  data:{
+    datasets:[
+      {
+        label:'Meta campaigns',
+        data:metaCampaigns.map(c=>({x:Math.round(c.spend/1000),y:parseFloat(c.roas.toFixed(2)),r:Math.round(Math.sqrt(c.conv)/4)})),
+        backgroundColor:'#f8717155',borderColor:'#f87171',borderWidth:1.5,
+      },
+      {
+        label:'Google campaigns',
+        data:googleCampaigns.map(c=>({
+          x:Math.round(c.spend/1000), y:Metrics.googleROAS(c.conv,c.spend), r:Math.max(4,Math.round(Math.sqrt(c.conv)/5))
+        })),
+        backgroundColor:'#60a5fa55',borderColor:'#60a5fa',borderWidth:1.5,
+      }
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`Spend: $${c.raw.x}K · ROAS: ${c.raw.y}×`}}},
+    scales:{
+      x:{title:{display:true,text:'Spend ($K)',color:'#6b7280',font:{size:10}},ticks:{color:'#6b7280',font:{size:10}},grid:{color:'#1e1e35'},min:0,max:110},
+      y:{title:{display:true,text:'ROAS',color:'#6b7280',font:{size:10}},ticks:{color:'#6b7280',font:{size:10}},grid:{color:'#1e1e35'},min:0,max:14}
+    }
+  }
+});
+
+const weeks=['W1','W2','W3','W4','W5','W6','W7','W8','W9','W10','W11','W12','W13'];
+const gSearch=[22,23,21,24,22,25,23,22,24,23,22,21,24];
+const mSocial=[28,27,29,28,30,28,29,30,28,29,30,31,28];
+const organic=[30,31,30,29,28,29,28,27,29,30,29,28,27];
+const emailDirect=[20,19,20,19,20,18,20,21,19,18,19,20,21];
+new Chart(document.getElementById('areaChart'),{
+  type:'line',
+  data:{
+    labels:weeks,
+    datasets:[
+      {label:'Google Search',data:gSearch,fill:true,backgroundColor:'#1d4ed830',borderColor:'#60a5fa',borderWidth:1.5,tension:.4,pointRadius:2},
+      {label:'Meta Social',data:mSocial,fill:true,backgroundColor:'#dc262630',borderColor:'#f87171',borderWidth:1.5,tension:.4,pointRadius:2},
+      {label:'Organic',data:organic,fill:true,backgroundColor:'#05974430',borderColor:'#34d399',borderWidth:1.5,tension:.4,pointRadius:2},
+      {label:'Email/Direct',data:emailDirect,fill:true,backgroundColor:'#92400e30',borderColor:'#fbbf24',borderWidth:1.5,tension:.4,pointRadius:2},
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.raw}%`}}},
+    scales:{
+      x:{ticks:{color:'#6b7280',font:{size:10}},grid:{color:'#1e1e35'}},
+      y:{ticks:{color:'#6b7280',font:{size:10},callback:v=>v+'%'},grid:{color:'#1e1e35'},min:0,max:45}
+    }
+  }
+});
+</script>
+</body>
+</html>

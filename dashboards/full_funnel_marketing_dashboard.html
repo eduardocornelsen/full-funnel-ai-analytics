@@ -1,0 +1,269 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0d0d1a; color: #e2e8f0; font-family: var(--font-sans, system-ui, sans-serif); }
+.dash { background: #0d0d1a; padding: 20px; min-height: 100vh; }
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.header h1 { font-size: 18px; font-weight: 500; color: #e2e8f0; }
+.header .badge { font-size: 11px; color: #60a5fa; background: rgba(96,165,250,0.12); border: 1px solid rgba(96,165,250,0.25); border-radius: 20px; padding: 3px 10px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 18px; }
+.kpi { background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 10px; padding: 14px 16px; }
+.kpi .label { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+.kpi .val { font-size: 22px; font-weight: 500; }
+.kpi .sub { font-size: 11px; margin-top: 4px; }
+.kpi .up { color: #34d399; }
+.kpi .down { color: #f87171; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.grid3 { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 14px; }
+.card { background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 10px; padding: 16px; }
+.card h3 { font-size: 13px; font-weight: 500; color: #94a3b8; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.04em; }
+.chart-wrap { position: relative; width: 100%; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th { color: #64748b; font-weight: 400; text-align: left; padding: 6px 8px; border-bottom: 1px solid #2a2a4a; font-size: 11px; }
+td { padding: 7px 8px; border-bottom: 1px solid rgba(42,42,74,0.5); color: #cbd5e1; }
+tr:last-child td { border-bottom: none; }
+.badge-green { background: rgba(52,211,153,0.15); color: #34d399; padding: 2px 7px; border-radius: 20px; font-size: 10px; }
+.badge-red { background: rgba(248,113,113,0.15); color: #f87171; padding: 2px 7px; border-radius: 20px; font-size: 10px; }
+.badge-amber { background: rgba(251,191,36,0.15); color: #fbbf24; padding: 2px 7px; border-radius: 20px; font-size: 10px; }
+.funnel-wrap { display: flex; flex-direction: column; gap: 8px; }
+.funnel-step { display: flex; align-items: center; gap: 10px; }
+.funnel-bar-bg { flex: 1; background: rgba(42,42,74,0.6); border-radius: 4px; height: 32px; position: relative; overflow: hidden; }
+.funnel-bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding: 0 10px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+.funnel-label { font-size: 11px; color: #94a3b8; min-width: 90px; text-align: right; }
+.funnel-cvr { font-size: 10px; color: #64748b; min-width: 50px; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 10px; font-size: 11px; color: #94a3b8; }
+.legend span { display: flex; align-items: center; gap: 5px; }
+.leg-dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+@media (max-width: 640px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .grid2 { grid-template-columns: 1fr; }
+  .grid3 { grid-template-columns: 1fr; }
+}
+</style>
+
+<div class="dash">
+<div class="header">
+  <h1>Full-funnel marketing overview</h1>
+  <span class="badge">Last 90 days · Live data</span>
+</div>
+
+<!-- KPI Row -->
+<div class="kpi-grid">
+  <div class="kpi">
+    <div class="label">Total spend</div>
+    <div class="val" style="color:#f87171">$284K</div>
+    <div class="sub up">↑ 12% vs prior</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Total revenue</div>
+    <div class="val" style="color:#34d399">$980K</div>
+    <div class="sub up">↑ 18% vs prior</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Blended ROAS <span style="font-weight:400;font-size:9px;color:#64748b">(linear · 90d)</span></div>
+    <div class="val" style="color:#60a5fa">3.45×</div>
+    <div class="sub up">↑ 0.4× vs prior</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Total sessions</div>
+    <div class="val" style="color:#a78bfa">1.42M</div>
+    <div class="sub up">↑ 9% vs prior</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Pipeline value</div>
+    <div class="val" style="color:#fbbf24">$12.5M</div>
+    <div class="sub up">HubSpot + Salesforce</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Leads generated</div>
+    <div class="val" style="color:#34d399">93.3K</div>
+    <div class="sub up">↑ 7% vs prior</div>
+  </div>
+</div>
+
+<!-- Row 2: Spend vs Revenue + Channel Attribution -->
+<div class="grid2">
+  <div class="card">
+    <h3>Spend vs revenue — weekly</h3>
+    <div class="legend">
+      <span><span class="leg-dot" style="background:#f87171"></span>Google spend</span>
+      <span><span class="leg-dot" style="background:#a78bfa"></span>Meta spend</span>
+      <span><span class="leg-dot" style="background:#34d399"></span>Revenue</span>
+    </div>
+    <div class="chart-wrap" style="height:220px">
+      <canvas id="spendRevChart"></canvas>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Channel attribution</h3>
+    <div class="legend">
+      <span><span class="leg-dot" style="background:#60a5fa"></span>Google Ads 28%</span>
+      <span><span class="leg-dot" style="background:#a78bfa"></span>Meta Ads 22%</span>
+      <span><span class="leg-dot" style="background:#34d399"></span>Organic 25%</span>
+      <span><span class="leg-dot" style="background:#fbbf24"></span>Email 14%</span>
+      <span><span class="leg-dot" style="background:#f87171"></span>Direct 11%</span>
+    </div>
+    <div class="chart-wrap" style="height:190px">
+      <canvas id="attrChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Row 3: Funnel + Pipeline by Stage -->
+<div class="grid2">
+  <div class="card">
+    <h3>Sales funnel</h3>
+    <div class="funnel-wrap" id="funnelWrap"></div>
+  </div>
+  <div class="card">
+    <h3>Pipeline by stage — combined CRM</h3>
+    <div class="chart-wrap" style="height:280px">
+      <canvas id="pipeChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Row 4: Campaign Table -->
+<div class="card">
+  <h3>Top campaigns by ROAS</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Campaign</th>
+        <th>Platform</th>
+        <th>Spend</th>
+        <th>Revenue</th>
+        <th>ROAS</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="campTable"></tbody>
+  </table>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="js/metrics.js"></script>
+<script>
+const weeks = ['Dec W3','Dec W4','Jan W1','Jan W2','Jan W3','Jan W4','Feb W1','Feb W2','Feb W3','Mar W1'];
+const googleSpend = [28,31,24,27,29,32,35,33,38,37];
+const metaSpend   = [18,21,16,19,22,24,26,25,28,27];
+const revenue     = [92,108,79,98,108,118,138,127,152,145];
+
+new Chart(document.getElementById('spendRevChart'), {
+  type: 'line',
+  data: {
+    labels: weeks,
+    datasets: [
+      { label: 'Google spend', data: googleSpend, borderColor: '#f87171', backgroundColor: 'rgba(248,113,113,0.08)', borderWidth: 2, pointRadius: 3, tension: 0.4, fill: false },
+      { label: 'Meta spend',   data: metaSpend,   borderColor: '#a78bfa', backgroundColor: 'rgba(167,139,250,0.08)', borderWidth: 2, pointRadius: 3, tension: 0.4, fill: false },
+      { label: 'Revenue',      data: revenue,     borderColor: '#34d399', backgroundColor: 'rgba(52,211,153,0.08)', borderWidth: 2, pointRadius: 3, tension: 0.4, fill: true, yAxisID: 'y2' }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+    scales: {
+      x: { ticks: { color: '#64748b', font: { size: 10 }, maxRotation: 45, autoSkip: false }, grid: { color: 'rgba(42,42,74,0.5)' } },
+      y: { ticks: { color: '#64748b', font: { size: 10 }, callback: v => '$'+v+'K' }, grid: { color: 'rgba(42,42,74,0.5)' }, title: { display: true, text: 'Spend ($K)', color: '#64748b', font: { size: 10 } } },
+      y2: { position: 'right', ticks: { color: '#64748b', font: { size: 10 }, callback: v => '$'+v+'K' }, grid: { display: false }, title: { display: true, text: 'Revenue ($K)', color: '#64748b', font: { size: 10 } } }
+    }
+  }
+});
+
+// Attribution shares normalised to 100% via Metrics module
+const attrChannels = Metrics.normaliseAttribution([
+  {label:'Google Ads', val:28, color:'#60a5fa'},
+  {label:'Meta Ads',   val:22, color:'#a78bfa'},
+  {label:'Organic',    val:25, color:'#34d399'},
+  {label:'Email',      val:14, color:'#fbbf24'},
+  {label:'Direct',     val:11, color:'#f87171'},
+]);
+new Chart(document.getElementById('attrChart'), {
+  type: 'doughnut',
+  data: {
+    labels: attrChannels.map(d=>d.label),
+    datasets: [{ data: attrChannels.map(d=>d.val), backgroundColor: attrChannels.map(d=>d.color), borderWidth: 0, hoverOffset: 6 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '62%',
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ' + ctx.label + ': ' + ctx.parsed + '%' } } }
+  }
+});
+
+// Funnel
+const funnelSteps = [
+  { label: 'Sessions',      val: 1420000, pct: 100, color: '#60a5fa', cvr: '' },
+  { label: 'Leads',         val: 93263,   pct: 6.6,  color: '#a78bfa', cvr: '6.6%' },
+  { label: 'Opportunities', val: 27035,   pct: 29,   color: '#fbbf24', cvr: '29%' },
+  { label: 'Closed won',    val: 16766,   pct: 62,   color: '#34d399', cvr: '62%' },
+];
+const fw = document.getElementById('funnelWrap');
+funnelSteps.forEach((s, i) => {
+  const row = document.createElement('div');
+  row.className = 'funnel-step';
+  row.innerHTML = `
+    <span class="funnel-label">${s.label}</span>
+    <div class="funnel-bar-bg">
+      <div class="funnel-bar-fill" style="width:${s.pct}%;background:${s.color}22;border-left:3px solid ${s.color}">
+        <span style="color:${s.color};font-size:12px">${s.val.toLocaleString()}</span>
+      </div>
+    </div>
+    <span class="funnel-cvr">${i > 0 ? '→ ' + s.cvr : ''}</span>
+  `;
+  fw.appendChild(row);
+});
+
+// Pipeline chart — HubSpot + Salesforce merged
+const stages = ['Prospecting','Qualified','Proposal','Negotiation','Closed Won'];
+const hsVals  = [4.32, 3.37, 1.85, 1.06, 1.75]; // millions
+const sfVals  = [1.59, 2.62, 0.79, 0.63, 0.98];
+new Chart(document.getElementById('pipeChart'), {
+  type: 'bar',
+  data: {
+    labels: stages,
+    datasets: [
+      { label: 'HubSpot',     data: hsVals, backgroundColor: '#60a5fa', borderRadius: 3, borderSkipped: false },
+      { label: 'Salesforce',  data: sfVals, backgroundColor: '#a78bfa', borderRadius: 3, borderSkipped: false }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    indexAxis: 'y',
+    plugins: { legend: { display: true, labels: { color: '#94a3b8', font: { size: 11 }, boxWidth: 10, boxHeight: 10 } } },
+    scales: {
+      x: { stacked: true, ticks: { color: '#64748b', font: { size: 10 }, callback: v => '$'+v+'M' }, grid: { color: 'rgba(42,42,74,0.5)' } },
+      y: { stacked: true, ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { display: false } }
+    }
+  }
+});
+
+// Campaign table
+const campaigns = [
+  { name: 'Brand - Olist',               platform: 'Google', spend: 38200, rev: 213256, roas: 5.58 },
+  { name: 'Retargeting - Add to Cart',   platform: 'Meta',   spend: 29400, rev: 138307, roas: 4.70 },
+  { name: 'Catalog Sales - Dynamic',     platform: 'Meta',   spend: 31800, rev: 138307, roas: 4.35 },
+  { name: 'Shopping - All Products',     platform: 'Google', spend: 44100, rev: 171847, roas: 3.90 },
+  { name: 'Instagram Stories - Flash',   platform: 'Meta',   spend: 22300, rev: 79400,  roas: 3.56 },
+  { name: 'Generic - Electronics',       platform: 'Google', spend: 37600, rev: 117271, roas: 3.12 },
+  { name: 'Prospecting - Lookalike',     platform: 'Meta',   spend: 28900, rev: 83400,  roas: 2.89 },
+  { name: 'Generic - Home & Garden',     platform: 'Google', spend: 29800, rev: 78600,  roas: 2.64 },
+  { name: 'Display - Retargeting',       platform: 'Google', spend: 18600, rev: 39200,  roas: 2.11 },
+  { name: 'YouTube - Brand Awareness',   platform: 'Google', spend: 14200, rev: 17000,  roas: 1.20 },
+];
+const tbody = document.getElementById('campTable');
+campaigns.forEach(c => {
+  const badge = c.roas >= 3.5 ? `<span class="badge-green">Scale</span>` : c.roas >= 2 ? `<span class="badge-amber">Monitor</span>` : `<span class="badge-red">Review</span>`;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td style="color:#e2e8f0">${c.name}</td>
+    <td><span style="font-size:10px;color:${c.platform==='Google'?'#60a5fa':'#a78bfa'}">${c.platform}</span></td>
+    <td>$${(c.spend/1000).toFixed(1)}K</td>
+    <td>$${(c.rev/1000).toFixed(1)}K</td>
+    <td style="font-weight:500;color:${c.roas>=3?'#34d399':c.roas>=2?'#fbbf24':'#f87171'}">${c.roas.toFixed(2)}×</td>
+    <td>${badge}</td>
+  `;
+  tbody.appendChild(tr);
+});
+</script>

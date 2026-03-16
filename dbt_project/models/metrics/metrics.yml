@@ -1,0 +1,119 @@
+metrics:
+  # ── Revenue & Spend ──────────────────────────────────────────────────────────
+  - name: total_revenue
+    label: Total Revenue
+    description: Sum of all attributed order revenue across the selected period
+    type: simple
+    type_params:
+      measure: revenue
+    filter: "{{ Dimension('orders__order_status') }} != 'canceled'"
+
+  - name: total_spend
+    label: Total Ad Spend
+    description: Sum of all paid media spend (Google Ads + Meta Ads)
+    type: simple
+    type_params:
+      measure: total_spend
+
+  - name: blended_roas
+    label: Blended ROAS
+    description: Total attributed revenue divided by total paid media spend
+    type: ratio
+    type_params:
+      numerator: revenue
+      denominator: channel_spend
+
+  - name: channel_roas
+    label: Channel ROAS
+    description: Revenue divided by spend, broken down by channel
+    type: ratio
+    type_params:
+      numerator: channel_revenue
+      denominator: channel_spend
+
+  # ── Efficiency ───────────────────────────────────────────────────────────────
+  - name: customer_acquisition_cost
+    label: Customer Acquisition Cost (CAC)
+    description: Total spend divided by number of orders — cost to acquire one customer
+    type: ratio
+    type_params:
+      numerator: channel_spend
+      denominator: channel_orders
+
+  - name: cost_per_session
+    label: Cost Per Session
+    description: Total spend divided by total paid sessions
+    type: ratio
+    type_params:
+      numerator: total_spend
+      denominator: total_sessions
+
+  # ── Traffic & Engagement ─────────────────────────────────────────────────────
+  - name: total_sessions
+    label: Total Sessions
+    description: All web sessions across channels from GA4
+    type: simple
+    type_params:
+      measure: sessions
+
+  - name: total_new_users
+    label: Total New Users (Leads)
+    description: First-time visitors — used as top-of-funnel lead proxy
+    type: simple
+    type_params:
+      measure: new_users
+
+  - name: engagement_rate
+    label: Engagement Rate
+    description: Share of sessions that were meaningfully engaged
+    type: ratio
+    type_params:
+      numerator: engaged_sessions
+      denominator: sessions
+
+  - name: session_conversion_rate
+    label: Session → Order Conversion Rate
+    description: Orders as a percentage of total sessions
+    type: ratio
+    type_params:
+      numerator: order_count
+      denominator: sessions
+
+  # ── Orders & Volume ──────────────────────────────────────────────────────────
+  - name: total_orders
+    label: Total Orders
+    description: Count of distinct completed orders
+    type: simple
+    type_params:
+      measure: order_count
+
+  - name: average_order_value
+    label: Average Order Value (AOV)
+    description: Mean revenue per order
+    type: simple
+    type_params:
+      measure: avg_order_value
+
+  # ── Pipeline ─────────────────────────────────────────────────────────────────
+  - name: total_pipeline_value
+    label: Total Pipeline Value
+    description: Sum of all open deal amounts across HubSpot and Salesforce
+    type: simple
+    type_params:
+      measure: pipeline_value
+    filter: "{{ Dimension('pipeline__stage') }} NOT IN ('closed_won', 'Closed Won', 'closed_lost', 'Closed Lost')"
+
+  - name: closed_won_value
+    label: Closed Won Value
+    description: Total value of deals marked as closed/won in the CRM
+    type: simple
+    type_params:
+      measure: pipeline_value
+    filter: "{{ Dimension('pipeline__stage') }} IN ('closed_won', 'Closed Won')"
+
+  - name: total_deals
+    label: Total Deals / Opportunities
+    description: Count of all CRM deals and opportunities
+    type: simple
+    type_params:
+      measure: deal_count

@@ -1,0 +1,161 @@
+semantic_models:
+  - name: marketing_daily
+    description: Daily marketing spend and performance by channel
+    model: ref('fct_marketing_daily')
+    defaults:
+      agg_time_dimension: date
+    entities:
+      - name: marketing_day
+        type: primary
+        expr: "date || '_' || channel"
+    dimensions:
+      - name: date
+        type: time
+        type_params:
+          time_granularity: day
+      - name: channel
+        type: categorical
+    measures:
+      - name: total_spend
+        description: Total paid media spend
+        agg: sum
+        expr: total_spend
+      - name: total_conversions
+        description: Total tracked conversions
+        agg: sum
+        expr: total_conversions
+      - name: total_sessions
+        description: Total sessions from paid channels
+        agg: sum
+        expr: total_sessions
+
+  - name: orders
+    description: Completed customer orders with attribution and revenue
+    model: ref('fct_orders')
+    defaults:
+      agg_time_dimension: order_date
+    entities:
+      - name: order
+        type: primary
+        expr: order_id
+      - name: customer
+        type: foreign
+        expr: customer_id
+    dimensions:
+      - name: order_date
+        type: time
+        type_params:
+          time_granularity: day
+      - name: last_touch_channel
+        type: categorical
+      - name: payment_type
+        type: categorical
+      - name: order_status
+        type: categorical
+    measures:
+      - name: revenue
+        description: Order revenue (payment value)
+        agg: sum
+        expr: revenue
+      - name: order_count
+        description: Number of orders
+        agg: count_distinct
+        expr: order_id
+      - name: avg_order_value
+        description: Average order value
+        agg: average
+        expr: revenue
+
+  - name: channel_performance
+    description: Aggregated channel-level spend, revenue, and efficiency metrics
+    model: ref('fct_channel_performance')
+    defaults:
+      agg_time_dimension: date
+    entities:
+      - name: channel_day
+        type: primary
+        expr: "date || '_' || channel"
+    dimensions:
+      - name: date
+        type: time
+        type_params:
+          time_granularity: day
+      - name: channel
+        type: categorical
+    measures:
+      - name: channel_spend
+        description: Total spend for this channel
+        agg: sum
+        expr: total_spend
+      - name: channel_revenue
+        description: Attributed revenue for this channel
+        agg: sum
+        expr: attributed_revenue
+      - name: channel_orders
+        description: Orders attributed to this channel
+        agg: sum
+        expr: total_orders
+
+  - name: ga4_sessions
+    description: Daily web sessions and engagement from GA4
+    model: ref('stg_ga4_sessions')
+    defaults:
+      agg_time_dimension: date
+    entities:
+      - name: session_day_channel
+        type: primary
+        expr: "date || '_' || channel_group"
+    dimensions:
+      - name: date
+        type: time
+        type_params:
+          time_granularity: day
+      - name: channel_group
+        type: categorical
+    measures:
+      - name: sessions
+        description: Total sessions
+        agg: sum
+        expr: sessions
+      - name: engaged_sessions
+        description: Sessions with meaningful engagement
+        agg: sum
+        expr: engaged_sessions
+      - name: new_users
+        description: First-time visitors (proxy for leads)
+        agg: sum
+        expr: new_users
+      - name: conversions
+        description: GA4-tracked conversion events
+        agg: sum
+        expr: conversions
+
+  - name: pipeline
+    description: CRM pipeline from HubSpot and Salesforce combined
+    model: ref('fct_pipeline')
+    defaults:
+      agg_time_dimension: close_date
+    entities:
+      - name: deal
+        type: primary
+        expr: deal_id
+    dimensions:
+      - name: close_date
+        type: time
+        type_params:
+          time_granularity: day
+      - name: stage
+        type: categorical
+      - name: source
+        type: categorical
+      - name: lead_source
+        type: categorical
+    measures:
+      - name: pipeline_value
+        description: Total deal/opportunity value in pipeline
+        agg: sum
+        expr: amount
+      - name: deal_count
+        description: Number of deals/opportunities
+        agg: count_distinct
+        expr: deal_id

@@ -5,6 +5,11 @@ import plotly.graph_objects as go
 from pathlib import Path
 import duckdb
 from datetime import datetime
+import os
+from dotenv import load_dotenv
+import anthropic
+
+load_dotenv(Path(__file__).parent.parent / ".env")
 
 st.set_page_config(
     page_title="Analytics Platform", 
@@ -23,6 +28,32 @@ def get_db_data(query):
     df = con.execute(query).df()
     con.close()
     return df
+
+@st.cache_data(ttl=300)
+def get_db_schema():
+    """Return a compact schema string for the AI system prompt."""
+    con = duckdb.connect(str(DB_PATH), read_only=True)
+    tables = con.execute("SHOW TABLES").fetchdf()["name"].tolist()
+    parts = []
+    for t in tables:
+        cols = con.execute(f"DESCRIBE {t}").fetchdf()
+        col_str = ", ".join(
+            f"{r['column_name']} ({r['column_type']})"
+            for _, r in cols.iterrows()
+        )
+        parts.append(f"  {t}: {col_str}")
+    con.close()
+    return "\n".join(parts)
+
+def run_sql_query(sql: str):
+    """Execute a SQL query against DuckDB. Returns (DataFrame | None, error | None)."""
+    try:
+        con = duckdb.connect(str(DB_PATH), read_only=True)
+        df = con.execute(sql).df()
+        con.close()
+        return df, None
+    except Exception as e:
+        return None, str(e)
 
 st.title(":material/rocket_launch: Full-funnel AI analytics")
 st.caption("Interactive insights governed by dbt + DuckDB")
@@ -242,27 +273,121 @@ with tab3:
 
 with tab4:
     st.subheader("Governed AI analyst")
-    if "messages" not in st.session_state: st.session_state.messages = []
+
+    _api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not _api_key:
+        st.warning(
+            "Set the **ANTHROPIC_API_KEY** environment variable to enable the AI analyst. "
+            "Example: `export ANTHROPIC_API_KEY=sk-ant-...` then restart Streamlit.",
+            icon="🔑"
+        )
+
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+    # Replay chat history
     for msg in st.session_state.messages:
-        with st.chat_message(msg["role"], avatar=":material/robot:" if msg["role"] == "assistant" else None): st.markdown(msg["content"])
+        avatar = ":material/robot:" if msg["role"] == "assistant" else None
+        with st.chat_message(msg["role"], avatar=avatar):
+            st.markdown(msg["content"])
+            if msg.get("dataframe") is not None:
+                st.dataframe(msg["dataframe"], use_container_width=True)
+
+    # Quick-start suggestions (shown only on an empty conversation)
     if not st.session_state.messages:
         SUGGESTIONS = {
-            "📈 What is our average ROAS?": "What is our average ROAS?", 
-            "💰 How much did we spend?": "How much did we spend?", 
-            "🎯 Funnel conversion stats": "Tell me about funnel conversion."
+            "📈 What is our average ROAS?": "What is our average ROAS across all paid channels?",
+            "💰 How much did we spend?": "What was our total ad spend and how did it break down by channel?",
+            "🎯 Funnel conversion stats": "Show me the full funnel conversion rates from sessions to orders.",
         }
         selected = st.pills("Quick questions:", list(SUGGESTIONS.keys()), label_visibility="collapsed")
         if selected:
             st.session_state.messages.append({"role": "user", "content": SUGGESTIONS[selected]})
             st.rerun()
 
-    if prompt := st.chat_input("Ask about ROAS, CAC, or Lead trends..."):
+    if prompt := st.chat_input("Ask about ROAS, CAC, pipeline, or lead trends..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"): st.markdown(prompt)
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
         with st.chat_message("assistant", avatar=":material/robot:"):
-            response = "I've analyzed the unified warehouse data. Performance across all channels is now synchronized."
-            st.markdown(response)
-        st.session_state.messages.append({"role": "assistant", "content": response})
+            if not _api_key:
+                fallback = "Please set **ANTHROPIC_API_KEY** to get real answers from the AI analyst."
+                st.markdown(fallback)
+                st.session_state.messages.append({"role": "assistant", "content": fallback})
+            else:
+                with st.spinner("Querying the warehouse…"):
+                    schema = get_db_schema()
+                    system_prompt = f"""You are an analytics assistant for a full-funnel marketing platform.
+The DuckDB warehouse covers data from 2017-01-01 to 2018-08-31.
+When answering questions, ALWAYS use the query_database tool to fetch real numbers — never guess.
+Write clean, readable DuckDB SQL. Limit results to 20 rows unless the user asks for more.
+After fetching data, give a concise, business-focused answer (2-4 sentences max).
+
+Available tables:
+{schema}"""
+
+                    tools = [
+                        {
+                            "name": "query_database",
+                            "description": "Execute a DuckDB SQL query against the analytics warehouse and return the results as a table.",
+                            "input_schema": {
+                                "type": "object",
+                                "properties": {
+                                    "sql": {
+                                        "type": "string",
+                                        "description": "Valid DuckDB SQL query to run."
+                                    }
+                                },
+                                "required": ["sql"]
+                            }
+                        }
+                    ]
+
+                    client = anthropic.Anthropic(api_key=_api_key)
+                    api_messages = [{"role": "user", "content": prompt}]
+                    result_df = None
+                    final_text = ""
+
+                    # Agentic loop — Claude calls query_database until it has enough data
+                    for _ in range(6):
+                        response = client.messages.create(
+                            model="claude-haiku-4-5-20251001",
+                            max_tokens=1024,
+                            system=system_prompt,
+                            tools=tools,
+                            messages=api_messages,
+                        )
+
+                        if response.stop_reason == "tool_use":
+                            api_messages.append({"role": "assistant", "content": response.content})
+                            tool_results = []
+                            for block in response.content:
+                                if block.type == "tool_use":
+                                    df, err = run_sql_query(block.input["sql"])
+                                    if err:
+                                        tool_content = f"SQL error: {err}"
+                                    else:
+                                        result_df = df
+                                        tool_content = df.to_string(index=False, max_rows=20)
+                                    tool_results.append({
+                                        "type": "tool_result",
+                                        "tool_use_id": block.id,
+                                        "content": tool_content,
+                                    })
+                            api_messages.append({"role": "user", "content": tool_results})
+                        else:
+                            for block in response.content:
+                                if hasattr(block, "text"):
+                                    final_text = block.text
+                            break
+
+                    st.markdown(final_text if final_text else "_No response generated._")
+                    if result_df is not None and not result_df.empty:
+                        st.dataframe(result_df, use_container_width=True)
+
+                    msg_entry = {"role": "assistant", "content": final_text, "dataframe": result_df}
+                    st.session_state.messages.append(msg_entry)
 
 with tab5:
     st.subheader("Data Explorer")

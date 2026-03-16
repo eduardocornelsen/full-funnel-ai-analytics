@@ -14,7 +14,12 @@
       "mcp__meta-ads__list_campaigns",
       "Bash(cat:*)",
       "Bash(find:*)",
-      "Bash(.venv/bin/python3 -c \"import fastmcp; print\\('fastmcp OK'\\)\")"
+      "Bash(.venv/bin/python3 -c \"import fastmcp; print\\('fastmcp OK'\\)\")",
+      "Bash(for csv:*)",
+      "Read(//home/duds0/agents/projects/full-funnel-ai-analytics/**)",
+      "Bash(done)",
+      "Bash(wc:*)",
+      "Bash(head:*)"
     ]
   }
 }

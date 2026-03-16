@@ -175,3 +175,33 @@ Key metrics:
 - `session_conversion_rate` = `total_orders / total_sessions` ← **canonical cross-channel CVR**
 - `blended_roas` = `total_revenue / total_spend` (linear attribution, 90d)
 - `channel_roas` = `channel_revenue / channel_spend` (linear attribution, 90d)
+
+
+---
+
+## 13. Shared Metrics Module (code-level enforcement)
+
+`dashboards/js/metrics.js` is the **mandatory** runtime enforcement of all metric rules.
+
+All new HTML dashboards MUST load it before any inline script block:
+```html
+<script src="js/metrics.js"></script>
+```
+
+**NEVER compute CVR, ROAS, or attribution percentages inline.** Use canonical functions:
+
+| Function | Formula | When to use |
+|----------|---------|-------------|
+| `Metrics.googleROAS(conv, cost)` | `conv × $100 / cost` | All Google Ads ROAS |
+| `Metrics.metaROAS(platformRoas)` | pass-through | Meta platform roas field |
+| `Metrics.sessionCVR(conv, sessions)` | `conv / sessions × 100` | Cross-channel, GA4 |
+| `Metrics.clickCVR(conv, clicks)` | `conv / clicks × 100` | Platform campaign tables |
+| `Metrics.normaliseAttribution(channels)` | normalises `val` to sum 100% | Any pie/donut/attribution bar |
+| `Metrics.validateFunnel(steps)` | returns `issues[]` | Before rendering any funnel |
+
+Use `Metrics.labels.*` for canonical KPI subtitle strings (attribution windows, CVR basis).
+
+Existing dashboards that already use `metrics.js`:
+- `attribution_dashboard.html`
+- `marketing_full_funnel_dashboard.html`
+- `full_funnel_marketing_dashboard.html`

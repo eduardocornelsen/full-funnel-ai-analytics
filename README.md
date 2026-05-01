@@ -451,6 +451,7 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 <p align="center">
   <sub>Built with ☕ by <strong><a href="https://www.linkedin.com/in/eduardo-cornelsen/">Eduardo Cornelsen</a></strong> — © 2026 All Rights Reserved</sub><br/>
+  <sub><a href="https://eduardocornelsen.com">Portfolio Website</a> | <a href="https://www.linkedin.com/in/eduardo-cornelsen/">LinkedIn</a></sub><br/>
   <sub>Portfolio project demonstrating production-grade data analytics architecture with AI integration.</sub><br/>
   <sub>Revenue Operations · Data Engineering · AI/ML · Full-Stack Development</sub>
 </p>

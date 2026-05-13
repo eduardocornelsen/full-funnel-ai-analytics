@@ -130,9 +130,34 @@ This assumption must be used consistently. If the user provides a different AOV,
 
 ## 9. Queried Date Range (Default)
 
-Unless the user specifies otherwise:
-- `start_date`: 90 days before today
-- `end_date`: today
+### Synthetic Dataset (this project's default)
+
+The original synthetic dataset has a **fixed boundary** — it does not update:
+
+| Variable | Value | Notes |
+|----------|-------|-------|
+| `ANCHOR_DATE` | **2026-03-15** | Dataset end — never use `today()` |
+| `WINDOW_START` | **2025-12-16** | 90 days before anchor |
+| `WINDOW_END`   | **2026-03-15** | Anchor date |
+
+**Rule for synthetic data:** Always use these exact dates. Never compute
+`today() - 90 days`. Using `today()` produces a different window every day,
+making dashboards non-reproducible.
+
+**How to identify synthetic data:** The dataset is in use when sourcing from
+`data/olist_analytics.duckdb` or `data/mock_marketing/*.csv`.
+
+### Live / Real Dataset (open-source swap-in)
+
+This project is open source. If the user connects a real marketing data source
+(live MCP, BigQuery, Supabase, Snowflake, or any daily-refreshed dataset),
+use the rolling window instead:
+
+- `end_date`: **today** (`date.today()`)
+- `start_date`: **90 days before today** (`today - 90 days`)
+
+**How to identify live data:** User says "connect my real data", "use BigQuery",
+"use production", or configures a non-DuckDB dbt target.
 
 Always pass explicit dates to MCP tools. Never use open-ended queries.
 
@@ -154,13 +179,34 @@ When generating any HTML dashboard or React artifact from MCP data:
 
 ## 11. Skill Quick Reference
 
-| Skill | MCP servers queried | Primary metric |
+Each skill has two modes: **golden** (default, reads `golden_metrics.json`) and
+**-mcp** (live, queries mock MCP servers directly). The golden mode guarantees
+zero metric drift; the -mcp mode shows raw real-time platform data.
+
+### Golden Layer Skills (default — read `dashboards/golden_metrics.json`)
+
+| Skill | Data source | Primary metric |
+|-------|-------------|----------------|
+| `/marketing` | `windowed_90d` + `all_time` sections | Blended ROAS (linear · 90d) |
+| `/campaign` | `windowed_90d.campaigns` | Platform ROAS per campaign |
+| `/attribution` | `windowed_90d.attribution_by_channel` | Channel revenue share (linear · 90d) |
+| `/traffic` | `windowed_90d.ga4_by_channel` | Session CVR by channel |
+| `/pipeline` | `all_time.crm` | Win rate, pipeline value (CRM all-time) |
+
+### Live MCP Skills (opt-in — bypasses golden layer)
+
+Triggered by appending `-mcp` to any skill name or by user requesting "live", "real-time", or "raw platform" data.
+
+| Skill | MCP servers queried | Notes |
 |-------|--------------------|-|
-| `/marketing` | google-ads, meta-ads, ga4, hubspot, salesforce | Blended ROAS (linear · 90d) |
-| `/campaign` | google-ads, meta-ads | Platform ROAS per campaign |
-| `/attribution` | ga4, google-ads, meta-ads | Channel revenue share (linear · 90d) |
-| `/traffic` | ga4 | Session CVR by channel |
-| `/pipeline` | hubspot, salesforce | Win rate, pipeline value (CRM all-time) |
+| `/marketing-mcp` | google-ads, meta-ads, ga4, hubspot, salesforce | Add ⚡ Live MCP badge |
+| `/campaign-mcp` | google-ads, meta-ads | Per-campaign raw platform data |
+| `/attribution-mcp` | ga4, google-ads, meta-ads | Raw channel attribution |
+| `/traffic-mcp` | ga4 | Live session data |
+| `/pipeline-mcp` | hubspot, salesforce | Live CRM data |
+
+**Rule for MCP skills:** Pass canonical dates (`start_date=2025-12-16`, `end_date=2026-03-15`)
+for synthetic data. Use rolling `today() - 90` for live datasets (see §9).
 
 ---
 
@@ -205,3 +251,65 @@ Existing dashboards that already use `metrics.js`:
 - `attribution_dashboard.html`
 - `marketing_full_funnel_dashboard.html`
 - `full_funnel_marketing_dashboard.html`
+
+---
+
+## 14. Golden Layer First — Mandatory Data Sourcing
+
+This project's purpose is **zero metric drift** between dbt and dashboards.
+The following rules are mandatory.
+
+### Default: Read `dashboards/golden_metrics.json`
+
+1. **Before generating any dashboard**, read `dashboards/golden_metrics.json`.
+2. This file is pre-computed from the dbt golden layer (DuckDB mart tables).
+3. **Copy exact values** from this file into HTML dashboard JS constants.
+   Do NOT recalculate metrics independently.
+4. Always use the `windowed_90d` section for the canonical 90-day view.
+5. Use the `all_time` section only when explicitly showing lifetime data.
+
+**Why:** If you recalculate metrics from MCP data, rounding differences and
+non-deterministic AI arithmetic will cause drift versus the golden layer.
+Reading pre-computed values guarantees bit-for-bit reproducibility.
+
+### Exception: Live MCP Querying (explicit opt-in only)
+
+Only bypass golden_metrics.json when the user explicitly says one of:
+- "query live data" / "get real-time data" / "use MCP"
+- "show raw platform data" / "bypass golden layer" / "live from MCP"
+
+When in Live MCP mode:
+1. Pass **canonical dates**: `start_date=2025-12-16`, `end_date=2026-03-15`
+2. Add to the dashboard header badge: `⚡ Live MCP — may differ from golden layer`
+3. Still use `metrics.js` canonical functions for all calculations
+4. For HubSpot/Salesforce, pass the same dates to `get_deal_pipeline_summary()`
+   and `get_opportunity_pipeline()` — these servers now support date filtering.
+
+### Never Mix Scopes
+
+- Never divide all-time revenue by 90-day spend (this was the source of the
+  nonsensical 71.1× Blended ROAS bug)
+- If using `windowed_90d`: ALL numbers must come from that section only
+- If using `all_time`: ALL numbers must come from that section only
+- Label every ROAS and CVR with its scope per §2 Attribution Windows rules
+
+### Data Source Decision Tree
+
+```
+User asks for a dashboard
+  │
+  ├─ Skill ends in "-mcp"  OR  user says "live", "real-time", "raw platform", "bypass golden"?
+  │   ├─ YES → Use MCP servers
+  │   │         · Synthetic dataset:  dates = 2025-12-16 → 2026-03-15 (fixed anchor)
+  │   │         · Live/real dataset:  dates = today()-90d → today()
+  │   │         · Add ⚡ Live MCP badge
+  │   │         · Use metrics.js for all calculations
+  │   └─ NO  → Read dashboards/golden_metrics.json (default)
+  │             · Use windowed_90d for 90-day views
+  │             · Use all_time for lifetime/CRM views
+  │             · Copy exact values — no recalculation
+  │
+  └─ Does golden_metrics.json exist?
+      ├─ YES → Use it
+      └─ NO  → Tell user: python scripts/generate_golden_metrics.py
+```

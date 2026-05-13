@@ -1,33 +1,39 @@
 semantic_models:
   - name: marketing_daily
-    description: Daily marketing spend and performance by channel
+    description: Daily marketing spend and GA4 session performance
     model: ref('fct_marketing_daily')
     defaults:
       agg_time_dimension: date
     entities:
       - name: marketing_day
         type: primary
-        expr: "date || '_' || channel"
+        expr: date
     dimensions:
       - name: date
         type: time
         type_params:
           time_granularity: day
-      - name: channel
-        type: categorical
     measures:
       - name: total_spend
-        description: Total paid media spend
+        description: Total paid media spend (Google + Meta)
         agg: sum
         expr: total_spend
       - name: total_conversions
-        description: Total tracked conversions
+        description: GA4 session-level conversions (canonical Session CVR denominator)
         agg: sum
         expr: total_conversions
       - name: total_sessions
-        description: Total sessions from paid channels
+        description: GA4 total sessions (all channels)
         agg: sum
-        expr: total_sessions
+        expr: ga4_total_sessions
+      - name: total_ad_conversions
+        description: Ad-platform conversions (Google + Meta clicks to purchase)
+        agg: sum
+        expr: total_ad_conversions
+      - name: engaged_sessions
+        description: GA4 engaged sessions
+        agg: sum
+        expr: ga4_engaged_sessions
 
   - name: orders
     description: Completed customer orders with attribution and revenue
@@ -67,32 +73,26 @@ semantic_models:
         expr: revenue
 
   - name: channel_performance
-    description: Aggregated channel-level spend, revenue, and efficiency metrics
+    description: Platform-level spend, attributed revenue, and ROAS (static aggregation)
     model: ref('fct_channel_performance')
-    defaults:
-      agg_time_dimension: date
     entities:
-      - name: channel_day
+      - name: channel
         type: primary
-        expr: "date || '_' || channel"
+        expr: channel
     dimensions:
-      - name: date
-        type: time
-        type_params:
-          time_granularity: day
       - name: channel
         type: categorical
     measures:
       - name: channel_spend
-        description: Total spend for this channel
+        description: Total spend for this platform channel
         agg: sum
         expr: total_spend
       - name: channel_revenue
-        description: Attributed revenue for this channel
+        description: Linear-attributed revenue for this platform channel
         agg: sum
         expr: attributed_revenue
       - name: channel_orders
-        description: Orders attributed to this channel
+        description: Orders attributed to this platform channel
         agg: sum
         expr: total_orders
 

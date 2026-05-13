@@ -24,13 +24,13 @@ metrics:
   - name: total_clicks
     label: Total Ad Clicks
     description: >
-      Sum of all paid ad clicks (Google Ads + Meta Ads).
+      Ad-platform conversion count proxy (Google + Meta).
       Use as denominator for click-based CVR (platform campaigns only).
-      Do NOT use as CVR denominator for cross-channel comparisons — use total_sessions.
+      Do NOT use for cross-channel comparisons — use total_sessions instead.
       See session_conversion_rate for the canonical cross-channel CVR definition.
     type: simple
     type_params:
-      measure: total_clicks
+      measure: total_ad_conversions
 
   - name: total_new_users
     label: Total New Users (Leads)

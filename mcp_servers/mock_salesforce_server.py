@@ -9,9 +9,25 @@ mcp = FastMCP("Salesforce")
 DATA_DIR = Path(__file__).parent.parent / "data" / "mock_marketing"
 
 @mcp.tool()
-def get_opportunity_pipeline():
-    """Get summarized opportunity pipeline from Salesforce by stage."""
+def get_opportunity_pipeline(start_date: str = None, end_date: str = None):
+    """Get summarized opportunity pipeline from Salesforce by stage.
+
+    Args:
+        start_date: YYYY-MM-DD — filter opportunities created on or after this date (optional).
+        end_date:   YYYY-MM-DD — filter opportunities created on or before this date (optional).
+
+    Note:
+        Default (no dates) returns all-time pipeline.
+        Pass the canonical window dates (2025-12-16 → 2026-03-15) to align
+        with the 90-day ad spend window.
+    """
     df = pd.read_csv(DATA_DIR / "salesforce_opportunities.csv")
+    df['created_date'] = pd.to_datetime(df['created_date'], errors='coerce')
+
+    if start_date:
+        df = df[df['created_date'] >= start_date]
+    if end_date:
+        df = df[df['created_date'] <= end_date]
 
     agg_cols = {'opportunity_id': 'count', 'amount': 'sum'}
     if 'expected_revenue' in df.columns:
@@ -24,16 +40,27 @@ def get_opportunity_pipeline():
     return summary.to_dict(orient="records")
 
 @mcp.tool()
-def get_revenue_by_source():
-    """Get closed-won revenue broken down by lead source."""
+def get_revenue_by_source(start_date: str = None, end_date: str = None):
+    """Get closed-won revenue broken down by lead source.
+
+    Args:
+        start_date: YYYY-MM-DD — filter by close_date on or after this date (optional).
+        end_date:   YYYY-MM-DD — filter by close_date on or before this date (optional).
+    """
     df = pd.read_csv(DATA_DIR / "salesforce_opportunities.csv")
+    df['close_date'] = pd.to_datetime(df['close_date'], errors='coerce')
 
     won_df = df[df['stage'] == 'Closed Won']
 
-    summary = won_df.groupby(['lead_source']).agg({
-        'amount': 'sum',
-        'opportunity_id': 'count'
-    }).rename(columns={'amount': 'total_revenue', 'opportunity_id': 'won_count'}).reset_index()
+    if start_date:
+        won_df = won_df[won_df['close_date'] >= start_date]
+    if end_date:
+        won_df = won_df[won_df['close_date'] <= end_date]
+
+    summary = won_df.groupby(['lead_source']).agg(
+        total_revenue=('amount', 'sum'),
+        won_count=('opportunity_id', 'count')
+    ).reset_index()
 
     return summary.to_dict(orient="records")
 

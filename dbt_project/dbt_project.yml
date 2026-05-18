@@ -18,3 +18,20 @@ models:
       +materialized: ephemeral
     marts:
       +materialized: table
+
+vars:
+  # ── MetricFlow time spine bounds ────────────────────────────────────────────
+  # These control how far the time spine extends. Widen them when the dataset grows.
+  # metricflow_time_spine.sql reads these via var() instead of hardcoding literals.
+  time_spine_start: "2024-01-01"   # Earliest date MetricFlow can aggregate; covers full synthetic dataset
+  time_spine_end:   "2026-12-31"   # Latest date in time spine; extend when data grows past this boundary
+
+  # ── Default 90-day analysis window (synthetic dataset) ──────────────────────
+  # ANCHOR_DATE for the synthetic dataset is 2026-03-15 (fixed — never changes).
+  # window_start = ANCHOR_DATE - 89 days = 2025-12-16.
+  # fct_marketing_daily.sql uses these to filter the time-spine join,
+  # ensuring only the canonical 90-day window is materialised.
+  # Override with --vars '{"window_start":"2025-06-01","window_end":"2025-09-01"}'
+  # when querying a different period.
+  window_start: "2025-12-16"       # 90-day window start (inclusive)
+  window_end:   "2026-03-15"       # 90-day window end / dataset anchor date (inclusive)

@@ -73,45 +73,28 @@ semantic_models:
         expr: revenue
 
   - name: channel_performance
-    # Previously this model had no time dimension, making all channel metrics permanently
-    # all-time aggregations. fct_channel_performance.sql now outputs a date column
-    # (daily × channel grain), so we can add agg_time_dimension here.
-    description: Daily platform-level spend, attributed revenue, and orders (date × channel grain)
+    description: Platform-level spend, attributed revenue, and ROAS (static aggregation)
     model: ref('fct_channel_performance')
-    defaults:
-      # MetricFlow uses agg_time_dimension to align this semantic model's measures
-      # with the time spine when a time-grain filter is applied (e.g. --group-by metric_time__month).
-      # Without this, MetricFlow cannot filter channel_roas or channel_spend by date.
-      agg_time_dimension: date
     entities:
-      - name: channel_date
-        # Composite primary key: date + channel, because neither alone is unique.
-        # fct_channel_performance has one row per (date, channel) pair.
-        type: primary
-        expr: "channel || '_' || CAST(date AS VARCHAR)"
-    dimensions:
-      - name: date
-        # Time dimension mapped to fct_channel_performance.date.
-        # MetricFlow will use this column when filtering or grouping by time grain.
-        type: time
-        type_params:
-          time_granularity: day       # base granularity; MetricFlow rolls up to week/month/quarter
       - name: channel
-        # Categorical dimension for grouping metrics by paid platform (google_ads / meta_ads).
+        type: primary
+        expr: channel
+    dimensions:
+      - name: channel
         type: categorical
     measures:
       - name: channel_spend
-        description: Total paid-media spend for this platform channel on this date
+        description: Total spend for this platform channel
         agg: sum
-        expr: total_spend             # maps to fct_channel_performance.total_spend
+        expr: total_spend
       - name: channel_revenue
-        description: Linear-attributed revenue for this platform channel on this date
+        description: Linear-attributed revenue for this platform channel
         agg: sum
-        expr: attributed_revenue      # maps to fct_channel_performance.attributed_revenue
+        expr: attributed_revenue
       - name: channel_orders
-        description: Orders attributed to this platform channel on this date
+        description: Orders attributed to this platform channel
         agg: sum
-        expr: total_orders            # maps to fct_channel_performance.total_orders
+        expr: total_orders
 
   - name: ga4_sessions
     description: Daily web sessions and engagement from GA4

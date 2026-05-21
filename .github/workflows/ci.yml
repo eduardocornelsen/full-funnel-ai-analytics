@@ -25,7 +25,7 @@ jobs:
         run: dbt deps
 
       - name: Generate mock marketing data
-        run: python scripts/generate_mock_marketing_data.py
+        run: python scripts/generate_mock_marketing_data.py --standalone
 
       - name: Load DuckDB
         run: python scripts/load_duckdb.py

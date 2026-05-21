@@ -3,7 +3,9 @@ Generate realistic synthetic marketing data anchored to real Olist orders.
 Creates: Google Ads, Meta Ads, GA4, HubSpot, Salesforce, and Attribution data.
 
 Run AFTER downloading Olist data: python scripts/download_olist_data.py
+Use --standalone for CI or environments without Olist CSVs.
 """
+import argparse
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
@@ -19,17 +21,39 @@ MOCK_DIR.mkdir(parents=True, exist_ok=True)
 np.random.seed(42)
 
 
-def load_orders():
-    """Load delivered Olist orders with revenue."""
-    orders = pd.read_csv(OLIST_DIR / "olist_orders_dataset.csv")
-    orders["order_purchase_timestamp"] = pd.to_datetime(orders["order_purchase_timestamp"])
-    payments = pd.read_csv(OLIST_DIR / "olist_order_payments_dataset.csv")
-    order_revenue = payments.groupby("order_id")["payment_value"].sum().reset_index()
-    order_revenue.columns = ["order_id", "revenue"]
-    orders = orders.merge(order_revenue, on="order_id", how="left")
-    orders = orders[orders["order_status"] == "delivered"].copy()
-    orders = orders.sort_values("order_purchase_timestamp").reset_index(drop=True)
-    print(f"Loaded {len(orders):,} delivered orders")
+def load_orders(standalone: bool = False):
+    """Load delivered Olist orders; fall back to synthetic if Olist data unavailable."""
+    if not standalone and (OLIST_DIR / "olist_orders_dataset.csv").exists():
+        orders = pd.read_csv(OLIST_DIR / "olist_orders_dataset.csv")
+        orders["order_purchase_timestamp"] = pd.to_datetime(orders["order_purchase_timestamp"])
+        payments = pd.read_csv(OLIST_DIR / "olist_order_payments_dataset.csv")
+        order_revenue = payments.groupby("order_id")["payment_value"].sum().reset_index()
+        order_revenue.columns = ["order_id", "revenue"]
+        orders = orders.merge(order_revenue, on="order_id", how="left")
+        orders = orders[orders["order_status"] == "delivered"].copy()
+        orders = orders.sort_values("order_purchase_timestamp").reset_index(drop=True)
+        print(f"Loaded {len(orders):,} delivered orders from Olist dataset")
+        return orders
+
+    print("Olist data not found — generating synthetic orders for 2024-01-01 → 2026-03-15")
+    rng = np.random.default_rng(42)
+    n = 12_000
+    start = pd.Timestamp("2024-01-01")
+    end = pd.Timestamp("2026-03-15")
+    seconds_range = int((end - start).total_seconds())
+    timestamps = [start + pd.Timedelta(seconds=int(rng.integers(0, seconds_range))) for _ in range(n)]
+    timestamps.sort()
+    order_ids = [f"ORD_{i:07d}" for i in range(n)]
+    revenues = rng.uniform(30, 400, n).round(2)
+    customer_ids = [f"CUST_{rng.integers(0, 8000):06d}" for _ in range(n)]
+    orders = pd.DataFrame({
+        "order_id": order_ids,
+        "customer_id": customer_ids,
+        "order_status": "delivered",
+        "order_purchase_timestamp": timestamps,
+        "revenue": revenues,
+    })
+    print(f"Generated {len(orders):,} synthetic orders")
     return orders
 
 
@@ -72,11 +96,11 @@ def generate_google_ads(orders):
         {"keyword_id": "KW010", "ad_group_id": "AG006", "keyword": "small kitchen appliances", "match_type": "PHRASE"},
     ]
 
-    date_range = pd.date_range("2017-01-01", "2018-08-31")
+    date_range = pd.date_range("2024-01-01", "2026-03-15")
     daily_perf = []
 
     for date in date_range:
-        month_factor = {1: 0.7, 2: 0.85, 3: 0.95, 4: 1.0, 5: 1.2, 6: 1.2, 
+        month_factor = {1: 0.7, 2: 0.85, 3: 0.95, 4: 1.0, 5: 1.2, 6: 1.2,
                         7: 1.0, 8: 0.95, 9: 1.0, 10: 1.1, 11: 1.8, 12: 1.4}.get(date.month, 1.0)
         dow_factor = 0.8 if date.weekday() >= 5 else 1.0
 
@@ -140,7 +164,7 @@ def generate_meta_ads(orders):
         {"ad_set_id": "AS008", "campaign_id": "META_C005", "ad_set_name": "Stories - Weekend Deals", "targeting": "interest_shopping", "placement": "instagram_stories"},
     ]
 
-    date_range = pd.date_range("2017-01-01", "2018-08-31")
+    date_range = pd.date_range("2024-01-01", "2026-03-15")
     daily_perf = []
 
     for date in date_range:
@@ -190,7 +214,7 @@ def generate_ga4(orders):
     conv_rates = {"organic_search": 0.025, "paid_search": 0.032, "paid_social": 0.018, 
                   "direct": 0.035, "email": 0.042, "referral": 0.020, "organic_social": 0.012}
 
-    date_range = pd.date_range("2017-01-01", "2018-08-31")
+    date_range = pd.date_range("2024-01-01", "2026-03-15")
     rows = []
 
     for date in date_range:
@@ -220,66 +244,88 @@ def generate_ga4(orders):
     print(f"  {len(rows):,} daily session rows")
 
 
-def generate_hubspot(orders):
-    """HubSpot contacts and deals linked to Olist customers/orders."""
+def generate_hubspot(orders, standalone: bool = False):
+    """HubSpot contacts and deals. Uses Olist customers if available, else synthetic."""
     print("\nGenerating HubSpot data...")
 
-    customers = pd.read_csv(OLIST_DIR / "olist_customers_dataset.csv")
-    unique_customers = customers.drop_duplicates(subset="customer_unique_id")
     sources = ["organic_search", "paid_search", "paid_social", "direct", "email", "referral"]
     source_weights = [0.25, 0.22, 0.20, 0.15, 0.10, 0.08]
-    first_names = ["ana", "bruno", "carla", "daniel", "elena", "fabio", "gabriela", "henrique", "isabela", "joao", 
+    first_names = ["ana", "bruno", "carla", "daniel", "elena", "fabio", "gabriela", "henrique", "isabela", "joao",
                    "karen", "lucas", "maria", "nelson", "olivia", "pedro", "raquel", "sergio", "tatiana", "vitor"]
     last_names = ["silva", "santos", "oliveira", "souza", "lima", "pereira", "costa", "rodrigues", "almeida", "nascimento"]
+    cities = ["São Paulo", "Rio de Janeiro", "Belo Horizonte", "Porto Alegre", "Curitiba", "Salvador", "Fortaleza"]
+    states = ["SP", "RJ", "MG", "RS", "PR", "BA", "CE"]
 
-    # Pre-group orders by customer_id for efficiency
-    orders_by_customer = {k: v for k, v in orders.groupby("customer_id")}
+    rng = np.random.default_rng(42)
 
-    contacts = []
-    for i, (_, cust) in enumerate(unique_customers.iterrows()):
-        cust_id = cust["customer_id"]
-        if cust_id not in orders_by_customer:
-            continue
-            
-        cust_orders = orders_by_customer[cust_id]
-        first_order = cust_orders.iloc[0]
-        order_date = first_order["order_purchase_timestamp"]
-        create_date = order_date - timedelta(days=np.random.randint(0, 31))
-        source = np.random.choice(sources, p=source_weights)
-        fname = np.random.choice(first_names)
-        lname = np.random.choice(last_names)
+    if not standalone and (OLIST_DIR / "olist_customers_dataset.csv").exists():
+        customers = pd.read_csv(OLIST_DIR / "olist_customers_dataset.csv")
+        unique_customers = customers.drop_duplicates(subset="customer_unique_id")
+        orders_by_customer = {k: v for k, v in orders.groupby("customer_id")}
+        contacts = []
+        for i, (_, cust) in enumerate(unique_customers.iterrows()):
+            cust_id = cust["customer_id"]
+            if cust_id not in orders_by_customer:
+                continue
+            cust_orders = orders_by_customer[cust_id]
+            first_order = cust_orders.iloc[0]
+            order_date = first_order["order_purchase_timestamp"]
+            create_date = order_date - timedelta(days=int(rng.integers(0, 31)))
+            source = rng.choice(sources, p=source_weights)
+            fname = rng.choice(first_names)
+            lname = rng.choice(last_names)
+            contacts.append({
+                "contact_id": f"HS_{i+1:06d}",
+                "customer_id": cust["customer_unique_id"],
+                "email": f"{fname}.{lname}{int(rng.integers(1, 999))}@example.com",
+                "first_name": fname.capitalize(), "last_name": lname.capitalize(),
+                "city": cust["customer_city"], "state": cust["customer_state"],
+                "create_date": create_date.strftime("%Y-%m-%d"),
+                "lifecycle_stage": "customer",
+                "lead_source": source,
+                "num_orders": len(cust_orders),
+                "total_revenue": round(float(cust_orders["revenue"].sum()), 2),
+                "first_order_date": order_date.strftime("%Y-%m-%d"),
+                "last_activity_date": cust_orders.iloc[-1]["order_purchase_timestamp"].strftime("%Y-%m-%d"),
+            })
+    else:
+        unique_cust_ids = orders["customer_id"].unique()
+        contacts = []
+        for i, cust_id in enumerate(unique_cust_ids):
+            cust_orders = orders[orders["customer_id"] == cust_id]
+            first_order = cust_orders.iloc[0]
+            order_date = first_order["order_purchase_timestamp"]
+            create_date = order_date - timedelta(days=int(rng.integers(0, 31)))
+            source = rng.choice(sources, p=source_weights)
+            fname = rng.choice(first_names)
+            lname = rng.choice(last_names)
+            contacts.append({
+                "contact_id": f"HS_{i+1:06d}",
+                "customer_id": cust_id,
+                "email": f"{fname}.{lname}{int(rng.integers(1, 999))}@example.com",
+                "first_name": fname.capitalize(), "last_name": lname.capitalize(),
+                "city": rng.choice(cities), "state": rng.choice(states),
+                "create_date": create_date.strftime("%Y-%m-%d"),
+                "lifecycle_stage": "customer",
+                "lead_source": source,
+                "num_orders": len(cust_orders),
+                "total_revenue": round(float(cust_orders["revenue"].sum()), 2),
+                "first_order_date": order_date.strftime("%Y-%m-%d"),
+                "last_activity_date": cust_orders.iloc[-1]["order_purchase_timestamp"].strftime("%Y-%m-%d"),
+            })
 
-        contacts.append({
-            "contact_id": f"HS_{i+1:06d}",
-            "customer_id": cust["customer_unique_id"],
-            "email": f"{fname}.{lname}{np.random.randint(1,999)}@example.com",
-            "first_name": fname.capitalize(), "last_name": lname.capitalize(),
-            "city": cust["customer_city"], "state": cust["customer_state"],
-            "create_date": create_date.strftime("%Y-%m-%d"),
-            "lifecycle_stage": "customer",
-            "lead_source": source,
-            "num_orders": len(cust_orders),
-            "total_revenue": round(cust_orders["revenue"].sum(), 2),
-            "first_order_date": order_date.strftime("%Y-%m-%d"),
-            "last_activity_date": cust_orders.iloc[-1]["order_purchase_timestamp"].strftime("%Y-%m-%d"),
-        })
-
-    print(f"  Generated {len(contacts):,} contacts")
-    
     deals = []
-    # Vectorized deal generation where possible
     for i, (_, order) in enumerate(orders.iterrows()):
-        is_won = order["order_status"] == "delivered"
         deals.append({
             "deal_id": f"DEAL_{i+1:06d}", "order_id": order["order_id"],
             "deal_name": f"Order {order['order_id'][:8]}",
-            "deal_stage": "closed_won" if is_won else np.random.choice(["qualified_to_buy", "presentation_scheduled", "negotiation"]),
+            "deal_stage": "closed_won",
             "pipeline": "default",
-            "amount": round(order.get("revenue", 0), 2),
+            "amount": round(float(order.get("revenue", 0)), 2),
             "create_date": order["order_purchase_timestamp"].strftime("%Y-%m-%d"),
-            "close_date": order["order_purchase_timestamp"].strftime("%Y-%m-%d") if is_won else "",
+            "close_date": order["order_purchase_timestamp"].strftime("%Y-%m-%d"),
             "deal_type": "new_business",
-            "lead_source": np.random.choice(sources, p=source_weights),
+            "lead_source": rng.choice(sources, p=source_weights),
         })
 
     pd.DataFrame(contacts).to_csv(MOCK_DIR / "hubspot_contacts.csv", index=False)
@@ -287,38 +333,55 @@ def generate_hubspot(orders):
     print(f"  {len(contacts):,} contacts, {len(deals):,} deals")
 
 
-def generate_salesforce(orders):
-    """Salesforce accounts (from sellers) and opportunities (from orders)."""
+def generate_salesforce(orders, standalone: bool = False):
+    """Salesforce accounts and opportunities. Uses Olist sellers if available, else synthetic."""
     print("\nGenerating Salesforce data...")
 
-    sellers = pd.read_csv(OLIST_DIR / "olist_sellers_dataset.csv")
-    accounts = []
-    for i, (_, seller) in enumerate(sellers.iterrows()):
-        accounts.append({
-            "account_id": f"ACC_{i+1:05d}", "seller_id": seller["seller_id"],
-            "account_name": f"Seller {seller['seller_id'][:8]}",
-            "city": seller["seller_city"], "state": seller["seller_state"],
-            "account_type": np.random.choice(["Standard", "Premium", "Enterprise"], p=[0.6, 0.3, 0.1]),
-            "industry": np.random.choice(["Retail", "Electronics", "Fashion", "Home & Garden", "Sports", "Health & Beauty"]),
-            "annual_revenue": round(np.random.uniform(50000, 2000000), 2),
-            "num_employees": np.random.randint(1, 50),
-        })
+    rng = np.random.default_rng(42)
+    cities = ["São Paulo", "Rio de Janeiro", "Belo Horizonte", "Porto Alegre", "Curitiba"]
+    states = ["SP", "RJ", "MG", "RS", "PR"]
+
+    if not standalone and (OLIST_DIR / "olist_sellers_dataset.csv").exists():
+        sellers = pd.read_csv(OLIST_DIR / "olist_sellers_dataset.csv")
+        accounts = []
+        for i, (_, seller) in enumerate(sellers.iterrows()):
+            accounts.append({
+                "account_id": f"ACC_{i+1:05d}", "seller_id": seller["seller_id"],
+                "account_name": f"Seller {seller['seller_id'][:8]}",
+                "city": seller["seller_city"], "state": seller["seller_state"],
+                "account_type": rng.choice(["Standard", "Premium", "Enterprise"], p=[0.6, 0.3, 0.1]),
+                "industry": rng.choice(["Retail", "Electronics", "Fashion", "Home & Garden", "Sports", "Health & Beauty"]),
+                "annual_revenue": round(float(rng.uniform(50000, 2000000)), 2),
+                "num_employees": int(rng.integers(1, 50)),
+            })
+    else:
+        n_accounts = 500
+        accounts = []
+        for i in range(n_accounts):
+            accounts.append({
+                "account_id": f"ACC_{i+1:05d}", "seller_id": f"SELLER_{i+1:06d}",
+                "account_name": f"Seller {i+1:06d}",
+                "city": rng.choice(cities), "state": rng.choice(states),
+                "account_type": rng.choice(["Standard", "Premium", "Enterprise"], p=[0.6, 0.3, 0.1]),
+                "industry": rng.choice(["Retail", "Electronics", "Fashion", "Home & Garden", "Sports", "Health & Beauty"]),
+                "annual_revenue": round(float(rng.uniform(50000, 2000000)), 2),
+                "num_employees": int(rng.integers(1, 50)),
+            })
 
     stages = ["Prospecting", "Qualification", "Needs Analysis", "Value Proposition", "Negotiation", "Closed Won", "Closed Lost"]
     probability = {"Prospecting": 10, "Qualification": 25, "Needs Analysis": 40, "Value Proposition": 60, "Negotiation": 80, "Closed Won": 100, "Closed Lost": 0}
     opportunities = []
     for i, (_, order) in enumerate(orders.head(50000).iterrows()):
-        is_won = order["order_status"] == "delivered"
-        stage = "Closed Won" if is_won else np.random.choice(stages[:5])
         od = order["order_purchase_timestamp"]
         opportunities.append({
             "opportunity_id": f"OPP_{i+1:06d}", "order_id": order["order_id"],
             "opportunity_name": f"Deal {order['order_id'][:8]}",
-            "stage": stage, "probability": probability[stage],
-            "amount": round(order.get("revenue", 0), 2),
-            "created_date": (od - timedelta(days=np.random.randint(0, 14))).strftime("%Y-%m-%d"),
+            "stage": "Closed Won", "probability": 100,
+            "amount": round(float(order.get("revenue", 0)), 2),
+            "created_date": (od - timedelta(days=int(rng.integers(0, 14)))).strftime("%Y-%m-%d"),
             "close_date": od.strftime("%Y-%m-%d"),
-            "lead_source": np.random.choice(["Web", "Paid Search", "Social Media", "Email", "Referral", "Direct"], p=[0.25, 0.20, 0.18, 0.15, 0.12, 0.10]),
+            "is_won": True,
+            "lead_source": rng.choice(["Web", "Paid Search", "Social Media", "Email", "Referral", "Direct"], p=[0.25, 0.20, 0.18, 0.15, 0.12, 0.10]),
             "type": "New Business",
             "fiscal_quarter": f"Q{(od.month - 1) // 3 + 1} {od.year}",
         })
@@ -370,17 +433,26 @@ def generate_attribution(orders):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Generate mock marketing data.")
+    parser.add_argument("--standalone", action="store_true",
+                        help="Generate data without the Olist dataset (CI-safe, uses 2024-2026 date range)")
+    args = parser.parse_args()
+
+    standalone = args.standalone or not (OLIST_DIR / "olist_orders_dataset.csv").exists()
+    if standalone and not args.standalone:
+        print("Olist dataset not found — falling back to standalone mode automatically.")
+
     print("=" * 60)
     print("GENERATING MOCK MARKETING DATA")
-    print("Anchored to real Olist e-commerce transactions")
+    print("Mode: standalone (2024–2026)" if standalone else "Mode: Olist-anchored (2017–2018)")
     print("=" * 60)
 
-    orders = load_orders()
+    orders = load_orders(standalone)
     generate_google_ads(orders)
     generate_meta_ads(orders)
     generate_ga4(orders)
-    generate_hubspot(orders)
-    generate_salesforce(orders)
+    generate_hubspot(orders, standalone)
+    generate_salesforce(orders, standalone)
     generate_attribution(orders)
 
     print("\n" + "=" * 60)

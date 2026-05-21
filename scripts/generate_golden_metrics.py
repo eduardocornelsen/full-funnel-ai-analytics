@@ -12,19 +12,27 @@ Usage:
 
 Run after every `dbt run` to refresh the golden snapshot.
 
-Date anchoring (SYNTHETIC DATASET — this project's default):
+Date anchoring — SINGLE SOURCE OF TRUTH:
+    Dates are now read from dbt_project/dbt_project.yml vars block.
+    To change the analysis window, edit dbt_project.yml once:
+        vars:
+          window_start: "2025-12-16"
+          window_end:   "2026-03-15"
+    Both `dbt build` and this script will pick up the change automatically.
+
+    SYNTHETIC DATASET (this project's default):
     The dataset ends at 2026-03-15 (fixed boundary — does not update daily).
-    ANCHOR_DATE is always 2026-03-15. Window: 2025-12-16 → 2026-03-15.
-    These dates are locked — do NOT use today().
+    Never use date.today() — it makes dashboards non-reproducible.
+    See CLAUDE.md §9.
 
     LIVE / REAL DATASET (open-source swap-in):
-    If you connect a live data source (BigQuery, Supabase, Snowflake, etc.),
-    replace ANCHOR_DATE with date.today() and the window will roll automatically.
-    See CLAUDE.md §9 for the full dataset-detection rules.
+    Update dbt_project.yml vars to today()-90 → today() and both the dbt
+    build and this script will use the rolling window automatically.
 """
 
 from pathlib import Path
 import json
+import yaml
 import duckdb
 from datetime import date, timedelta, datetime, timezone
 
@@ -32,13 +40,36 @@ from datetime import date, timedelta, datetime, timezone
 PROJECT_ROOT = Path(__file__).parent.parent
 DB_PATH      = PROJECT_ROOT / "data" / "olist_analytics.duckdb"
 OUTPUT_PATH  = PROJECT_ROOT / "dashboards" / "golden_metrics.json"
+DBT_PROJECT  = PROJECT_ROOT / "dbt_project" / "dbt_project.yml"
+
+
+def _load_dbt_vars() -> dict:
+    """Read the vars block from dbt_project.yml.
+
+    This makes generate_golden_metrics.py the downstream consumer of the
+    canonical date config rather than an independent copy. A single edit to
+    dbt_project.yml now propagates to both the dbt build and this script.
+    Falls back to hardcoded defaults so the script still runs if the YAML
+    is missing or the vars block is absent.
+    """
+    try:
+        with open(DBT_PROJECT) as f:
+            return yaml.safe_load(f).get("vars", {})
+    except FileNotFoundError:
+        return {}
+
+
+_dbt_vars = _load_dbt_vars()
 
 # ── Canonical Date Anchoring ───────────────────────────────────────────────────
-# Dataset ends 2026-03-15. This is FIXED — never use date.today().
-ANCHOR_DATE  = date(2026, 3, 15)
+# Dates are read from dbt_project.yml vars so this script and the dbt build
+# always use the same window. The fallback strings match the synthetic dataset
+# anchor (CLAUDE.md §9) and are only used if dbt_project.yml is unreachable.
+# Never use date.today() here — the synthetic dataset has a fixed boundary.
 WINDOW_DAYS  = 90
-WINDOW_START = ANCHOR_DATE - timedelta(days=WINDOW_DAYS - 1)   # 2025-12-16
-WINDOW_END   = ANCHOR_DATE                                       # 2026-03-15
+WINDOW_END   = date.fromisoformat(_dbt_vars.get("window_end",        "2026-03-15"))
+WINDOW_START = date.fromisoformat(_dbt_vars.get("window_start",      "2025-12-16"))
+ANCHOR_DATE  = WINDOW_END   # kept for backward-compat references below
 
 # ── AOV for Google ROAS (mirrors CLAUDE.md §8 + metrics.js) ───────────────────
 GOOGLE_AOV = 100.0
@@ -373,7 +404,10 @@ def main():
     print(f"Connecting to DuckDB: {DB_PATH}")
     con = connect()
 
-    dataset_start = date(2024, 7, 16)
+    # All-time start: earliest date in the synthetic dataset.
+    # Read from dbt_project.yml time_spine_start so it stays in sync with
+    # the MetricFlow spine bounds configured there.
+    dataset_start = date.fromisoformat(_dbt_vars.get("time_spine_start", "2024-01-01"))
     dataset_end   = ANCHOR_DATE
 
     print(f"Anchor date: {ANCHOR_DATE}  |  90d window: {WINDOW_START} → {WINDOW_END}")

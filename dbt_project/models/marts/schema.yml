@@ -121,7 +121,11 @@ models:
           - not_null
 
   - name: metricflow_time_spine
-    description: MetricFlow-required time spine — one row per day from 2016-01-01 to 2019-12-31
+    description: >
+      MetricFlow-required time spine — one row per calendar day.
+      Bounds are driven by dbt vars time_spine_start (default 2024-01-01) and
+      time_spine_end (default 2026-12-31), defined in dbt_project.yml.
+      Extend time_spine_end when the dataset grows beyond 2026-12-31.
     columns:
       - name: date_day
         tests:

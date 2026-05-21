@@ -199,6 +199,30 @@ See the [Production Readiness Guide](docs/guides/production_readiness_guide.md) 
 
 ---
 
+## Data Architecture — What Lives Where
+
+| Layer | Location | In git? | How it's created |
+|-------|----------|---------|-----------------|
+| Olist raw dataset | `data/olist/*.csv` | ❌ Never (400MB) | `python scripts/download_olist_data.py` |
+| Mock marketing CSVs | `data/mock_marketing/*.csv` | ✅ Yes (~10MB) | Generated once; CI recreates without Olist via `--standalone` |
+| DuckDB warehouse | `data/olist_analytics.duckdb` | ❌ Never | `load_duckdb.py` + `dbt run` locally |
+| Golden metrics snapshot | `dashboards/golden_metrics.json` | ✅ Yes (~50KB) | CI commits it after every deploy |
+
+**To update your local DuckDB after a `git pull`:**
+
+```bash
+git pull                                                   # get new CSVs + golden_metrics.json
+python scripts/load_duckdb.py                             # load CSVs into DuckDB
+cd dbt_project && dbt run --target duckdb && cd ..        # rebuild mart tables
+```
+
+Claude dashboards update after `git pull` alone (they read `golden_metrics.json`).
+Streamlit and DuckDB queries need all three steps above.
+
+See [Data Import Guide](docs/guides/data_import_guide.md) for the full explanation including how this maps to a real production pipeline (Fivetran → BigQuery → dbt Cloud).
+
+---
+
 ## Importing Your Own Data
 
 The platform supports three ways to bring in real data — from a spreadsheet, a CSV file, or a live warehouse.

@@ -1,0 +1,67 @@
+name: CI — PR Gate
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  dbt-test:
+    name: dbt compile + test (DuckDB)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install dbt packages
+        working-directory: dbt_project
+        run: dbt deps
+
+      - name: Generate mock marketing data
+        run: python scripts/generate_mock_marketing_data.py
+
+      - name: Load DuckDB
+        run: python scripts/load_duckdb.py
+
+      - name: dbt run (staging only — fast)
+        working-directory: dbt_project
+        run: dbt run --target duckdb --select staging
+
+      - name: dbt run (full)
+        working-directory: dbt_project
+        run: dbt run --target duckdb
+
+      - name: dbt test
+        working-directory: dbt_project
+        run: dbt test --target duckdb
+
+      - name: Generate golden metrics
+        run: python scripts/generate_golden_metrics.py --target duckdb
+
+      - name: Validate golden layer (no drift)
+        run: python scripts/validate_metrics.py --target duckdb
+
+  pytest:
+    name: pytest suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: pytest tests/ -v --tb=short

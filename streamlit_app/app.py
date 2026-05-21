@@ -133,6 +133,20 @@ def kpi_card(col, label: str, value: str, xy=None, chart_type: str = "bar",
 # ── Sidebar ────────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("## :material/analytics: Full-funnel AI")
+
+    # Connection status badge (reads ~/.full_funnel_connectors.json if present)
+    try:
+        import sys as _sys
+        _lib_path = str(Path(__file__).parent)
+        if _lib_path not in _sys.path:
+            _sys.path.insert(0, _lib_path)
+        from lib.connector_registry import get_active_target as _get_target
+        _active = _get_target()
+        _badge = {"duckdb": "🟡 DuckDB local", "bigquery": "🟢 BigQuery", "snowflake": "🟢 Snowflake"}
+        st.caption(_badge.get(_active, f"🔵 {_active}"))
+    except Exception:
+        st.caption("🟡 DuckDB local")
+
     st.space("small")
 
     DATA_MIN = datetime(2024, 3, 30).date()

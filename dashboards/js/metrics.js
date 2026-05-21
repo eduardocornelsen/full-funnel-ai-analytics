@@ -9,6 +9,7 @@
  *  - Click CVR:   conversions / clicks             (platform campaigns only)
  *  - Attribution: always normalised to 100% before render
  *  - Funnel:      each step must be ≤ the step above it
+ *  - Freshness:   every dashboard must show the query window and generation date
  *
  * Usage in HTML:
  *   <script src="js/metrics.js"></script>
@@ -128,7 +129,7 @@ const Metrics = (() => {
 
   /** Format a ROAS value. e.g. "3.46×" */
   function fmtROAS(value) {
-    return value.toFixed(2) + '\u00d7';
+    return value.toFixed(2) + '×';
   }
 
   /* ── Canonical KPI subtitle strings ──────────────────────────────────────── */
@@ -136,16 +137,79 @@ const Metrics = (() => {
   // the same attribution window and basis labels.
 
   const labels = {
-    blendedROAS:  'Linear attribution \u00b7 90-day window',
-    channelROAS:  'Linear attribution \u00b7 90-day window',
-    metaROAS:     'Meta platform \u00b7 7d click / 1d view',
-    googleROAS:   'Google est. \u00b7 AOV $100 \u00b7 30-day',
-    sessionCVR:   'Session CVR: conversions \u00f7 sessions',
-    clickCVR:     'Click CVR: conversions \u00f7 clicks',
-    attributed:   'Attributed Revenue (90d) \u00b7 linear',
-    sfClosedWon:  'Salesforce Closed Won \u00b7 90-day',
+    blendedROAS:  'Linear attribution · 90-day window',
+    channelROAS:  'Linear attribution · 90-day window',
+    metaROAS:     'Meta platform · 7d click / 1d view',
+    googleROAS:   'Google est. · AOV $100 · 30-day',
+    sessionCVR:   'Session CVR: conversions ÷ sessions',
+    clickCVR:     'Click CVR: conversions ÷ clicks',
+    attributed:   'Attributed Revenue (90d) · linear',
+    sfClosedWon:  'Salesforce Closed Won · 90-day',
     crmAllTime:   'CRM all-time (HubSpot + Salesforce)',
   };
+
+  /* ── Data Freshness Badge (CLAUDE.md §6) ─────────────────────────────────── */
+
+  /**
+   * Build the canonical data freshness string required by CLAUDE.md §6.
+   * Format: "[Start date] – [End date] · Data as of [generatedAt]"
+   *
+   * Example output: "Dec 16, 2025 – Mar 15, 2026 · Data as of Mar 15, 2026"
+   *
+   * @param {string} windowStart   ISO date "YYYY-MM-DD" — period start (inclusive)
+   * @param {string} windowEnd     ISO date "YYYY-MM-DD" — period end (inclusive)
+   * @param {string} [generatedAt] ISO timestamp from golden_metrics._meta.generated_at.
+   *                               When omitted, falls back to today's date in the browser.
+   *                               Always pass this value when available so the badge
+   *                               reflects the snapshot date, not the render date.
+   * @returns {string}
+   */
+  function freshnessLabel(windowStart, windowEnd, generatedAt) {
+    // Parse YYYY-MM-DD as local calendar date.
+    // Using (y, m-1, d) constructor avoids the UTC midnight off-by-one shift
+    // that would occur with new Date("2025-12-16") on machines west of UTC.
+    const fmtDate = (iso) => {
+      const [y, m, d] = iso.slice(0, 10).split('-').map(Number);
+      return new Date(y, m - 1, d).toLocaleDateString('en-US', {
+        month: 'short', day: 'numeric', year: 'numeric',
+      });
+    };
+
+    // Use the golden-layer generation timestamp when available.
+    // Fall back to today's local date when called outside a golden-layer context.
+    const asOf = generatedAt
+      ? fmtDate(generatedAt)
+      : new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+    return `${fmtDate(windowStart)} – ${fmtDate(windowEnd)} · Data as of ${asOf}`;
+  }
+
+  /**
+   * Inject the canonical freshness label into a DOM element.
+   *
+   * Usage — call this once after loading golden_metrics.json:
+   *   const meta = goldenMetrics._meta;
+   *   Metrics.renderFreshnessBadge(
+   *     '#freshness-badge',
+   *     meta.window_start,    // "2025-12-16"
+   *     meta.window_end,      // "2026-03-15"
+   *     meta.generated_at     // "2026-03-15T00:00:00+00:00"
+   *   );
+   *
+   * The element with id="freshness-badge" should already exist in the HTML, e.g.:
+   *   <span id="freshness-badge" class="freshness-badge">Loading…</span>
+   *
+   * @param {string} selector    CSS selector for the target element
+   * @param {string} windowStart ISO date string for the period start
+   * @param {string} windowEnd   ISO date string for the period end
+   * @param {string} [generatedAt] ISO timestamp from golden_metrics._meta.generated_at
+   */
+  function renderFreshnessBadge(selector, windowStart, windowEnd, generatedAt) {
+    const el = document.querySelector(selector);
+    // Silently skip if the element is absent — not every dashboard has a badge element.
+    if (!el) return;
+    el.textContent = freshnessLabel(windowStart, windowEnd, generatedAt);
+  }
 
   /* ── Public API ───────────────────────────────────────────────────────────── */
 
@@ -161,6 +225,8 @@ const Metrics = (() => {
     fmtPct,
     fmtROAS,
     labels,
+    freshnessLabel,
+    renderFreshnessBadge,
   };
 })();
 

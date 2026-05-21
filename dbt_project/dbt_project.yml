@@ -18,3 +18,19 @@ models:
       +materialized: ephemeral
     marts:
       +materialized: table
+
+# Project-wide date variables — override at run time with:
+#   dbt build --vars '{"window_start":"2025-06-01","window_end":"2025-09-01"}'
+#
+# These drive:
+#   - metricflow_time_spine.sql (time_spine_start / time_spine_end)
+#   - fct_marketing_daily.sql  (window_start / window_end)
+#   - int_dates.sql            (time_spine_start / time_spine_end)
+#
+# Synthetic dataset has a fixed anchor date (2026-03-15 — never use today()).
+# Live/production datasets should override window_start/end to today()-90 → today().
+vars:
+  time_spine_start: "2024-01-01"   # earliest date MetricFlow spine must cover; extend for older data
+  time_spine_end:   "2026-12-31"   # latest date MetricFlow spine must cover; extend when dataset grows
+  window_start:     "2025-12-16"   # canonical 90-day window start (anchor 2026-03-15 minus 89 days)
+  window_end:       "2026-03-15"   # canonical 90-day window end / synthetic dataset anchor date

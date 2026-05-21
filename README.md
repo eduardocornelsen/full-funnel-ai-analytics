@@ -18,6 +18,10 @@
 ![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
 ![Cost](https://img.shields.io/badge/cost-%240%2Fmo%20base-brightgreen?style=flat-square)
 
+[![CI — PR Gate](https://github.com/eduardocornelsen/full-funnel-ai-analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/eduardocornelsen/full-funnel-ai-analytics/actions/workflows/ci.yml)
+[![Warehouse Deploy](https://github.com/eduardocornelsen/full-funnel-ai-analytics/actions/workflows/warehouse-deploy.yml/badge.svg)](https://github.com/eduardocornelsen/full-funnel-ai-analytics/actions/workflows/warehouse-deploy.yml)
+[![Scheduled Refresh](https://github.com/eduardocornelsen/full-funnel-ai-analytics/actions/workflows/scheduled-refresh.yml/badge.svg)](https://github.com/eduardocornelsen/full-funnel-ai-analytics/actions/workflows/scheduled-refresh.yml)
+
 **Natural language marketing analytics powered by MCP, dbt Semantic Layer, and ML lead scoring. Works with Claude Desktop, OpenCode, Gemini CLI, and Antigravity IDE.**
 
 > *"Which channels actually drive revenue, not just clicks?"*<br>
@@ -101,7 +105,14 @@ This project solves that with the **dbt Semantic Layer (MetricFlow)**: define "R
 
 > Full-stack analytics portfolio — data ingestion through AI-powered natural language querying, built entirely on free/trial tiers.
 
+![Architecture v2](docs/images/full_funnel_architecture_flow_v2.png)
+
+<details>
+<summary>View original architecture diagram (SVG)</summary>
+
 ![full_funnel_architecture_flow](docs/images/full_funnel_architecture_flow.svg)
+
+</details>
 
 | Pillar       | What it does                                               | Tech                                                              |
 | ------------ | ---------------------------------------------------------- | ----------------------------------------------------------------- |
@@ -109,18 +120,21 @@ This project solves that with the **dbt Semantic Layer (MetricFlow)**: define "R
 | **ML Layer** | Predict which leads become high-value customers            | XGBoost + MLflow + FastAPI `/score` + n8n auto-routing            |
 | **BI Layer** | Self-serve dashboards for marketing and sales teams        | Looker Studio + Streamlit + Claude React artifacts                |
 
+For a detailed breakdown of every model, metric, and semantic definition see [docs/architecture.md](docs/architecture.md).
+
 ---
 
 ## Build Status
 
-| Phase                            | Status     | Description                                                  |
-| -------------------------------- | ---------- | ------------------------------------------------------------ |
-| Phase 1: Data Foundation         | ✅ Complete | Olist dataset + synthetic marketing data + warehouse loading |
-| Phase 2: dbt Semantic Layer      | ✅ Complete | 14 staging + 4 intermediate + 11 mart models                 |
-| Phase 3: AI Layer (MCP)          | ✅ Complete | 7 MCP servers + 4 AI client configs                          |
-| Phase 4: ML Scoring              | ✅ Complete | XGBoost + MLflow + FastAPI endpoint                          |
-| Phase 5: Dashboards & Automation | ✅ Complete | Looker Studio + Streamlit + n8n routing                      |
-| Phase 6: Portability & Polish    | ✅ Complete | Snowflake/Databricks demos + documentation                   |
+| Phase                                  | Status     | Description                                                  |
+| -------------------------------------- | ---------- | ------------------------------------------------------------ |
+| Phase 1: Data Foundation               | ✅ Complete | Olist dataset + synthetic marketing data + warehouse loading |
+| Phase 2: dbt Semantic Layer            | ✅ Complete | 14 staging + 4 intermediate + 11 mart models                 |
+| Phase 3: AI Layer (MCP)               | ✅ Complete | 7 MCP servers + 4 AI client configs                          |
+| Phase 4: ML Scoring                   | ✅ Complete | XGBoost + MLflow + FastAPI endpoint                          |
+| Phase 5: Dashboards & Automation      | ✅ Complete | Looker Studio + Streamlit + n8n routing                      |
+| Phase 6: Portability & Polish         | ✅ Complete | Snowflake/Databricks demos + documentation                   |
+| Phase 7: Production Readiness & CI/CD | ✅ Complete | GitHub Actions, warehouse adapters, daily synthetic data, test suite, connector UI |
 
 ### Project Scale
 
@@ -130,10 +144,93 @@ This project solves that with the **dbt Semantic Layer (MetricFlow)**: define "R
 | **DuckDB Warehouse** | **46 objects** (staging views + mart tables), all populated        |
 | **dbt Models**       | **29 models**, all materialized, end-to-end verified               |
 | **MCP Servers**      | **7 servers**, column references cross-checked against source CSVs |
-| **Streamlit App**    | 5 tabs, all DuckDB queries valid, AI analyst integrated            |
+| **Streamlit App**    | 5 tabs + Data Sources page, all DuckDB queries valid, AI analyst integrated |
 | **ML Pipeline**      | XGBoost trained on **93K rows**, FastAPI `/score` endpoint live    |
 | **Semantic Layer**   | **5 semantic models** + **13+ metrics** governed                   |
+| **CI/CD Workflows**  | **4 GitHub Actions workflows** — PR gate, warehouse deploy, scheduled refresh, daily synthetic data |
+| **Test Suite**       | **20+ pytest assertions** on golden metrics + FastAPI endpoint     |
 | **Dependencies**     | **27 core packages**, all importable                               |
+
+---
+
+## CI/CD & Production Readiness
+
+The project ships with four GitHub Actions workflows that enforce zero metric drift from source to dashboard.
+
+### Workflows
+
+| Workflow | Trigger | What it does |
+| -------- | ------- | ------------ |
+| [`ci.yml`](.github/workflows/ci.yml) | Every pull request | dbt compile + test on DuckDB → generate golden metrics → validate drift → pytest. No cloud creds needed. |
+| [`warehouse-deploy.yml`](.github/workflows/warehouse-deploy.yml) | Push to `main` | Deploys dbt to BigQuery **and** Snowflake in parallel → regenerates `golden_metrics.json` → commits it back to the repo. |
+| [`scheduled-refresh.yml`](.github/workflows/scheduled-refresh.yml) | Daily 06:00 UTC | Appends synthetic data → dbt run/test → regenerates golden metrics with `--live` flag → validates. |
+| [`daily-synthetic-data.yml`](.github/workflows/daily-synthetic-data.yml) | Daily 05:00 UTC | Adds one new day of realistic synthetic data to mock CSVs. Can be manually triggered with a custom `--days` count. |
+
+### The Zero-Drift Guarantee
+
+```
+Raw data
+  → dbt staging/intermediate/mart models
+  → generate_golden_metrics.py  (reads mart tables, writes dashboards/golden_metrics.json)
+  → validate_metrics.py         (re-queries warehouse, diffs vs JSON — exits 1 if any drift)
+  → HTML dashboards + Claude skills + Streamlit app  (all read golden_metrics.json)
+```
+
+Every PR gate and every warehouse deploy runs `validate_metrics.py`. If a metric in the dashboard diverges from the warehouse by more than the configured tolerance, the workflow fails and blocks the merge.
+
+### GitHub Secrets Required
+
+To enable BigQuery and Snowflake deploys, add these secrets in **Settings → Secrets and variables → Actions**:
+
+| Secret | Platform |
+| ------ | -------- |
+| `GCP_PROJECT_ID` | BigQuery |
+| `GCP_SERVICE_ACCOUNT_KEY_JSON` | BigQuery |
+| `SNOWFLAKE_ACCOUNT` | Snowflake |
+| `SNOWFLAKE_USER` | Snowflake |
+| `SNOWFLAKE_PASSWORD` | Snowflake |
+| `SNOWFLAKE_WAREHOUSE` | Snowflake |
+| `SNOWFLAKE_DATABASE` | Snowflake |
+| `SNOWFLAKE_SCHEMA` | Snowflake |
+
+The DuckDB PR gate needs **no secrets** — it runs entirely locally inside the Actions runner.
+
+See the [Production Readiness Guide](docs/guides/production_readiness_guide.md) for full setup instructions, including how to create a BigQuery service account and configure Snowflake.
+
+---
+
+## Importing Your Own Data
+
+The platform supports three ways to bring in real data — from a spreadsheet, a CSV file, or a live warehouse.
+
+### Streamlit Data Sources UI (easiest)
+
+```bash
+streamlit run streamlit_app/app.py
+```
+
+Click **Data Sources** in the sidebar to open the three-tab interface:
+
+| Tab | What it does |
+| --- | ------------ |
+| **File Upload** | Drag-and-drop a CSV or Excel file, preview 20 rows, choose which table to replace, and save it to `data/mock_marketing/` |
+| **Warehouse Connection** | Configure and test a connection to DuckDB, BigQuery, or Snowflake. Preview any mart table. Saves to `~/.full_funnel_connectors.json` (never committed to git). |
+| **MCP Server Status** | Live view of all 6 MCP servers — CSV path, row count, and latest date in the data. |
+
+After saving a file, rebuild the pipeline from the terminal:
+
+```bash
+python scripts/load_duckdb.py
+cd dbt_project && dbt run --target duckdb && cd ..
+python scripts/generate_golden_metrics.py
+python scripts/validate_metrics.py   # must exit 0
+```
+
+### See Updated Data in Claude
+
+Once `golden_metrics.json` is regenerated, every Claude skill (`/marketing`, `/attribution`, `/campaign`, etc.) reads the new numbers automatically. In Claude Code on the web, push the updated JSON to the repo so the container has the latest file.
+
+See the [Data Import Guide](docs/guides/data_import_guide.md) for all three import methods, column mapping tables, and troubleshooting tips.
 
 ---
 
@@ -265,22 +362,26 @@ python scripts/load_bigquery.py
 python scripts/load_duckdb.py
 
 # 5. Build dbt models
-cd dbt_project && dbt build --target bigquery && cd ..
+cd dbt_project && dbt build --target duckdb && cd ..
 
-# 6. Start ML tracking and train model
+# 6. Generate the golden metrics snapshot (used by all dashboards and Claude skills)
+python scripts/generate_golden_metrics.py
+python scripts/validate_metrics.py   # confirms 0 drift — must exit 0
+
+# 7. Start ML tracking and train model
 bash scripts/run_mlflow_server.sh &
 python ml/src/train.py
 
-# 7. Start scoring API
+# 8. Start scoring API
 cd api && uvicorn main:app --port 8000 &
 
-# 8. Configure MCP for your preferred client
+# 9. Configure MCP for your preferred client
 # Claude Desktop: copy mcp_servers/claude_desktop_config.example.json
 #                 to ~/Library/Application Support/Claude/claude_desktop_config.json
 # OpenCode: already configured at .opencode/opencode.json — run `opencode`
 # Gemini CLI: gemini --mcp-server "bigquery=uvx mcp-server-bigquery --project YOUR_PROJECT"
 
-# 9. Query in natural language from any client:
+# 10. Query in natural language from any client:
 # "Show me blended ROAS across Google and Meta for Q1 2025,
 #  with attribution model comparison and lead quality breakdown."
 ```
@@ -291,16 +392,25 @@ cd api && uvicorn main:app --port 8000 &
 
 ```
 full-funnel-ai-analytics/
-├── dbt_project/                    # Semantic layer + transformations
-│   ├── models/
-│   │   ├── staging/                #   14 staging models (Olist + marketing)
-│   │   ├── intermediate/           #   4 intermediate (LTV, funnel, unified campaigns)
-│   │   ├── marts/                  #   11 mart models (facts + dimensions)
-│   │   ├── semantic_models/        #   MetricFlow definitions
-│   │   └── metrics/                #   15+ governed metrics
-│   └── macros/                     #   Attribution model logic + cross-db helpers
+├── .github/
+│   └── workflows/
+│       ├── ci.yml                        # PR gate (DuckDB — no cloud creds needed)
+│       ├── warehouse-deploy.yml          # Deploy to BigQuery + Snowflake on push to main
+│       ├── scheduled-refresh.yml         # Daily dbt run + golden metrics refresh (06:00 UTC)
+│       └── daily-synthetic-data.yml      # Daily synthetic data append (05:00 UTC)
 │
-├── mcp_servers/                    # 7 MCP servers (work with all 4 clients)
+├── dbt_project/                          # Semantic layer + transformations
+│   ├── models/
+│   │   ├── staging/                      #   14 staging models (Olist + marketing)
+│   │   ├── intermediate/                 #   4 intermediate (LTV, funnel, unified campaigns)
+│   │   ├── marts/                        #   11 mart models (facts + dimensions)
+│   │   ├── semantic_models/              #   MetricFlow definitions
+│   │   └── metrics/                      #   15+ governed metrics
+│   ├── macros/                           #   Attribution model logic + cross-db helpers
+│   ├── dbt_project.yml                   #   vars block: window dates, time spine bounds
+│   └── profiles.yml.example             #   DuckDB + BigQuery + Snowflake profiles
+│
+├── mcp_servers/                          # 7 MCP servers (work with all 4 clients)
 │   ├── mock_google_ads_server.py
 │   ├── mock_meta_ads_server.py
 │   ├── mock_ga4_server.py
@@ -308,39 +418,81 @@ full-funnel-ai-analytics/
 │   ├── mock_salesforce_server.py
 │   └── weather_server.py
 │
-├── cowork_plugin/                  # Claude Desktop Cowork plugin
-│   ├── commands/                   #   /marketing, /attribution, /pipeline, /score
-│   └── skills/                     #   Brand voice, metric definitions, workflows
+├── scripts/
+│   ├── _warehouse_adapters.py            # Uniform DuckDB / BigQuery / Snowflake connection layer
+│   ├── generate_golden_metrics.py        # Reads mart tables → writes dashboards/golden_metrics.json
+│   ├── validate_metrics.py              # Re-queries warehouse, diffs vs JSON (exits 1 on drift)
+│   ├── daily_synthetic_append.py        # Appends N realistic days to mock marketing CSVs
+│   ├── load_duckdb.py
+│   ├── load_bigquery.py
+│   └── generate_mock_marketing_data.py
 │
-├── .opencode/                      # OpenCode CLI config + commands + skills
-│   ├── opencode.json               #   MCP server config
-│   ├── commands/                   #   Same commands (OpenCode format)
+├── streamlit_app/
+│   ├── app.py                            # Main dashboard with connection status badge
+│   ├── pages/
+│   │   └── connectors.py                 # Data Sources page (file upload, warehouse config, MCP status)
+│   └── lib/
+│       └── connector_registry.py         # Connection factory + config (~/.full_funnel_connectors.json)
+│
+├── tests/
+│   ├── conftest.py                       # Pytest fixtures (loads golden_metrics.json)
+│   ├── test_golden_metrics.py           # 20+ assertions on golden metrics structure and sanity
+│   └── test_api.py                      # FastAPI lead scoring endpoint tests
+│
+├── dashboards/
+│   ├── golden_metrics.json              # Pre-computed snapshot — single source of truth for all dashboards
+│   ├── js/metrics.js                    # Canonical metric functions (ROAS, CVR, attribution normalisation)
+│   ├── full_funnel_marketing_dashboard.html
+│   ├── attribution_dashboard.html
+│   ├── campaign_performance_dashboard.html
+│   ├── pipeline_dashboard.html
+│   └── traffic_ga4_dashboard.html
+│
+├── cowork_plugin/                        # Claude Desktop Cowork plugin
+│   ├── commands/                         #   /marketing, /attribution, /pipeline, /score
+│   └── skills/                           #   Brand voice, metric definitions, workflows
+│
+├── .opencode/                            # OpenCode CLI config + commands + skills
+│   ├── opencode.json                     #   MCP server config
+│   ├── commands/                         #   Same commands (OpenCode format)
 │   └── skills/
 │
-├── ml/                             # Lead scoring ML pipeline
-│   ├── src/train.py                #   XGBoost + MLflow tracking
-│   └── notebooks/                  #   EDA, training, evaluation
+├── ml/                                   # Lead scoring ML pipeline
+│   ├── src/train.py                      #   XGBoost + MLflow tracking
+│   └── notebooks/                        #   EDA, training, evaluation
 │
-├── api/                            # FastAPI lead scoring endpoint
-│   ├── main.py                     #   POST /score, GET /health, GET /model-info
+├── api/                                  # FastAPI lead scoring endpoint
+│   ├── main.py                           #   POST /score, GET /health, GET /model-info
 │   └── Dockerfile
 │
-├── automation/                     # n8n lead routing workflow
+├── automation/                           # n8n lead routing workflow
 │   └── n8n_workflow.json
 │
-├── streamlit_app/                  # Interactive AI dashboard
-│   └── app.py
-│
-├── scripts/                        # Data download + loading
-│
-├── warehouse_configs/              # Setup scripts per warehouse
+├── warehouse_configs/                    # Setup scripts per warehouse
 │   ├── bigquery/
 │   ├── snowflake/
 │   ├── databricks/
 │   ├── supabase/
 │   └── duckdb/
 │
-└── docs/                           # Architecture, cost analysis, guides
+└── docs/
+    ├── architecture.md                   # Full medallion architecture, MetricFlow models, AI agent internals
+    ├── images/
+    │   ├── full_funnel_architecture_flow_v2.png   # Architecture diagram v2
+    │   ├── full_funnel_architecture_flow.png      # Architecture diagram v1
+    │   └── full_funnel_architecture_flow.svg      # Architecture diagram (SVG)
+    ├── guides/
+    │   ├── production_readiness_guide.md  # CI/CD setup, GitHub secrets, BigQuery SA creation
+    │   ├── data_import_guide.md           # Import data via UI, CSV, or live warehouse
+    │   ├── connector_ui_guide.md          # Data Sources page walkthrough + live dashboard capabilities
+    │   ├── setup_guide.md
+    │   ├── commands_guide.md
+    │   ├── portability_guide.md
+    │   ├── data-warehouse-plan.md
+    │   └── claude_desktop_project_instructions.md
+    └── plans/
+        ├── plan_01_production_readiness.md
+        └── plan_02_connector_interface.md
 ```
 
 ---
@@ -367,6 +519,10 @@ Not because you'd run 5 in production — but because it proves the semantic lay
 
 Same principle — it proves the MCP architecture is LLM-agnostic. This directly answers *"but we use GPT-4"* — you show the same servers working with any client.
 
+### Why a golden metrics JSON?
+
+The `dashboards/golden_metrics.json` file is pre-computed from the dbt warehouse and is the single source of truth for all dashboards and Claude skills. Every number a dashboard shows is copied verbatim from this file — no recalculation by the AI, no rounding drift, no stale aggregates. `validate_metrics.py` re-queries the warehouse and diffs against this file, guaranteeing bit-for-bit reproducibility. See [CLAUDE.md](CLAUDE.md) §14 for the full rule set.
+
 ---
 
 ## Swapping to Real Platform Data
@@ -392,7 +548,7 @@ The entire stack is warehouse-agnostic. Only connection config changes between w
 | All MCP server tool interfaces              | Minor SQL dialect differences (auto-handled by dbt macros) |
 | All client commands, skills, and dashboards |                                                            |
 
-See the [Portability Guide](docs/portability_guide.md) for Snowflake, Databricks, and Supabase setup steps.
+See the [Portability Guide](docs/guides/portability_guide.md) for Snowflake, Databricks, and Supabase setup steps.
 
 ---
 
@@ -422,7 +578,11 @@ See the [Portability Guide](docs/portability_guide.md) for Snowflake, Databricks
 
 | Document | Description |
 | -------- | ----------- |
-| [Architecture Flow](docs/images/full_funnel_architecture_flow.svg) | System design & data flow diagrams |
+| [Architecture v2](docs/images/full_funnel_architecture_flow_v2.png) | Latest system architecture diagram |
+| [Architecture Deep-Dive](docs/architecture.md) | Medallion layers, MetricFlow semantic models, AI agent internals, dbt CLI reference |
+| [Production Readiness Guide](docs/guides/production_readiness_guide.md) | CI/CD setup, GitHub secrets, BigQuery service account creation, warehouse deploy walkthrough |
+| [Data Import Guide](docs/guides/data_import_guide.md) | Import data via Streamlit UI, direct CSV, or live BigQuery/Snowflake connection |
+| [Connector UI Guide](docs/guides/connector_ui_guide.md) | Data Sources page walkthrough; live dashboard capabilities across Claude, Streamlit, and HTML |
 | [Setup & Execution Guide](docs/guides/setup_guide.md) | Step-by-step instructions to get the full platform running locally |
 | [Analytical Commands Guide](docs/guides/commands_guide.md) | Reference for all slash commands (`/marketing`, `/campaign`, `/attribution`, etc.) |
 | [Multi-Warehouse Portability Guide](docs/guides/portability_guide.md) | Deploying to Snowflake or Databricks from the default BigQuery/DuckDB setup |

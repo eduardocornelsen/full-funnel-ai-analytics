@@ -1,0 +1,53 @@
+name: Scheduled Refresh — Daily Golden Metrics
+
+on:
+  schedule:
+    # 06:00 UTC daily — after daily-synthetic-data (05:00 UTC)
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  refresh-duckdb:
+    name: Refresh DuckDB golden layer
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install dbt packages
+        working-directory: dbt_project
+        run: dbt deps
+
+      - name: Generate / append synthetic data
+        run: python scripts/daily_synthetic_append.py
+
+      - name: Load DuckDB
+        run: python scripts/load_duckdb.py
+
+      - name: dbt run
+        working-directory: dbt_project
+        run: dbt run --target duckdb
+
+      - name: dbt test
+        working-directory: dbt_project
+        run: dbt test --target duckdb
+
+      - name: Generate golden metrics
+        run: python scripts/generate_golden_metrics.py --target duckdb
+
+      - name: Validate — no drift
+        run: python scripts/validate_metrics.py --target duckdb
+
+      - name: Commit updated golden_metrics.json
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: daily refresh — golden_metrics.json [skip ci]"
+          file_pattern: "dashboards/golden_metrics.json data/mock_marketing/*.csv"

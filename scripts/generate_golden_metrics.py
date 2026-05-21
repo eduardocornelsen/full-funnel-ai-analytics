@@ -1,14 +1,16 @@
 """
 generate_golden_metrics.py
 ───────────────────────────────────────────────────────────────────────────────
-Queries the dbt DuckDB golden layer and writes dashboards/golden_metrics.json.
+Queries the dbt golden layer and writes dashboards/golden_metrics.json.
 
 This file is the SINGLE SOURCE OF TRUTH for all dashboard numbers.
 The AI agent must read this file when generating dashboards — never
 recalculate metrics independently.
 
 Usage:
-    python scripts/generate_golden_metrics.py
+    python scripts/generate_golden_metrics.py                   # DuckDB (default)
+    python scripts/generate_golden_metrics.py --target bigquery
+    python scripts/generate_golden_metrics.py --target snowflake
 
 Run after every `dbt run` to refresh the golden snapshot.
 
@@ -23,10 +25,15 @@ Date anchoring (SYNTHETIC DATASET — this project's default):
     See CLAUDE.md §9 for the full dataset-detection rules.
 """
 
+import argparse
+import sys
 from pathlib import Path
 import json
 import duckdb
 from datetime import date, timedelta, datetime, timezone
+
+sys.path.insert(0, str(Path(__file__).parent))
+from _warehouse_adapters import get_connection as _get_warehouse_connection  # noqa: E402
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -44,8 +51,14 @@ WINDOW_END   = ANCHOR_DATE                                       # 2026-03-15
 GOOGLE_AOV = 100.0
 
 
+def get_connection(target: str = "duckdb"):
+    """Return a warehouse-agnostic connection for the given dbt target."""
+    return _get_warehouse_connection(target)
+
+
 def connect():
-    return duckdb.connect(str(DB_PATH), read_only=True)
+    """Legacy no-arg helper — kept for backwards compatibility."""
+    return _get_warehouse_connection("duckdb")
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
@@ -370,32 +383,57 @@ def build_section(con, start: date, end: date, label: str) -> dict:
 # ── Main ────────────────────────────────────────────────────────────────────────
 
 def main():
-    print(f"Connecting to DuckDB: {DB_PATH}")
-    con = connect()
+    parser = argparse.ArgumentParser(description="Generate golden_metrics.json from dbt mart tables.")
+    parser.add_argument("--target", default="duckdb",
+                        choices=["duckdb", "bigquery", "snowflake"],
+                        help="dbt target warehouse (default: duckdb)")
+    parser.add_argument("--live", action="store_true",
+                        help="Auto-detect latest date in DB instead of using fixed ANCHOR_DATE. "
+                             "Use after daily_synthetic_append.py or with live datasets.")
+    args = parser.parse_args()
+
+    if args.target == "duckdb":
+        print(f"Connecting to DuckDB: {DB_PATH}")
+    else:
+        print(f"Connecting to {args.target} ...")
+    con = get_connection(args.target)
 
     dataset_start = date(2024, 7, 16)
-    dataset_end   = ANCHOR_DATE
 
-    print(f"Anchor date: {ANCHOR_DATE}  |  90d window: {WINDOW_START} → {WINDOW_END}")
+    if args.live:
+        # Read latest date from the fact table so the window follows appended data
+        latest = con.execute("SELECT MAX(date) FROM fct_marketing_daily").fetchone()[0]
+        anchor = date.fromisoformat(str(latest)[:10]) if not isinstance(latest, date) else latest
+        window_start = anchor - timedelta(days=WINDOW_DAYS - 1)
+        window_end   = anchor
+        print(f"--live mode: anchor={anchor}  |  90d window: {window_start} → {window_end}")
+    else:
+        anchor       = ANCHOR_DATE
+        window_start = WINDOW_START
+        window_end   = WINDOW_END
+        print(f"Anchor date: {anchor}  |  90d window: {window_start} → {window_end}")
+
+    dataset_end = anchor
 
     print("Building all-time section …")
     all_time = build_section(con, dataset_start, dataset_end, "All-time (dataset full range)")
 
     print("Building 90-day windowed section …")
-    windowed_90d = build_section(con, WINDOW_START, WINDOW_END, "90-day window (canonical)")
+    windowed_90d = build_section(con, window_start, window_end, "90-day window (canonical)")
 
     con.close()
 
     output = {
         "_meta": {
             "generated_at":   datetime.now(timezone.utc).isoformat(),
-            "anchor_date":    fd(ANCHOR_DATE),
+            "anchor_date":    fd(anchor),
             "dataset_start":  fd(dataset_start),
             "dataset_end":    fd(dataset_end),
             "window_days":    WINDOW_DAYS,
-            "window_start":   fd(WINDOW_START),
-            "window_end":     fd(WINDOW_END),
-            "dbt_source":     str(DB_PATH),
+            "window_start":   fd(window_start),
+            "window_end":     fd(window_end),
+            "dbt_source":     str(DB_PATH) if args.target == "duckdb" else args.target,
+            "dbt_target":     args.target,
             "schema_version": "2.1",
             "google_aov":     GOOGLE_AOV,
             "note": (

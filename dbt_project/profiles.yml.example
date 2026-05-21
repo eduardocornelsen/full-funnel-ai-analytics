@@ -12,6 +12,15 @@ olist_analytics:
       dataset: olist_analytics
       threads: 4
       location: US
+    # Use this target in CI (GitHub Actions) — reads key JSON from env var, no file needed
+    bigquery-ci:
+      type: bigquery
+      method: service-account-json
+      project: "{{ env_var('GCP_PROJECT_ID') }}"
+      dataset: olist_analytics
+      threads: 4
+      location: US
+      keyfile_json: "{{ env_var('GCP_SERVICE_ACCOUNT_KEY_JSON') }}"
     supabase:
       type: postgres
       host: "db.{{ env_var('SUPABASE_PROJECT_REF') }}.supabase.co"

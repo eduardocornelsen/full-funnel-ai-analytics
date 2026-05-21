@@ -2,7 +2,7 @@
 
 > **Branch:** `claude/fix-dynamic-time-filtering-mE86T`  
 > **Generated from audit:** May 2026  
-> **Covers:** Medallion Architecture layers, MetricFlow semantic models, architecture summary, dbt CLI commands
+> **Covers:** Medallion Architecture layers, MetricFlow semantic models, architecture summary, dbt CLI commands, AI agent internals
 
 ---
 
@@ -16,6 +16,7 @@
 6. [Metric Definitions](#6-metric-definitions)
 7. [Architecture Summary Table](#7-architecture-summary-table)
 8. [dbt CLI Command Reference](#8-dbt-cli-command-reference)
+9. [AI Agent — Querying, Drift Prevention & Validation](#9-ai-agent--querying-drift-prevention--validation)
 
 ---
 
@@ -979,3 +980,226 @@ Beyond the commands above, these dbt features are relevant to this project:
 | `--select` graph operators | `+model` (upstream), `model+` (downstream), `model1 model2` (explicit set), `tag:foo` (tagged models) |
 | `--store-failures` | Persists failed test rows to a schema for debugging — especially useful for `accepted_values` and `unique` failures |
 | `mf validate-configs` | MetricFlow-specific: validates that every semantic model's `model`, `entities`, `dimensions`, and `measures` resolve correctly before any query runs |
+
+---
+
+## 9. AI Agent — Querying, Drift Prevention & Validation
+
+This section answers three questions about how the AI agent interacts with this data system.
+
+---
+
+### 9.1 How the AI Agent Queries the Semantic Layer
+
+The agent operates in **two distinct modes** controlled by a decision tree in `CLAUDE.md §14`:
+
+```
+User asks for a dashboard or metric
+        │
+        ├─ User says "live", "real-time", "bypass golden", or uses a "-mcp" skill?
+        │   └─ YES → Path B: Live MCP Query
+        │
+        └─ NO (default)
+            └─ Path A: Read dashboards/golden_metrics.json
+```
+
+#### Path A — Golden Layer (Default)
+
+The agent reads `dashboards/golden_metrics.json`, a pre-computed JSON snapshot, and **copies exact values** into dashboard JS constants — it does not recalculate anything.
+
+The file is produced by `scripts/generate_golden_metrics.py`, which queries DuckDB mart tables directly with parameterised date bounds:
+
+```
+dbt run
+  → materialises tables in data/olist_analytics.duckdb
+
+python scripts/generate_golden_metrics.py
+  → reads dbt_project/dbt_project.yml vars (window_start / window_end)
+  → queries DuckDB with: WHERE date BETWEEN ? AND ?
+  → writes dashboards/golden_metrics.json
+```
+
+The JSON has two root sections the agent uses:
+
+| Key | Contents | When to use |
+|-----|----------|-------------|
+| `windowed_90d` | All metrics scoped to `window_start` → `window_end` | Default 90-day views |
+| `all_time` | Metrics over full dataset range | Lifetime / CRM views only |
+
+The `_meta` block records `window_start`, `window_end`, `generated_at`, `schema_version`, and `google_aov` so every snapshot is fully auditable.
+
+> **Why pre-compute instead of query live?**  
+> If the agent recalculates from MCP data, floating-point rounding differences and non-deterministic AI arithmetic introduce drift versus the golden layer. Copying pre-computed values guarantees bit-for-bit reproducibility between runs.
+
+#### Path B — Live MCP Query (Opt-in Only)
+
+Triggered by the user saying "query live data", "bypass golden", or running a `-mcp` skill. The agent calls mock MCP server tools (`google-ads`, `meta-ads`, `ga4`, `hubspot`, `salesforce`) with **explicit canonical dates** as arguments:
+
+```
+Synthetic dataset:  start_date=2025-12-16, end_date=2026-03-15  (fixed anchor)
+Live dataset:       start_date=today()-90,  end_date=today()     (rolling window)
+```
+
+Raw MCP responses are then processed through `dashboards/js/metrics.js` canonical functions — never computed inline. The dashboard header shows an `⚡ Live MCP` badge.
+
+---
+
+### 9.2 How the Agent Prevents Metric Drift
+
+Metric drift — the same metric returning different numbers in different places — is blocked at **four independent enforcement layers**, each targeting a different failure mode.
+
+#### Layer 1 — dbt Semantic Layer (Definition Governance)
+
+`dbt_project/models/metrics/metrics.yml` is the single authoritative definition for every metric formula. Example:
+
+```yaml
+- name: session_conversion_rate
+  type: derived
+  type_params:
+    expr: "total_orders / NULLIF(total_sessions, 0)"
+    metrics:
+      - name: total_orders
+        fill_nulls_with: 0
+      - name: total_sessions
+        fill_nulls_with: 0
+```
+
+This one definition feeds MetricFlow query validation, the Python golden-layer script, and the `metrics.js` module. `CLAUDE.md §12` mandates: *"When in doubt about a metric formula, read that file."*
+
+#### Layer 2 — Golden Layer Pre-computation (Arithmetic Freeze)
+
+`generate_golden_metrics.py` computes each metric once with a fixed date window and serialises the result to `golden_metrics.json`. The agent is mandated by `CLAUDE.md §14` to copy those values, never recompute them:
+
+> *"Copy exact values from this file into HTML dashboard JS constants. Do NOT recalculate metrics independently."*
+
+The `_meta` block with `schema_version` and `generated_at` makes each snapshot auditable.
+
+#### Layer 3 — `metrics.js` Runtime Enforcement (Browser-side)
+
+`dashboards/js/metrics.js` is the **mandatory** runtime module — all HTML dashboards must load it before any inline script. It exposes only canonical formula implementations. Dashboards cannot accidentally implement their own CVR or ROAS logic:
+
+```javascript
+// Google ROAS: conversions × $100 AOV / cost — NEVER spend × multiplier
+function googleROAS(conversions, cost) {
+  if (!cost || cost === 0) return 0;
+  return parseFloat(((conversions * AOV) / cost).toFixed(2));
+}
+```
+
+The `labels` object enforces consistent attribution window strings across every KPI card so every dashboard shows the same subtitle text.
+
+#### Layer 4 — CLAUDE.md Hard Rules (Instruction-level Enforcement)
+
+`CLAUDE.md` contains explicit prohibitions loaded into every conversation:
+
+| Rule | Protection |
+|------|-----------|
+| `§ROAS` | Never use a hardcoded spend multiplier (e.g. `spend × 3.5`) |
+| `§CVR` | Never mix session CVR and click CVR on the same chart without labelling |
+| `§Channel Attribution` | Attribution shares must normalise to exactly 100% before rendering |
+| `§Funnel` | Each funnel step must be ≤ the step above it; CRM Contacts cannot appear as a funnel stage after GA4 Conversions |
+| `§Revenue Scopes` | Never divide all-time revenue by 90-day spend (this was the source of the 71.1× ROAS bug) |
+| `§Never mix scopes` | `windowed_90d` numbers must never mix with `all_time` numbers in the same calculation |
+
+These are not guidelines — `CLAUDE.md` opens with: *"All rules here are mandatory."*
+
+---
+
+### 9.3 How the Agent Tests and Validates Itself
+
+Testing runs at **four independent checkpoints**, each catching a different class of failure.
+
+#### Checkpoint A — dbt Build + Tests (SQL layer)
+
+```bash
+dbt build --select marts
+```
+
+Every mart model in `models/marts/schema.yml` has dbt schema tests. Examples:
+
+```yaml
+- name: fct_orders
+  columns:
+    - name: order_id
+      tests: [unique, not_null]    # catches duplicate orders
+    - name: revenue
+      tests: [not_null]            # catches broken payment joins
+
+- name: fct_channel_performance
+  columns:
+    - name: channel
+      tests: [unique, not_null]    # catches channel mapping regressions
+```
+
+Staging models additionally use `accepted_values` tests on `order_status`, `payment_type`, `deal_stage`, and `lifecycle_stage`. These run on every `dbt build` and fail loudly before any downstream model is materialised.
+
+#### Checkpoint B — MetricFlow Compile Validation (Semantic layer)
+
+```bash
+mf validate-configs
+mf compile --metrics blended_roas
+mf compile --metrics channel_roas
+```
+
+MetricFlow validates before executing:
+- The measure exists in the referenced semantic model
+- Entity join keys are defined
+- `agg_time_dimension` exists as a `time` type dimension on the model
+- `fill_nulls_with` is set before ratio arithmetic across sparse time windows
+
+If any semantic model is misconfigured (e.g., a column mismatch like the `fct_pipeline` issue found in the audit), MetricFlow raises a compile error before any SQL reaches the warehouse.
+
+#### Checkpoint C — `metrics.js` `validateFunnel()` Runtime Check
+
+Every dashboard that renders a funnel calls `Metrics.validateFunnel(steps)` before drawing:
+
+```javascript
+// metrics.js
+function validateFunnel(steps) {
+  const issues = [];
+  for (let i = 1; i < steps.length; i++) {
+    if (steps[i].val > steps[i - 1].val) {
+      issues.push(
+        `Funnel integrity error: "${steps[i].label}" (${steps[i].val.toLocaleString()}) ` +
+        `> "${steps[i - 1].label}" (${steps[i - 1].val.toLocaleString()})`
+      );
+    }
+  }
+  return issues;
+}
+```
+
+`issues.length > 0` means the funnel violates the ordering constraint (each step ≤ the step above). The dashboard surfaces the error rather than rendering a broken chart. This catches runtime data anomalies even after the data has passed dbt tests.
+
+#### Checkpoint D — `normaliseAttribution()` Auto-correction
+
+Before rendering any attribution pie or donut chart, the agent calls:
+
+```javascript
+const normalised = Metrics.normaliseAttribution(channels);
+// Input:  [{label:'Google', val:55.3}, {label:'Meta', val:44.9}]  → sum = 100.2
+// Output: [{label:'Google', val:55.1}, {label:'Meta', val:44.9}]  → sum = 100.0
+```
+
+This is not just a test — it is a silent auto-correction that re-normalises shares to exactly 100% with 1 decimal place, compensating for any rounding that accumulated during intermediate calculations (`CLAUDE.md §4`).
+
+---
+
+### 9.4 Date Source Linkage (Single Source of Truth)
+
+After the dynamic time filtering audit, the date configuration flows in one direction:
+
+```
+dbt_project/dbt_project.yml  (vars: window_start, window_end, time_spine_start, time_spine_end)
+        │
+        ├──▶  dbt SQL models (via var() references)
+        │       metricflow_time_spine.sql, fct_marketing_daily.sql
+        │
+        └──▶  scripts/generate_golden_metrics.py (via _load_dbt_vars())
+                │
+                └──▶  dashboards/golden_metrics.json  (AI reads this)
+                        └──▶  Dashboards render from _meta.window_start / _meta.window_end
+```
+
+**To change the analysis window for the entire system, edit `dbt_project.yml` once.**  
+Run `dbt build` then `python scripts/generate_golden_metrics.py` — everything updates automatically.

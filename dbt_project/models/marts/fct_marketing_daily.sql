@@ -79,12 +79,12 @@ SELECT
 
 FROM {{ ref('metricflow_time_spine') }} d  -- spine drives the date; ensures continuous daily coverage
 
+-- LEFT JOIN preserves all spine dates even when campaigns were paused or GA4 had no sessions.
+LEFT JOIN ads      a ON d.date_day = a.date   -- join paid-media metrics; NULL → COALESCE to 0
+LEFT JOIN sessions s ON d.date_day = s.date   -- join GA4 session metrics; NULL → COALESCE to 0
+
 -- Filter to the canonical 90-day analysis window.
 -- Use dbt vars so the window can be changed without editing SQL.
 -- Synthetic dataset window: 2025-12-16 → 2026-03-15 (fixed anchor; see CLAUDE.md §9).
 WHERE d.date_day BETWEEN '{{ var("window_start", "2025-12-16") }}'
                      AND '{{ var("window_end",   "2026-03-15") }}'
-
--- LEFT JOIN preserves all spine dates even when campaigns were paused or GA4 had no sessions.
-LEFT JOIN ads      a ON d.date_day = a.date   -- join paid-media metrics; NULL → COALESCE to 0
-LEFT JOIN sessions s ON d.date_day = s.date   -- join GA4 session metrics; NULL → COALESCE to 0

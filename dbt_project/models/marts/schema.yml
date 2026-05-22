@@ -28,11 +28,16 @@ models:
           - not_null
 
   - name: fct_channel_performance
-    description: Aggregated spend, revenue, orders, ROAS, and CAC per channel
+    description: >
+      Aggregated spend, revenue, orders, ROAS, and CAC per (date × channel).
+      Grain is daily × channel after the time-dimension refactor — channel
+      alone is not unique.
     columns:
+      - name: date
+        tests:
+          - not_null
       - name: channel
         tests:
-          - unique
           - not_null
       - name: total_spend
         tests:
@@ -42,11 +47,15 @@ models:
           - not_null
 
   - name: fct_marketing_attribution
-    description: Revenue credited to each channel under four attribution models
+    description: >
+      Revenue credited to each channel under four attribution models.
+      Grain is (order_date × channel) — channel alone is not unique.
     columns:
+      - name: order_date
+        tests:
+          - not_null
       - name: channel
         tests:
-          - unique
           - not_null
       - name: first_touch_revenue
         tests:
@@ -62,12 +71,22 @@ models:
           - not_null
 
   - name: fct_pipeline
-    description: Funnel and pipeline counts by attribution channel
+    description: >
+      Deal-level CRM pipeline — UNION of HubSpot deals and Salesforce opportunities.
+      Grain is one row per deal (deal_id is the unique key).
     columns:
-      - name: attribution_channel
+      - name: deal_id
         tests:
           - unique
           - not_null
+      - name: amount
+        tests:
+          - not_null
+      - name: source
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['hubspot', 'salesforce']
 
   - name: fct_lead_scoring_features
     description: Feature table for XGBoost lead scoring model — one row per customer

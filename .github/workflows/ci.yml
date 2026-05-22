@@ -24,6 +24,9 @@ jobs:
         working-directory: dbt_project
         run: dbt deps
 
+      - name: Write dbt profiles.yml
+        run: cp dbt_project/profiles.yml.example dbt_project/profiles.yml
+
       - name: Bootstrap mock data (skipped if CSVs are committed to repo)
         run: |
           if [ -f data/mock_marketing/google_ads_daily_performance.csv ]; then

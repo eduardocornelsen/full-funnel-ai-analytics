@@ -26,6 +26,9 @@ jobs:
         working-directory: dbt_project
         run: dbt deps
 
+      - name: Write dbt profiles.yml
+        run: cp dbt_project/profiles.yml.example dbt_project/profiles.yml
+
       - name: Generate / append synthetic data
         run: python scripts/daily_synthetic_append.py
 

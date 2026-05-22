@@ -1,0 +1,7 @@
+campaign_id,campaign_name,campaign_type,daily_budget
+C001,Brand - Olist,SEARCH,150.0
+C002,Generic - Electronics,SEARCH,300.0
+C003,Generic - Home & Garden,SEARCH,250.0
+C004,Shopping - All Products,SHOPPING,400.0
+C005,Display - Retargeting,DISPLAY,200.0
+C006,YouTube - Brand Awareness,VIDEO,100.0

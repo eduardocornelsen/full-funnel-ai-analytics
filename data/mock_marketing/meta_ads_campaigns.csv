@@ -1,0 +1,6 @@
+campaign_id,campaign_name,objective,daily_budget
+META_C001,Prospecting - Lookalike Purchasers,CONVERSIONS,250.0
+META_C002,Retargeting - Add to Cart,CONVERSIONS,150.0
+META_C003,Brand Awareness - Video,AWARENESS,100.0
+META_C004,Catalog Sales - Dynamic,CATALOG_SALES,300.0
+META_C005,Instagram Stories - Flash Sales,CONVERSIONS,200.0

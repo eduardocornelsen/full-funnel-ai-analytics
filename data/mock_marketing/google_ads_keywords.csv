@@ -1,0 +1,11 @@
+keyword_id,ad_group_id,keyword,match_type
+KW001,AG001,olist,EXACT
+KW002,AG001,olist store,EXACT
+KW003,AG002,olist marketplace,BROAD
+KW004,AG003,buy electronics online brazil,PHRASE
+KW005,AG003,cheap electronics,BROAD
+KW006,AG004,smartphone deals,PHRASE
+KW007,AG005,home decor online,BROAD
+KW008,AG005,furniture online brazil,PHRASE
+KW009,AG006,kitchen appliances,BROAD
+KW010,AG006,small kitchen appliances,PHRASE

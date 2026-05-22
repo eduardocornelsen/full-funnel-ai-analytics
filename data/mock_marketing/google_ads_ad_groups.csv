@@ -1,0 +1,11 @@
+ad_group_id,campaign_id,ad_group_name
+AG001,C001,Olist Exact Match
+AG002,C001,Olist Broad Match
+AG003,C002,Electronics - General
+AG004,C002,Electronics - Smartphones
+AG005,C003,Home Decor
+AG006,C003,Kitchen Appliances
+AG007,C004,Shopping - Best Sellers
+AG008,C005,Cart Abandoners
+AG009,C005,Past Purchasers
+AG010,C006,Brand Video - 30s

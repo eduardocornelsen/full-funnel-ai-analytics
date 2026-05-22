@@ -1,0 +1,9 @@
+ad_set_id,campaign_id,ad_set_name,targeting,placement
+AS001,META_C001,LAL 1% - Purchasers,lookalike_1pct,facebook_feed
+AS002,META_C001,LAL 3% - Purchasers,lookalike_3pct,facebook_feed
+AS003,META_C001,Interest - Electronics,interest_electronics,instagram_feed
+AS004,META_C002,Cart Abandoners 7d,retarget_cart_7d,facebook_feed
+AS005,META_C002,Viewed Product 14d,retarget_viewed_14d,instagram_stories
+AS006,META_C003,Broad - 18-45 Brazil,broad_18_45,facebook_video
+AS007,META_C004,Dynamic - All Products,catalog_dynamic,facebook_feed
+AS008,META_C005,Stories - Weekend Deals,interest_shopping,instagram_stories

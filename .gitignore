@@ -9,10 +9,8 @@ __pycache__/
 .venv/
 venv/
 node_modules/
-data/
-# Allow mock marketing CSVs to be tracked (needed for daily synthetic data CI)
-!data/mock_marketing/
-!data/mock_marketing/*.csv
+*.duckdb
+*.duckdb.bak
 *.parquet
 *.duckdb
 dbt_project/target/

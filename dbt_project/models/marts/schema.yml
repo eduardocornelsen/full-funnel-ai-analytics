@@ -126,8 +126,11 @@ models:
       Bounds are driven by dbt vars time_spine_start (default 2024-01-01) and
       time_spine_end (default 2026-12-31), defined in dbt_project.yml.
       Extend time_spine_end when the dataset grows beyond 2026-12-31.
+    time_spine:
+      standard_granularity_column: date_day
     columns:
       - name: date_day
+        granularity: day
         tests:
           - unique
           - not_null

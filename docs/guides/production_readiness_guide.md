@@ -5,6 +5,81 @@ run the test suite, and verify that every dashboard number matches your warehous
 
 ---
 
+## Promoting v0.9 → v1.0 — Pre-Release Checklist
+
+Before flipping the GitHub release tag from `v0.9.0` pre-release to `v1.0.0`, walk through this checklist. Each item is small but catches a different class of failure.
+
+### 1. CI/CD must be green on `main`
+
+- [ ] `ci.yml` — last run on `main` exits 0 (validates real Olist-anchored data after PR #5)
+- [ ] `warehouse-deploy.yml` — both BigQuery and Snowflake jobs pass, OR the Snowflake job is intentionally marked `continue-on-error: true` if you don't have credits
+- [ ] `scheduled-refresh.yml` — at least one successful daily run in the Actions tab
+- [ ] `daily-synthetic-data.yml` — at least one successful daily run; check that the auto-commit lands on `main`
+
+### 2. Required GitHub secrets are configured
+
+Go to **Settings → Secrets and variables → Actions** and confirm each:
+
+- [ ] `GCP_PROJECT_ID`
+- [ ] `GCP_SERVICE_ACCOUNT_KEY_JSON` (full JSON contents, not a path)
+- [ ] `SNOWFLAKE_ACCOUNT`, `SNOWFLAKE_USER`, `SNOWFLAKE_PASSWORD`, `SNOWFLAKE_WAREHOUSE`, `SNOWFLAKE_DATABASE`, `SNOWFLAKE_SCHEMA`
+
+The DuckDB PR-gate workflow needs no secrets — it runs entirely on the GitHub Actions runner.
+
+### 3. Local end-to-end run passes
+
+From a fresh clone (or after `rm -rf data/olist_analytics.duckdb`):
+
+```bash
+python scripts/load_duckdb.py
+cd dbt_project && dbt run --target duckdb && dbt test --target duckdb && cd ..
+python scripts/generate_golden_metrics.py
+python scripts/validate_metrics.py     # must exit 0
+pytest tests/ -v                       # must pass
+```
+
+- [ ] dbt run completes with no errors
+- [ ] dbt test passes (no `not_null`, `unique`, or `relationships` test failures)
+- [ ] `validate_metrics.py` exits 0
+- [ ] `pytest` passes (skipping `test_api.py` if the ML model isn't trained is acceptable)
+
+### 4. Dashboards render with correct data
+
+- [ ] `streamlit run streamlit_app/app.py` — check that the sidebar shows the correct connection badge and the Data Sources page loads
+- [ ] Open `dashboards/full_funnel_marketing_dashboard.html` locally and verify the KPI values match `dashboards/golden_metrics.json`
+- [ ] In Claude Code, type `/marketing` — values should match the HTML dashboard exactly
+
+### 5. Documentation links resolve
+
+- [ ] Every link in `README.md` Documentation table opens the right file
+- [ ] `docs/architecture.md` renders correctly (no broken anchors)
+- [ ] The architecture v2 image displays at the top of the README
+
+### 6. dbt Fusion compatibility (if applicable)
+
+dbt Fusion is stricter than dbt Core. If you use it locally, verify:
+
+- [ ] `metricflow_time_spine.sql` — SQL comments are OUTSIDE the `{{ config() }}` Jinja block
+- [ ] `metrics.yml` and `sem_marketing.yml` — start with `version: 2` (legacy YAML without it triggers warning `dbt1157`)
+- [ ] `dbt parse` runs clean with no `dbt1502` errors
+
+These three points are now enforced in the codebase as of PR #5.
+
+### 7. Release hygiene
+
+- [ ] PR #5 (or its successor) is merged to `main`
+- [ ] All stale feature branches are deleted (`claude/*`, `feat/*`)
+- [ ] The `v0.9.0` GitHub release has been live for at least 24 hours with no surprises
+- [ ] Edit the existing release: uncheck "Pre-release", change tag to `v1.0.0`, click Update — OR draft a fresh `v1.0.0` release referencing the v0.9 testing period in the notes
+
+### 8. LinkedIn post readiness
+
+- [ ] Repo description on GitHub reflects v1.0 scope (currently mentions $0/mo, 5 warehouses)
+- [ ] README hero gif / video loads on a fresh browser session (no auth)
+- [ ] Architecture v2 image renders correctly when opened from the GitHub-hosted README
+
+---
+
 ## What Was Built
 
 | Component | File(s) | Purpose |

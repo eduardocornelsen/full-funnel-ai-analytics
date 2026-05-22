@@ -1,3 +1,5 @@
+version: 2
+
 semantic_models:
   - name: marketing_daily
     description: Daily marketing spend and GA4 session performance

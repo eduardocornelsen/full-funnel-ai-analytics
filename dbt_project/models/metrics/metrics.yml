@@ -1,3 +1,5 @@
+version: 2
+
 metrics:
   # ── Simple metrics (aggregate a single measure) ──────────────────────────────
   - name: total_revenue

@@ -2,10 +2,6 @@ version: 2
 
 metrics:
   # ── Simple metrics (aggregate a single measure) ──────────────────────────────
-  #
-  # fill_nulls_with: 0 is set at the metric level (not on derived references).
-  # Without this, MetricFlow returns NULL for any time period where a measure has
-  # no data, which propagates through ratio metrics as NULL instead of 0.
 
   - name: total_revenue
     label: Total Revenue
@@ -13,7 +9,6 @@ metrics:
     type: simple
     type_params:
       measure: revenue
-    fill_nulls_with: 0
 
   - name: total_spend
     label: Total Ad Spend
@@ -21,7 +16,6 @@ metrics:
     type: simple
     type_params:
       measure: total_spend
-    fill_nulls_with: 0
 
   - name: total_sessions
     label: Total Sessions
@@ -29,7 +23,6 @@ metrics:
     type: simple
     type_params:
       measure: sessions
-    fill_nulls_with: 0
 
   - name: total_clicks
     label: Total Ad Clicks
@@ -41,7 +34,6 @@ metrics:
     type: simple
     type_params:
       measure: total_ad_conversions
-    fill_nulls_with: 0
 
   - name: total_new_users
     label: Total New Users (Leads)
@@ -49,7 +41,6 @@ metrics:
     type: simple
     type_params:
       measure: new_users
-    fill_nulls_with: 0
 
   - name: total_engaged_sessions
     label: Total Engaged Sessions
@@ -57,7 +48,6 @@ metrics:
     type: simple
     type_params:
       measure: engaged_sessions
-    fill_nulls_with: 0
 
   - name: total_orders
     label: Total Orders
@@ -65,7 +55,6 @@ metrics:
     type: simple
     type_params:
       measure: order_count
-    fill_nulls_with: 0
 
   - name: average_order_value
     label: Average Order Value (AOV)
@@ -80,7 +69,6 @@ metrics:
     type: simple
     type_params:
       measure: pipeline_value
-    fill_nulls_with: 0
 
   - name: total_deals
     label: Total Deals / Opportunities
@@ -88,7 +76,6 @@ metrics:
     type: simple
     type_params:
       measure: deal_count
-    fill_nulls_with: 0
 
   - name: channel_spend
     label: Channel Ad Spend
@@ -96,7 +83,6 @@ metrics:
     type: simple
     type_params:
       measure: channel_spend
-    fill_nulls_with: 0
 
   - name: channel_revenue
     label: Channel Attributed Revenue
@@ -109,7 +95,6 @@ metrics:
     type: simple
     type_params:
       measure: channel_revenue
-    fill_nulls_with: 0
 
   - name: channel_orders
     label: Channel Orders
@@ -117,13 +102,12 @@ metrics:
     type: simple
     type_params:
       measure: channel_orders
-    fill_nulls_with: 0
 
   # ── Derived metrics (computed from simple metrics) ───────────────────────────
   #
   # NULLIF in each expr guards the denominator to prevent divide-by-zero errors
-  # from producing Infinity or NaN values in the result set. Zero-fill behaviour
-  # is inherited from the component simple metrics via fill_nulls_with: 0 above.
+  # from producing Infinity or NaN values in the result set. Empty periods return
+  # NULL rather than 0 — dashboards handle that downstream.
 
   - name: blended_roas
     label: Blended ROAS

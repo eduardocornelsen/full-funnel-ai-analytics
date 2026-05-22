@@ -57,7 +57,7 @@ jobs:
 
       # ── Load raw data into warehouse ─────────────────────────────────────────
       - name: Generate mock marketing data
-        run: python scripts/generate_mock_marketing_data.py
+        run: python scripts/generate_mock_marketing_data.py --standalone
 
       - name: Load data into ${{ matrix.target }}
         run: python scripts/load_${{ matrix.target }}.py

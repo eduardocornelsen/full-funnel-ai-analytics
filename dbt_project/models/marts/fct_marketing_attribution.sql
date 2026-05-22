@@ -33,19 +33,20 @@ SELECT
 
     -- First-touch revenue: multiply each touchpoint's first_touch_credit (0 or 1) by order_revenue.
     -- Only the first touchpoint in the path receives credit; all others get 0.
-    SUM(first_touch_credit * order_revenue)                                           AS first_touch_revenue,
+    -- COALESCE handles edge cases where all rows in a group have NULL revenue (returns 0 instead of NULL).
+    COALESCE(SUM(first_touch_credit * order_revenue), 0)                              AS first_touch_revenue,
 
     -- Last-touch revenue: same logic but credit goes to the final touchpoint in the path.
-    SUM(last_touch_credit * order_revenue)                                            AS last_touch_revenue,
+    COALESCE(SUM(last_touch_credit * order_revenue), 0)                               AS last_touch_revenue,
 
     -- Linear revenue: every touchpoint in the path receives 1/N of the order revenue,
     -- where N = total_touchpoints. This is the CANONICAL attribution model for this project.
-    SUM(linear_credit * order_revenue)                                                AS linear_revenue,
+    COALESCE(SUM(linear_credit * order_revenue), 0)                                   AS linear_revenue,
 
     -- Time-decay revenue: touchpoints closer to conversion receive exponentially more credit.
     -- The macro time_decay_credit() computes POWER(2, -days_to_conversion / half_life_days).
     -- half_life_days defaults to 7 (one week) — touchpoint 7 days before conversion gets 50% weight.
-    SUM({{ time_decay_credit('touchpoint_date', 'order_date') }} * order_revenue)    AS time_decay_revenue,
+    COALESCE(SUM({{ time_decay_credit('touchpoint_date', 'order_date') }} * order_revenue), 0) AS time_decay_revenue,
 
     -- Distinct order count for this date × channel combination.
     -- Used as the denominator for channel-level CVR and CAC calculations.

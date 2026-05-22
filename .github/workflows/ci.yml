@@ -24,8 +24,19 @@ jobs:
         working-directory: dbt_project
         run: dbt deps
 
-      - name: Generate mock marketing data
-        run: python scripts/generate_mock_marketing_data.py
+      - name: Write dbt profiles.yml
+        run: cp dbt_project/profiles.yml.example dbt_project/profiles.yml
+
+      - name: Bootstrap mock data (skipped if CSVs are committed to repo)
+        run: |
+          if [ -f data/mock_marketing/google_ads_daily_performance.csv ]; then
+            echo "✅ Mock marketing CSVs found — validating committed (Olist-anchored) data"
+            wc -l data/mock_marketing/*.csv
+          else
+            echo "⚠️  No mock CSVs in repo — generating standalone synthetic data (structural test only)"
+            echo "    To test real data: commit data/mock_marketing/*.csv from your local machine."
+            python scripts/generate_mock_marketing_data.py --standalone
+          fi
 
       - name: Load DuckDB
         run: python scripts/load_duckdb.py

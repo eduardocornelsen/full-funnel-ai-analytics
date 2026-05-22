@@ -1,11 +1,7 @@
-{{
-  config(
-    -- Must be a physical table, not a view.
-    -- MetricFlow reads the time spine once per query and materialising it as a table
-    -- avoids re-executing generate_series() on every MetricFlow request.
-    materialized = 'table'
-  )
-}}
+-- Must be a physical table, not a view.
+-- MetricFlow reads the time spine once per query and materialising it as a table
+-- avoids re-executing generate_series() on every MetricFlow request.
+{{ config(materialized = 'table') }}
 
 -- MetricFlow time spine — one row per calendar day.
 --
@@ -22,18 +18,9 @@
 -- when it discovers the time spine model.
 
 SELECT
-    -- Cast the generated timestamp to DATE; MetricFlow requires a DATE type column.
     CAST(d AS DATE) AS date_day
 FROM generate_series(
-    -- Inclusive lower bound: start of the MetricFlow spine.
-    -- Defaults to 2024-01-01 if the var is not set.
     '{{ var("time_spine_start", "2024-01-01") }}'::DATE,
-
-    -- Inclusive upper bound: extend this when data grows past 2026-12-31.
-    -- Defaults to 2026-12-31 if the var is not set.
     '{{ var("time_spine_end", "2026-12-31") }}'::DATE,
-
-    -- Step size: daily — MetricFlow requires day-level granularity as the base.
-    -- Coarser grains (week, month, quarter) are computed from this daily spine at query time.
     INTERVAL '1 day'
 ) AS t(d)

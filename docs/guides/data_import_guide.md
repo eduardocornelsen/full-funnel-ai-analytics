@@ -6,6 +6,94 @@ and the dbt golden layer.
 
 ---
 
+## What Data Lives Where (and What Goes in Git)
+
+This project has three distinct data layers. Understanding them prevents confusion about
+what to commit, what to download, and what gets rebuilt automatically.
+
+| Layer | Location | In git? | Size | How it's created |
+|-------|----------|---------|------|-----------------|
+| **Olist raw dataset** | `data/olist/*.csv` | ❌ Never | ~400MB | `python scripts/download_olist_data.py` (once, locally) |
+| **Mock marketing CSVs** | `data/mock_marketing/*.csv` | ✅ Yes | ~5–15MB | Generated once; CI uses `--standalone` to recreate without Olist |
+| **DuckDB warehouse** | `data/olist_analytics.duckdb` | ❌ Never | ~50–200MB | Built locally: `load_duckdb.py` + `dbt run` |
+| **Golden metrics snapshot** | `dashboards/golden_metrics.json` | ✅ Yes | ~50KB | `generate_golden_metrics.py`; CI commits it automatically |
+
+**Rules of thumb:**
+- Never commit anything in `data/olist/` or `*.duckdb` — they're too large and are always reproducible.
+- The mock marketing CSVs **are** committed — they're the seed data every contributor needs without running a download.
+- `golden_metrics.json` **is** committed — it's how Claude and the HTML dashboards read pre-computed metrics without a live DB connection.
+
+---
+
+## How to Update Your Local Database
+
+The DuckDB file lives only on your machine. After pulling new commits (e.g., after the
+daily CI appends new synthetic data), you need to rebuild it:
+
+```bash
+# 1. Pull the latest mock CSVs and golden_metrics.json that CI committed
+git pull
+
+# 2. Rebuild the local DuckDB from the updated CSVs
+python scripts/load_duckdb.py
+
+# 3. Re-run dbt to rebuild mart tables
+cd dbt_project && dbt run --target duckdb && cd ..
+
+# 4. (Optional) Verify zero drift — should exit 0 if you just pulled CI-generated data
+python scripts/validate_metrics.py
+```
+
+After step 1 alone, **Claude dashboards** already show updated data because CI
+committed the new `golden_metrics.json`. Steps 2–3 are only needed for
+**Streamlit** or any tool that queries DuckDB directly.
+
+---
+
+## This Project vs. a Real Production Pipeline
+
+This project is a portfolio demo that mimics a production data stack with lightweight
+substitutes. Here is the mapping:
+
+```
+DEMO (this project)                    PRODUCTION (real company)
+─────────────────────────────────────  ─────────────────────────────────────────────
+data/olist/*.csv                  ←→   Raw tables already in BigQuery / Snowflake
+  downloaded once, never in git         populated by Fivetran, Airbyte, or custom ETL
+
+data/mock_marketing/*.csv         ←→   Real platform data in the warehouse
+  hand-crafted synthetic seed data      loaded by Google Ads / Meta / GA4 connectors
+  committed to git (small)              no CSV files needed — data goes straight to DW
+
+data/olist_analytics.duckdb       ←→   The production warehouse itself
+  local file, rebuilt from CSVs         BigQuery / Snowflake — cloud-managed, always live
+
+daily_synthetic_append.py         ←→   Fivetran / Airbyte daily syncs
+  GitHub Action adds rows to CSVs       appends real platform data to the warehouse
+  commits them, simulating a live feed  fully automatic, no code to maintain
+
+generate_golden_metrics.py        ←→   dbt Cloud job / Airflow DAG
+  reads DuckDB → writes JSON            reads warehouse → BI tool reads it directly
+
+golden_metrics.json in git        ←→   BI tool queries the warehouse live
+  lets Claude read pre-computed values  (Looker, Tableau connect to DW directly)
+  avoids needing a live DB in CI        no JSON file needed in production
+```
+
+**The core pattern never changes:**
+
+```
+Raw data source (warehouse or CSV)
+  → dbt transforms it into clean mart tables
+  → AI / BI layer reads the results
+```
+
+What changes between demo and production is only:
+1. Where raw data comes from (Fivetran vs. local CSVs)
+2. Who reads the results (Looker vs. Claude via a JSON snapshot)
+
+---
+
 ## How Data Flows into Dashboards
 
 Understanding this chain makes every import step obvious:

@@ -1,3 +1,5 @@
+version: 2
+
 semantic_models:
   - name: marketing_daily
     description: Daily marketing spend and GA4 session performance
@@ -30,10 +32,6 @@ semantic_models:
         description: Ad-platform conversions (Google + Meta clicks to purchase)
         agg: sum
         expr: total_ad_conversions
-      - name: engaged_sessions
-        description: GA4 engaged sessions
-        agg: sum
-        expr: ga4_engaged_sessions
 
   - name: orders
     description: Completed customer orders with attribution and revenue

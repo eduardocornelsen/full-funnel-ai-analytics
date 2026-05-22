@@ -3,7 +3,10 @@ olist_analytics:
   outputs:
     duckdb:
       type: duckdb
-      path: "data/olist_analytics.duckdb"
+      # Path is relative to the directory where dbt is invoked.
+      # CI and the standard "cd dbt_project && dbt run" workflow expect ../data/
+      # When running dbt from the project root with --project-dir, override via env var.
+      path: "{{ env_var('DUCKDB_PATH', '../data/olist_analytics.duckdb') }}"
       threads: 4
     bigquery:
       type: bigquery

@@ -2,12 +2,18 @@ version: 2
 
 metrics:
   # ── Simple metrics (aggregate a single measure) ──────────────────────────────
+  #
+  # fill_nulls_with: 0 is set at the metric level (not on derived references).
+  # Without this, MetricFlow returns NULL for any time period where a measure has
+  # no data, which propagates through ratio metrics as NULL instead of 0.
+
   - name: total_revenue
     label: Total Revenue
     description: Sum of all attributed order revenue
     type: simple
     type_params:
       measure: revenue
+    fill_nulls_with: 0
 
   - name: total_spend
     label: Total Ad Spend
@@ -15,6 +21,7 @@ metrics:
     type: simple
     type_params:
       measure: total_spend
+    fill_nulls_with: 0
 
   - name: total_sessions
     label: Total Sessions
@@ -22,6 +29,7 @@ metrics:
     type: simple
     type_params:
       measure: sessions
+    fill_nulls_with: 0
 
   - name: total_clicks
     label: Total Ad Clicks
@@ -33,6 +41,7 @@ metrics:
     type: simple
     type_params:
       measure: total_ad_conversions
+    fill_nulls_with: 0
 
   - name: total_new_users
     label: Total New Users (Leads)
@@ -40,6 +49,7 @@ metrics:
     type: simple
     type_params:
       measure: new_users
+    fill_nulls_with: 0
 
   - name: total_engaged_sessions
     label: Total Engaged Sessions
@@ -47,6 +57,7 @@ metrics:
     type: simple
     type_params:
       measure: engaged_sessions
+    fill_nulls_with: 0
 
   - name: total_orders
     label: Total Orders
@@ -54,6 +65,7 @@ metrics:
     type: simple
     type_params:
       measure: order_count
+    fill_nulls_with: 0
 
   - name: average_order_value
     label: Average Order Value (AOV)
@@ -68,6 +80,7 @@ metrics:
     type: simple
     type_params:
       measure: pipeline_value
+    fill_nulls_with: 0
 
   - name: total_deals
     label: Total Deals / Opportunities
@@ -75,6 +88,7 @@ metrics:
     type: simple
     type_params:
       measure: deal_count
+    fill_nulls_with: 0
 
   - name: channel_spend
     label: Channel Ad Spend
@@ -82,6 +96,7 @@ metrics:
     type: simple
     type_params:
       measure: channel_spend
+    fill_nulls_with: 0
 
   - name: channel_revenue
     label: Channel Attributed Revenue
@@ -94,6 +109,7 @@ metrics:
     type: simple
     type_params:
       measure: channel_revenue
+    fill_nulls_with: 0
 
   - name: channel_orders
     label: Channel Orders
@@ -101,15 +117,13 @@ metrics:
     type: simple
     type_params:
       measure: channel_orders
+    fill_nulls_with: 0
 
   # ── Derived metrics (computed from simple metrics) ───────────────────────────
   #
-  # fill_nulls_with: 0 is set on every component measure of each ratio metric.
-  # Without this, MetricFlow returns NULL for any time period where a measure has
-  # no data (e.g., a channel with zero spend on a given day), which causes the
-  # ratio expression to silently evaluate to NULL instead of 0.
   # NULLIF in each expr guards the denominator to prevent divide-by-zero errors
-  # from producing Infinity or NaN values in the result set.
+  # from producing Infinity or NaN values in the result set. Zero-fill behaviour
+  # is inherited from the component simple metrics via fill_nulls_with: 0 above.
 
   - name: blended_roas
     label: Blended ROAS
@@ -123,65 +137,50 @@ metrics:
       last-click attribution within their own 7-day or 28-day windows.
     type: derived
     type_params:
-      # NULLIF(total_spend, 0) prevents divide-by-zero when spend is zero for a period.
       expr: "total_revenue / NULLIF(total_spend, 0)"
       metrics:
         - name: total_revenue
-          fill_nulls_with: 0    # treat periods with no revenue data as $0, not NULL
         - name: total_spend
-          fill_nulls_with: 0    # treat periods with no spend data as $0, not NULL
 
   - name: channel_roas
     label: Channel ROAS
     description: Channel revenue divided by channel spend (linear attribution, daily × channel grain)
     type: derived
     type_params:
-      # NULLIF(channel_spend, 0) prevents divide-by-zero on zero-spend days for a channel.
       expr: "channel_revenue / NULLIF(channel_spend, 0)"
       metrics:
         - name: channel_revenue
-          fill_nulls_with: 0    # zero-fill channels with no attributed revenue on a given day
         - name: channel_spend
-          fill_nulls_with: 0    # zero-fill channels with no active spend on a given day
 
   - name: customer_acquisition_cost
     label: Customer Acquisition Cost (CAC)
     description: Channel ad spend divided by number of attributed orders for that channel
     type: derived
     type_params:
-      # NULLIF(channel_orders, 0) prevents divide-by-zero when no orders are attributed.
       expr: "channel_spend / NULLIF(channel_orders, 0)"
       metrics:
         - name: channel_spend
-          fill_nulls_with: 0    # zero-fill spend for periods / channels with no campaigns
         - name: channel_orders
-          fill_nulls_with: 0    # zero-fill orders for periods / channels with no conversions
 
   - name: cost_per_session
     label: Cost Per Session
     description: Total paid media spend divided by total GA4 sessions
     type: derived
     type_params:
-      # NULLIF(total_sessions, 0) prevents divide-by-zero on days with no GA4 session data.
       expr: "total_spend / NULLIF(total_sessions, 0)"
       metrics:
         - name: total_spend
-          fill_nulls_with: 0    # zero-fill spend for zero-campaign days
         - name: total_sessions
-          fill_nulls_with: 0    # zero-fill sessions for days with no GA4 data
 
   - name: engagement_rate
     label: Engagement Rate
     description: Share of sessions that were meaningfully engaged (engaged_sessions / sessions)
     type: derived
     type_params:
-      # NULLIF(total_sessions, 0) prevents divide-by-zero on days with zero sessions.
       expr: "total_engaged_sessions / NULLIF(total_sessions, 0)"
       metrics:
         - name: total_engaged_sessions
-          fill_nulls_with: 0    # zero-fill engaged sessions for zero-traffic days
         - name: total_sessions
-          fill_nulls_with: 0    # zero-fill sessions for zero-traffic days
 
   - name: session_conversion_rate
     label: Session to Order Conversion Rate
@@ -194,10 +193,7 @@ metrics:
       Label as "Session CVR" in UI; label platform CVR as "Click CVR".
     type: derived
     type_params:
-      # NULLIF(total_sessions, 0) prevents divide-by-zero when sessions = 0 for a period.
       expr: "total_orders / NULLIF(total_sessions, 0)"
       metrics:
         - name: total_orders
-          fill_nulls_with: 0    # zero-fill orders for periods with no conversions
         - name: total_sessions
-          fill_nulls_with: 0    # zero-fill sessions for periods with no GA4 traffic

@@ -29,9 +29,47 @@
 
 ---
 
-## Ask your data and get real-time answers
+## The Problem
 
-Ask Claude or other supported LLMs *any question about your data* and get **real-time insights and dashboards** — integrated with your data warehouses, CRMs, and Ads platforms.
+Companies run ads across Google, Meta, and organic channels. Marketing claims leads. Sales says they're low quality. The CEO asks: *"Where should we spend next quarter?"*
+
+Answering this requires joining data from 5+ platforms, building attribution models, scoring leads, and making it all accessible to non-technical stakeholders. Most teams cobble together spreadsheets and one-off queries. This project builds the production system — at $0/month base cost.
+
+---
+
+<details>
+<summary>
+<h3 style="display:inline;"><b>+ <code>Show Table of Contents</code></b></h3>
+</summary>
+
+- [Demo](#demo)
+- [Who This Is Built For](#who-this-is-built-for)
+- [The Core Insight](#the-core-insight-governance-is-what-makes-ai-analytics-reliable)
+- [What This Project Does](#what-this-project-does)
+- [CI/CD & Production Readiness](#cicd--production-readiness)
+- [Data Architecture](#data-architecture--what-lives-where)
+- [Importing Your Own Data](#importing-your-own-data)
+- [MCP Servers](#mcp-servers)
+- [AI Clients](#ai-clients)
+- [AI-Powered Commands](#ai-powered-commands)
+- [Metrics Governed by the Semantic Layer](#metrics-governed-by-the-semantic-layer)
+- [Stack & Cost](#stack--cost)
+- [Quick Start](#quick-start)
+- [Project Structure](#project-structure)
+- [Key Design Decisions](#key-design-decisions)
+- [Swapping to Real Platform Data](#swapping-to-real-platform-data)
+- [Multi-Warehouse Portability](#multi-warehouse-portability)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+- [License](#license)
+
+</details>
+
+> **Full documentation index → [`docs/README.md`](docs/README.md)**
+
+---
+
+## Demo
 
 > Predefined commands: type `/marketing` and see the magic happens:
 
@@ -40,21 +78,17 @@ Ask Claude or other supported LLMs *any question about your data* and get **real
 **[▶ Watch the video →](demo/videos/marketing-query.mp4)**
 
 > View the dashboards for all commands available: <br>
-> [[/marketing]](dashboards/full_funnel_marketing_dashboard.html) | [[/attribution]](dashboards/attribution_dashboard.html) | [[/campaign]](dashboards/campaign_performance_dashboard.html) | [[/pipeline]](dashboards/pipeline_dashboard.html) | [[/traffic]](dashboards/traffic_ga4_dashboard.html);
-
----
-
-## Demo
+> [[/marketing]](dashboards/full_funnel_marketing_dashboard.html) | [[/attribution]](dashboards/attribution_dashboard.html) | [[/campaign]](dashboards/campaign_performance_dashboard.html) | [[/pipeline]](dashboards/pipeline_dashboard.html) | [[/traffic]](dashboards/traffic_ga4_dashboard.html)
 
 ### Hero Query
 
 > *"Show me the complete marketing funnel for Q1 2025: ad spend across Google and Meta, website sessions by channel, lead conversion rates, and final revenue. Calculate blended CAC and ROAS."*
 
-The AI queries the dbt semantic layer via MCP, pulls GA4 traffic and CRM pipeline data from mock platform servers, and returns a formatted analysis with KPI cards, charts, and recommendations — in ~15 seconds. Works from Claude Desktop, OpenCode, Gemini CLI, or Antigravity IDE.
-
 ![open-query.gif](demo/videos/open-query.gif)
 
 **[▶ Watch the demo video →](demo/videos/open-query.mp4)**
+
+The AI queries the dbt semantic layer via MCP, pulls GA4 traffic and CRM pipeline data from mock platform servers, and returns a formatted analysis with KPI cards, charts, and recommendations — in ~15 seconds. Works from Claude Desktop, OpenCode, Gemini CLI, or Antigravity IDE.
 
 ### Other queries this system handles
 
@@ -75,14 +109,6 @@ The AI queries the dbt semantic layer via MCP, pulls GA4 traffic and CRM pipelin
 | **Analytics Engineer**            | dbt semantic layer, MCP architecture, multi-warehouse + multi-client portability |
 | **BI / Data Analyst**             | Looker Studio dashboards, Streamlit app, React artifacts                         |
 | **Marketing Analyst**             | CAC/LTV analysis, channel comparison, attribution model comparison               |
-
----
-
-## The Problem
-
-Companies run ads across Google, Meta, and organic channels. Marketing claims leads. Sales says they're low quality. The CEO asks: *"Where should we spend next quarter?"*
-
-Answering this requires joining data from 5+ platforms, building attribution models, scoring leads, and making it all accessible to non-technical stakeholders. Most teams cobble together spreadsheets and one-off queries. This project builds the production system — at $0/month base cost.
 
 ---
 
@@ -121,35 +147,6 @@ This project solves that with the **dbt Semantic Layer (MetricFlow)**: define "R
 | **BI Layer** | Self-serve dashboards for marketing and sales teams        | Looker Studio + Streamlit + Claude React artifacts                |
 
 For a detailed breakdown of every model, metric, and semantic definition see [docs/architecture.md](docs/architecture.md).
-
----
-
-## Build Status
-
-| Phase                                  | Status     | Description                                                  |
-| -------------------------------------- | ---------- | ------------------------------------------------------------ |
-| Phase 1: Data Foundation               | ✅ Complete | Olist dataset + synthetic marketing data + warehouse loading |
-| Phase 2: dbt Semantic Layer            | ✅ Complete | 14 staging + 4 intermediate + 11 mart models                 |
-| Phase 3: AI Layer (MCP)               | ✅ Complete | 7 MCP servers + 4 AI client configs                          |
-| Phase 4: ML Scoring                   | ✅ Complete | XGBoost + MLflow + FastAPI endpoint                          |
-| Phase 5: Dashboards & Automation      | ✅ Complete | Looker Studio + Streamlit + n8n routing                      |
-| Phase 6: Portability & Polish         | ✅ Complete | Snowflake/Databricks demos + documentation                   |
-| Phase 7: Production Readiness & CI/CD | ✅ Complete | GitHub Actions, warehouse adapters, daily synthetic data, test suite, connector UI |
-
-### Project Scale
-
-| Component            | Detail                                                             |
-| :------------------- | :----------------------------------------------------------------- |
-| **Data Volume**      | 23 CSV files, **2.2M+ rows**, aligned across 2024–2026             |
-| **DuckDB Warehouse** | **46 objects** (staging views + mart tables), all populated        |
-| **dbt Models**       | **29 models**, all materialized, end-to-end verified               |
-| **MCP Servers**      | **7 servers**, column references cross-checked against source CSVs |
-| **Streamlit App**    | 5 tabs + Data Sources page, all DuckDB queries valid, AI analyst integrated |
-| **ML Pipeline**      | XGBoost trained on **93K rows**, FastAPI `/score` endpoint live    |
-| **Semantic Layer**   | **5 semantic models** + **13+ metrics** governed                   |
-| **CI/CD Workflows**  | **4 GitHub Actions workflows** — PR gate, warehouse deploy, scheduled refresh, daily synthetic data |
-| **Test Suite**       | **20+ pytest assertions** on golden metrics + FastAPI endpoint     |
-| **Dependencies**     | **27 core packages**, all importable                               |
 
 ---
 
@@ -270,7 +267,7 @@ See the [Data Import Guide](docs/guides/data_import_guide.md) for all three impo
 | **HubSpot**            | Contacts, deals, pipeline         | `get_contacts_by_source`, `get_deal_pipeline`, `search_contacts`              |
 | **Salesforce**         | Opportunities, accounts, revenue  | `get_opportunity_pipeline`, `get_revenue_by_source`, `get_quarterly_forecast` |
 
-> All mock servers use the exact same tool interface as real platform APIs. Swap mock → production with zero code changes.
+> All mock servers use the exact same tool interface as real platform APIs. Swap mock → production with zero code changes. See [docs/mcp_servers.md](docs/mcp_servers.md) for full server reference.
 
 ---
 
@@ -365,7 +362,7 @@ Enterprise warehouse demos use free trials: Snowflake (30-day, ~$400 credits) an
 
 ## Quick Start
 
-See the [Step-by-Step Setup Guide](SETUP_GUIDE.md) for full instructions.
+See the [Step-by-Step Setup Guide](docs/guides/setup_guide.md) for full instructions.
 
 ```bash
 # 1. Clone
@@ -500,23 +497,23 @@ full-funnel-ai-analytics/
 │   └── duckdb/
 │
 └── docs/
+    ├── README.md                         # Documentation index — start here
     ├── architecture.md                   # Full medallion architecture, MetricFlow models, AI agent internals
+    ├── mcp_servers.md                    # How mock MCP servers work + swap-to-production guide
+    ├── ml_model.md                       # XGBoost, MLflow, FastAPI scoring, n8n integration
     ├── images/
     │   ├── full_funnel_architecture_flow_v2.png   # Architecture diagram v2
     │   ├── full_funnel_architecture_flow.png      # Architecture diagram v1
     │   └── full_funnel_architecture_flow.svg      # Architecture diagram (SVG)
-    ├── guides/
-    │   ├── production_readiness_guide.md  # CI/CD setup, GitHub secrets, BigQuery SA creation
-    │   ├── data_import_guide.md           # Import data via UI, CSV, or live warehouse
-    │   ├── connector_ui_guide.md          # Data Sources page walkthrough + live dashboard capabilities
-    │   ├── setup_guide.md
-    │   ├── commands_guide.md
-    │   ├── portability_guide.md
-    │   ├── data-warehouse-plan.md
-    │   └── claude_desktop_project_instructions.md
-    └── plans/
-        ├── plan_01_production_readiness.md
-        └── plan_02_connector_interface.md
+    └── guides/
+        ├── production_readiness_guide.md  # CI/CD setup, GitHub secrets, BigQuery SA creation
+        ├── data_import_guide.md           # Import data via UI, CSV, or live warehouse
+        ├── connector_ui_guide.md          # Data Sources page walkthrough + live dashboard capabilities
+        ├── setup_guide.md
+        ├── commands_guide.md
+        ├── portability_guide.md
+        ├── data-warehouse-plan.md
+        └── claude_desktop_project_instructions.md
 ```
 
 ---
@@ -559,6 +556,8 @@ The `dashboards/golden_metrics.json` file is pre-computed from the dbt warehouse
 | `mock_hubspot_server.py`    | Official HubSpot MCP        | HubSpot access token                   |
 | `mock_salesforce_server.py` | Airbyte agent connector     | Salesforce Connected App               |
 
+See [docs/mcp_servers.md](docs/mcp_servers.md) for the full swap guide including tool interface compatibility requirements.
+
 ---
 
 ## Multi-Warehouse Portability
@@ -576,34 +575,16 @@ See the [Portability Guide](docs/guides/portability_guide.md) for Snowflake, Dat
 
 ---
 
-## Built With
-
-**Data:** Olist Brazilian E-Commerce Dataset (Kaggle) + Synthetic Marketing Data
-
-**Warehouses:** BigQuery · DuckDB · Supabase · Snowflake · Databricks
-
-**Transformation:** dbt Core · MetricFlow · Polars
-
-**AI Clients:** Claude Desktop · OpenCode · Gemini CLI · Antigravity IDE
-
-**AI/MCP:** Model Context Protocol · Anthropic API · Cowork Plugin · OpenCode Commands
-
-**ML:** XGBoost · Scikit-learn · MLflow · FastAPI
-
-**Automation:** n8n
-
-**Visualization:** Looker Studio · Streamlit · Plotly · Recharts
-
-**Infrastructure:** Docker · uv · GitHub Actions
-
----
-
 ## Documentation
+
+> See the complete documentation index at **[`docs/README.md`](docs/README.md)** — includes quick-find table, reading paths by role, and descriptions of every doc.
 
 | Document | Description |
 | -------- | ----------- |
 | [Architecture v2](docs/images/full_funnel_architecture_flow_v2.png) | Latest system architecture diagram |
 | [Architecture Deep-Dive](docs/architecture.md) | Medallion layers, MetricFlow semantic models, AI agent internals, dbt CLI reference |
+| [Mock MCP Servers](docs/mcp_servers.md) | How the five FastMCP mock servers work, tool schemas, date filtering, and swap-to-production guide |
+| [ML Model & MLflow](docs/ml_model.md) | XGBoost lead scoring, MLflow experiment tracking, FastAPI `/score` endpoint, n8n automation status |
 | [Production Readiness Guide](docs/guides/production_readiness_guide.md) | CI/CD setup, GitHub secrets, BigQuery service account creation, warehouse deploy walkthrough |
 | [Data Import Guide](docs/guides/data_import_guide.md) | Import data via Streamlit UI, direct CSV, or live BigQuery/Snowflake connection |
 | [Connector UI Guide](docs/guides/connector_ui_guide.md) | Data Sources page walkthrough; live dashboard capabilities across Claude, Streamlit, and HTML |
@@ -612,6 +593,38 @@ See the [Portability Guide](docs/guides/portability_guide.md) for Snowflake, Dat
 | [Multi-Warehouse Portability Guide](docs/guides/portability_guide.md) | Deploying to Snowflake or Databricks from the default BigQuery/DuckDB setup |
 | [BigQuery Data Warehouse Plan](docs/guides/data-warehouse-plan.md) | BigQuery implementation plan and data warehouse architecture decisions |
 | [Claude Desktop Project Instructions](docs/guides/claude_desktop_project_instructions.md) | Configuring Claude Desktop Projects to use the analytical commands |
+
+---
+
+## Build Status
+
+<details>
+<summary>Phase completion & project scale</summary>
+
+| Phase                                  | Status     | Description                                                  |
+| -------------------------------------- | ---------- | ------------------------------------------------------------ |
+| Phase 1: Data Foundation               | ✅ Complete | Olist dataset + synthetic marketing data + warehouse loading |
+| Phase 2: dbt Semantic Layer            | ✅ Complete | 14 staging + 4 intermediate + 11 mart models                 |
+| Phase 3: AI Layer (MCP)               | ✅ Complete | 7 MCP servers + 4 AI client configs                          |
+| Phase 4: ML Scoring                   | ✅ Complete | XGBoost + MLflow + FastAPI endpoint                          |
+| Phase 5: Dashboards & Automation      | ✅ Complete | Looker Studio + Streamlit + n8n routing                      |
+| Phase 6: Portability & Polish         | ✅ Complete | Snowflake/Databricks demos + documentation                   |
+| Phase 7: Production Readiness & CI/CD | ✅ Complete | GitHub Actions, warehouse adapters, daily synthetic data, test suite, connector UI |
+
+| Component            | Detail                                                             |
+| :------------------- | :----------------------------------------------------------------- |
+| **Data Volume**      | 23 CSV files, **2.2M+ rows**, aligned across 2024–2026             |
+| **DuckDB Warehouse** | **46 objects** (staging views + mart tables), all populated        |
+| **dbt Models**       | **29 models**, all materialized, end-to-end verified               |
+| **MCP Servers**      | **7 servers**, column references cross-checked against source CSVs |
+| **Streamlit App**    | 5 tabs + Data Sources page, all DuckDB queries valid, AI analyst integrated |
+| **ML Pipeline**      | XGBoost trained on **93K rows**, FastAPI `/score` endpoint live    |
+| **Semantic Layer**   | **5 semantic models** + **13+ metrics** governed                   |
+| **CI/CD Workflows**  | **4 GitHub Actions workflows** — PR gate, warehouse deploy, scheduled refresh, daily synthetic data |
+| **Test Suite**       | **20+ pytest assertions** on golden metrics + FastAPI endpoint     |
+| **Dependencies**     | **27 core packages**, all importable                               |
+
+</details>
 
 ---
 

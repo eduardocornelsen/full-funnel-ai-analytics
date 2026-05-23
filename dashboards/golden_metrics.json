@@ -1,13 +1,14 @@
 {
   "_meta": {
-    "generated_at": "2026-05-13T02:54:14.761597+00:00",
+    "generated_at": "2026-05-23T08:08:01.700758+00:00",
     "anchor_date": "2026-03-15",
     "dataset_start": "2024-07-16",
     "dataset_end": "2026-03-15",
     "window_days": 90,
     "window_start": "2025-12-16",
     "window_end": "2026-03-15",
-    "dbt_source": "/home/duds0/agents/projects/full-funnel-ai-analytics/data/olist_analytics.duckdb",
+    "dbt_source": "/home/runner/work/full-funnel-ai-analytics/full-funnel-ai-analytics/data/olist_analytics.duckdb",
+    "dbt_target": "duckdb",
     "schema_version": "2.1",
     "google_aov": 100.0,
     "note": "SINGLE SOURCE OF TRUTH for all dashboard numbers. AI agent must read and copy values — never recalculate independently. Regenerate after dbt run: python scripts/generate_golden_metrics.py"
@@ -19,21 +20,21 @@
       "end": "2026-03-15"
     },
     "spend": {
-      "google": 352231.76000000007,
-      "meta": 390835.2200000002,
-      "total": 743066.9800000003
+      "google": 53860.399999999994,
+      "meta": 59212.259999999995,
+      "total": 113072.66000000002
     },
     "sessions": {
-      "total": 2971635,
-      "engaged": 1711743,
+      "total": 431698,
+      "engaged": 248639,
       "engagement_rate_pct": 57.6
     },
     "conversions": {
-      "ga4_total": 74978,
-      "ad_platform": 43465,
+      "ga4_total": 10882,
+      "ad_platform": 6357,
       "session_cvr_pct": 2.52
     },
-    "blended_roas": 20.69,
+    "blended_roas": 135.95,
     "channel_performance": [
       {
         "channel": "google_ads",
@@ -455,9 +456,9 @@
       "end": "2026-03-15"
     },
     "spend": {
-      "google": 53860.39999999999,
-      "meta": 59212.25999999996,
-      "total": 113072.66
+      "google": 53860.399999999994,
+      "meta": 59212.259999999995,
+      "total": 113072.66000000002
     },
     "sessions": {
       "total": 431698,

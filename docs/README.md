@@ -10,6 +10,9 @@ Your complete map of every file in the `docs/` folder. Start here whenever you c
 2. [Quick-find: I want to…](#quick-find-i-want-to)
 3. [Folder structure at a glance](#folder-structure-at-a-glance)
 4. [`docs/` root files](#docs-root-files)
+   - [architecture.md](#architecturemd)
+   - [mcp_servers.md](#mcp_serversmd)
+   - [ml_model.md](#ml_modelmd)
 5. [`docs/guides/` — step-by-step how-to docs](#docsguides--step-by-step-how-to-docs)
 6. [`docs/images/` — diagrams and screenshots](#docsimages--diagrams-and-screenshots)
 7. [`docs/slides/` — presentations](#docsslides--presentations)
@@ -37,6 +40,8 @@ If you only have time for one section, skip to [Quick-find](#quick-find-i-want-t
 |------|-----------|
 | Run the project for the first time | [`guides/setup_guide.md`](guides/setup_guide.md) |
 | Understand the dbt model layers and MetricFlow | [`architecture.md`](architecture.md) |
+| Understand how mock MCP servers work | [`mcp_servers.md`](mcp_servers.md) |
+| Understand the ML model, MLflow, and n8n integration | [`ml_model.md`](ml_model.md) |
 | Use a slash command in Claude (`/marketing`, `/attribution`, etc.) | [`guides/commands_guide.md`](guides/commands_guide.md) |
 | Set up Claude Desktop with this project | [`guides/claude_desktop_project_instructions.md`](guides/claude_desktop_project_instructions.md) |
 | Import my own CSV / Excel data | [`guides/data_import_guide.md`](guides/data_import_guide.md) |
@@ -56,6 +61,8 @@ If you only have time for one section, skip to [Quick-find](#quick-find-i-want-t
 docs/
 ├── README.md                                # ← you are here
 ├── architecture.md                          # full dbt + MetricFlow internals (1,200 lines)
+├── mcp_servers.md                           # how mock MCP servers work + swap guide
+├── ml_model.md                              # XGBoost, MLflow, FastAPI, n8n integration
 │
 ├── guides/                                  # task-oriented how-to docs
 │   ├── setup_guide.md                       # first-time setup (104 lines)
@@ -91,6 +98,24 @@ docs/
 | **Audience** | Analytics engineers, dbt practitioners, anyone debugging the data layer. |
 | **When to read** | When you need to know exactly how a metric is computed, what columns a fact table has, or how MetricFlow time spines work. |
 | **Sections** | 1. Medallion overview 2. Staging layer (14 models) 3. Intermediate layer (4 models) 4. Marts layer (11 models) 5. MetricFlow semantic models 6. Metric definitions 7. Architecture summary table 8. dbt CLI reference 9. AI agent — querying, drift prevention & validation |
+
+### [`mcp_servers.md`](mcp_servers.md)
+
+| | |
+|---|---|
+| **Purpose** | Explains the five mock MCP servers: how they're built with FastMCP, what each tool returns, how date filtering works, how to configure `.mcp.json`, and how to swap any mock for a real production API. |
+| **Audience** | Anyone adding a new AI client, debugging MCP tool calls, or replacing mock data with live platform APIs. |
+| **When to read** | When you need to understand what data an MCP tool returns, why a tool call returns unexpected results, or how to connect to a real Ads/CRM platform. |
+| **Sections** | 1. What is MCP? 2. Why mock servers? 3. How a server is built 4. All five servers with tool schemas 5. Date filtering rules 6. `.mcp.json` config 7. Local testing 8. Swap mock → production |
+
+### [`ml_model.md`](ml_model.md)
+
+| | |
+|---|---|
+| **Purpose** | Documents the XGBoost lead scoring pipeline end-to-end: input features, training script, MLflow experiment tracking, FastAPI endpoint, and n8n lead routing automation. |
+| **Audience** | Data scientists, ML engineers, and anyone integrating the scoring API into an automation workflow. |
+| **When to read** | When training a new model version, debugging the `/score` endpoint, setting up the n8n workflow, or viewing MLflow experiment results. |
+| **Sections** | 1. What the model does 2. Input features 3. Training pipeline 4. MLflow tracking 5. Saved artefacts 6. FastAPI endpoint 7. n8n automation + current status 8. How to retrain 9. Viewing results 10. Roadmap |
 
 ---
 
@@ -207,6 +232,14 @@ Each guide solves a specific task. They are not meant to be read top-to-bottom; 
 1. [`guides/data_import_guide.md`](guides/data_import_guide.md) — start here
 2. [`guides/connector_ui_guide.md`](guides/connector_ui_guide.md) — Streamlit UI
 3. [`architecture.md`](architecture.md) §2 staging — column requirements
+
+### "I want to understand or extend the MCP servers"
+1. [`mcp_servers.md`](mcp_servers.md) — full server reference + swap guide
+2. [`guides/data_import_guide.md`](guides/data_import_guide.md) — replacing mock data with real platform data
+
+### "I want to work on the ML model or n8n automation"
+1. [`ml_model.md`](ml_model.md) — model, MLflow, FastAPI, n8n status
+2. [`guides/setup_guide.md`](guides/setup_guide.md) §5–7 — MLflow server + training commands
 
 ### "I'm shipping v1.0 — what do I need to check?"
 1. [`guides/production_readiness_guide.md`](guides/production_readiness_guide.md) — the 8-category checklist

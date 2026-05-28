@@ -132,39 +132,38 @@ This assumption must be used consistently. If the user provides a different AOV,
 
 ### Synthetic Dataset (this project's default)
 
-The original synthetic dataset has a **fixed boundary** — it does not update:
+The dataset grows daily via `daily_synthetic_append.py`. The anchor date
+auto-detects `MAX(date)` from the database so all windows always cover
+the latest appended data.
 
-| Variable | Value | Notes |
-|----------|-------|-------|
-| `ANCHOR_DATE` | **2026-03-15** | Dataset end — never use `today()` |
-| `WINDOW_START` | **2025-12-16** | 90 days before anchor |
-| `WINDOW_END`   | **2026-03-15** | Anchor date |
+| Variable | Resolved at runtime | Notes |
+|----------|---------------------|-------|
+| `anchor` | `MAX(date)` from DB | Latest appended day |
+| `window_start` | `anchor - 89 days` | 90-day window start |
+| `window_end` | `anchor` | 90-day window end |
 
-**Rule for synthetic data:** Always use these exact dates. Never compute
-`today() - 90 days`. Using `today()` produces a different window every day,
-making dashboards non-reproducible.
+**Rule for synthetic data:** Read window bounds from `golden_metrics.json`
+`_meta.window_start` / `_meta.window_end` — never hardcode dates. These are
+regenerated daily and always reflect the latest data.
 
 **How to identify synthetic data:** The dataset is in use when sourcing from
 `data/olist_analytics.duckdb` or `data/mock_marketing/*.csv`.
 
 ### Available Pre-Computed Windows
 
-`golden_metrics.json` (schema v2.2) contains these sections:
+`golden_metrics.json` (schema v2.2) contains these sections (dates roll forward with each daily refresh):
 
 | JSON key | Window | Label |
 |----------|--------|-------|
-| `windowed_7d` | 2026-03-09 → 2026-03-15 | Last 7 days |
-| `windowed_30d` | 2026-02-14 → 2026-03-15 | Last 30 days |
-| `windowed_60d` | 2026-01-15 → 2026-03-15 | Last 60 days |
-| `windowed_90d` | 2025-12-16 → 2026-03-15 | **Canonical 90-day window** |
-| `windowed_180d` | 2025-09-17 → 2026-03-15 | Last 180 days |
-| `month_2026_03` | 2026-03-01 → 2026-03-15 | March 2026 (partial) |
-| `month_2026_02` | 2026-02-01 → 2026-02-28 | February 2026 |
-| `month_2026_01` | 2026-01-01 → 2026-01-31 | January 2026 |
-| `all_time` | 2024-07-16 → 2026-03-15 | Full dataset range |
+| `windowed_7d` | anchor-6d → anchor | Last 7 days |
+| `windowed_30d` | anchor-29d → anchor | Last 30 days |
+| `windowed_60d` | anchor-59d → anchor | Last 60 days |
+| `windowed_90d` | anchor-89d → anchor | **Canonical 90-day window** |
+| `windowed_180d` | anchor-179d → anchor | Last 180 days |
+| `month_YYYY_MM` | full calendar month | Last 3 months relative to anchor |
+| `all_time` | dataset_start → anchor | Full dataset range |
 
-For live data, windows roll forward from today. The scheduled refresh
-(`scheduled-refresh.yml`) regenerates all windows daily at 06:00 UTC.
+The scheduled refresh (`scheduled-refresh.yml`) regenerates all windows daily at 06:00 UTC.
 
 ### On-Demand Queries — Any Date Range
 
@@ -255,8 +254,9 @@ Triggered by appending `-mcp` to any skill name or by user requesting "live", "r
 | `/traffic-mcp` | ga4 | Live session data |
 | `/pipeline-mcp` | hubspot, salesforce | Live CRM data |
 
-**Rule for MCP skills:** Pass canonical dates (`start_date=2025-12-16`, `end_date=2026-03-15`)
-for synthetic data. Use rolling `today() - 90` for live datasets (see §9).
+**Rule for MCP skills:** Pass dates from `golden_metrics.json` `_meta.window_start` /
+`_meta.window_end` for synthetic data (these update daily with the appended data).
+Use rolling `today() - 90` for live datasets (see §9).
 
 ---
 
@@ -331,7 +331,7 @@ Only bypass golden_metrics.json when the user explicitly says one of:
 - "show raw platform data" / "bypass golden layer" / "live from MCP"
 
 When in Live MCP mode:
-1. Pass **canonical dates**: `start_date=2025-12-16`, `end_date=2026-03-15`
+1. Pass dates from `golden_metrics.json` `_meta.window_start` / `_meta.window_end`
 2. Add to the dashboard header badge: `⚡ Live MCP — may differ from golden layer`
 3. Still use `metrics.js` canonical functions for all calculations
 4. For HubSpot/Salesforce, pass the same dates to `get_deal_pipeline_summary()`
@@ -352,7 +352,7 @@ User asks for data or a dashboard
   │
   ├─ Skill ends in "-mcp"  OR  user says "live", "real-time", "raw platform"?
   │   ├─ YES → Use MCP servers
-  │   │         · Synthetic:  dates = 2025-12-16 → 2026-03-15
+  │   │         · Synthetic:  dates from golden_metrics.json _meta.window_start/end
   │   │         · Live/real:  dates = today()-90d → today()
   │   │         · Add ⚡ Live MCP badge
   │   │         · Use metrics.js for all calculations

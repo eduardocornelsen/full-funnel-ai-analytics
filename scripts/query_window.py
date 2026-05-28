@@ -33,8 +33,8 @@ Notes:
   - Data is always sourced from data/mock_marketing/*.csv
   - CRM data (HubSpot, Salesforce) is always all-time — it is a lifetime
     count and must not be date-filtered. Labelled "(CRM all-time)" in output.
-  - For synthetic dataset, anchor = 2026-03-15. --last-days is relative to
-    that anchor, NOT today(), to keep results reproducible.
+  - --last-days is relative to MAX(date) in the CSV data, so it always
+    follows daily_synthetic_append.py without manual updates.
   - Results are ad-hoc and may diverge from golden_metrics.json by rounding
     (~$0.01) since they bypass the dbt mart layer. Label any dashboard built
     from this output with "⚡ Ad-hoc query · not from golden layer".
@@ -54,9 +54,20 @@ import duckdb
 PROJECT_ROOT = Path(__file__).parent.parent
 DATA_DIR     = PROJECT_ROOT / "data" / "mock_marketing"
 
-# Fixed anchor for synthetic dataset (CLAUDE.md §9)
-ANCHOR_DATE = date(2026, 3, 15)
 GOOGLE_AOV  = 100.0
+
+
+def _latest_csv_date() -> date:
+    """Return MAX(date) from the GA4 daily sessions CSV — used for --last-days anchor."""
+    csv = DATA_DIR / "ga4_daily_sessions.csv"
+    con = duckdb.connect(":memory:")
+    result = con.execute(
+        f"SELECT MAX(CAST(date AS DATE)) FROM read_csv_auto('{csv}')"
+    ).fetchone()[0]
+    con.close()
+    if result is None:
+        raise RuntimeError(f"No dates found in {csv}")
+    return result if isinstance(result, date) else date.fromisoformat(str(result)[:10])
 
 
 # ── CSV-backed DuckDB connection ──────────────────────────────────────────────
@@ -147,13 +158,13 @@ def parse_window(args) -> tuple[date, date, str]:
     """
     Resolve CLI args to (start, end, label).
 
-    --last-days N         : N days ending at ANCHOR_DATE (synthetic)
+    --last-days N         : N days ending at the latest date in the CSV data
     --start/--end         : explicit range
     --month YYYY-MM       : full calendar month
     --year YYYY           : full calendar year
     """
     if args.last_days is not None:
-        end   = ANCHOR_DATE
+        end   = _latest_csv_date()
         start = end - timedelta(days=int(args.last_days) - 1)
         label = f"Last {args.last_days} days (ending {end})"
 

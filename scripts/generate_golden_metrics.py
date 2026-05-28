@@ -14,14 +14,10 @@ Usage:
 
 Run after every `dbt run` to refresh the golden snapshot.
 
-Date anchoring (SYNTHETIC DATASET — this project's default):
-    The dataset ends at 2026-03-15 (fixed boundary — does not update daily).
-    ANCHOR_DATE is always 2026-03-15. Window: 2025-12-16 → 2026-03-15.
-    These dates are locked — do NOT use today().
-
-    LIVE / REAL DATASET (open-source swap-in):
-    If you connect a live data source (BigQuery, Supabase, Snowflake, etc.),
-    replace ANCHOR_DATE with date.today() and the window will roll automatically.
+Date anchoring:
+    By default, anchor = MAX(date) from fct_marketing_daily, so the 90-day window
+    always follows the latest appended data (daily_synthetic_append.py).
+    Use --anchor YYYY-MM-DD to pin a specific date for reproducible CI snapshots.
     See CLAUDE.md §9 for the full dataset-detection rules.
 """
 
@@ -41,11 +37,7 @@ DB_PATH      = PROJECT_ROOT / "data" / "olist_analytics.duckdb"
 OUTPUT_PATH  = PROJECT_ROOT / "dashboards" / "golden_metrics.json"
 
 # ── Canonical Date Anchoring ───────────────────────────────────────────────────
-# Dataset ends 2026-03-15. This is FIXED — never use date.today().
-ANCHOR_DATE  = date(2026, 3, 15)
 WINDOW_DAYS  = 90
-WINDOW_START = ANCHOR_DATE - timedelta(days=WINDOW_DAYS - 1)   # 2025-12-16
-WINDOW_END   = ANCHOR_DATE                                       # 2026-03-15
 
 # ── AOV for Google ROAS (mirrors CLAUDE.md §8 + metrics.js) ───────────────────
 GOOGLE_AOV = 100.0
@@ -387,9 +379,11 @@ def main():
     parser.add_argument("--target", default="duckdb",
                         choices=["duckdb", "bigquery", "snowflake"],
                         help="dbt target warehouse (default: duckdb)")
-    parser.add_argument("--live", action="store_true",
-                        help="Auto-detect latest date in DB instead of using fixed ANCHOR_DATE. "
-                             "Use after daily_synthetic_append.py or with live datasets.")
+    parser.add_argument("--anchor",
+                        metavar="YYYY-MM-DD",
+                        help="Fix the anchor date instead of auto-detecting from DB. "
+                             "Useful for reproducible CI snapshots. "
+                             "Default: auto-detect MAX(date) from fct_marketing_daily.")
     args = parser.parse_args()
 
     if args.target == "duckdb":
@@ -400,18 +394,18 @@ def main():
 
     dataset_start = date(2024, 7, 16)
 
-    if args.live:
-        # Read latest date from the fact table so the window follows appended data
+    if args.anchor:
+        anchor = date.fromisoformat(args.anchor)
+        print(f"--anchor override: {anchor}")
+    else:
+        # Auto-detect the latest date so the window follows daily_synthetic_append.py
         latest = con.execute("SELECT MAX(date) FROM fct_marketing_daily").fetchone()[0]
         anchor = date.fromisoformat(str(latest)[:10]) if not isinstance(latest, date) else latest
-        window_start = anchor - timedelta(days=WINDOW_DAYS - 1)
-        window_end   = anchor
-        print(f"--live mode: anchor={anchor}  |  90d window: {window_start} → {window_end}")
-    else:
-        anchor       = ANCHOR_DATE
-        window_start = WINDOW_START
-        window_end   = WINDOW_END
-        print(f"Anchor date: {anchor}  |  90d window: {window_start} → {window_end}")
+        print(f"Auto-detected anchor={anchor} from fct_marketing_daily")
+
+    window_start = anchor - timedelta(days=WINDOW_DAYS - 1)
+    window_end   = anchor
+    print(f"90d window: {window_start} → {window_end}")
 
     dataset_end = anchor
 

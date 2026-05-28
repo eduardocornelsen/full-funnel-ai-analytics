@@ -418,45 +418,81 @@ def main():
     print("Building all-time section …")
     all_time = build_section(con, dataset_start, dataset_end, "All-time (dataset full range)")
 
-    print("Building 90-day windowed section …")
-    windowed_90d = build_section(con, window_start, window_end, "90-day window (canonical)")
+    # ── Pre-computed rolling windows (relative to anchor) ─────────────────────
+    sections: dict = {}
+    for days, key in [(7, "windowed_7d"), (30, "windowed_30d"),
+                      (60, "windowed_60d"), (90, "windowed_90d"),
+                      (180, "windowed_180d")]:
+        ws = anchor - timedelta(days=days - 1)
+        label = f"{days}-day window ({fd(ws)} → {fd(anchor)})"
+        print(f"Building {days}-day window ({fd(ws)} → {fd(anchor)}) …")
+        sections[key] = build_section(con, ws, anchor, label)
+
+    # ── Pre-computed calendar months (last 3 relative to anchor) ─────────────
+    import calendar as _cal
+    month_sections: dict = {}
+    for offset in range(3):
+        # Walk backwards: anchor month, then previous months
+        y = anchor.year
+        m = anchor.month - offset
+        if m <= 0:
+            m += 12
+            y -= 1
+        last_day = _cal.monthrange(y, m)[1]
+        ms = date(y, m, 1)
+        me = date(y, m, last_day)
+        key   = f"month_{y}_{m:02d}"
+        label = f"{ms.strftime('%B %Y')} (full month)"
+        print(f"Building {label} …")
+        month_sections[key] = build_section(con, ms, me, label)
 
     con.close()
 
+    # ── Canonical window metadata (for AI agent reference) ────────────────────
+    available_windows = (
+        {k: sections[k]["window"] for k in sections}
+        | {k: month_sections[k]["window"] for k in month_sections}
+        | {"all_time": {"start": fd(dataset_start), "end": fd(dataset_end)}}
+    )
+
     output = {
         "_meta": {
-            "generated_at":   datetime.now(timezone.utc).isoformat(),
-            "anchor_date":    fd(anchor),
-            "dataset_start":  fd(dataset_start),
-            "dataset_end":    fd(dataset_end),
-            "window_days":    WINDOW_DAYS,
-            "window_start":   fd(window_start),
-            "window_end":     fd(window_end),
-            "dbt_source":     str(DB_PATH) if args.target == "duckdb" else args.target,
-            "dbt_target":     args.target,
-            "schema_version": "2.1",
-            "google_aov":     GOOGLE_AOV,
+            "generated_at":      datetime.now(timezone.utc).isoformat(),
+            "anchor_date":       fd(anchor),
+            "dataset_start":     fd(dataset_start),
+            "dataset_end":       fd(dataset_end),
+            "window_days":       WINDOW_DAYS,
+            "window_start":      fd(window_start),
+            "window_end":        fd(window_end),
+            "dbt_source":        str(DB_PATH) if args.target == "duckdb" else args.target,
+            "dbt_target":        args.target,
+            "schema_version":    "2.2",
+            "google_aov":        GOOGLE_AOV,
+            "available_windows": available_windows,
             "note": (
                 "SINGLE SOURCE OF TRUTH for all dashboard numbers. "
                 "AI agent must read and copy values — never recalculate independently. "
+                "For windows not listed in available_windows, use query_window.py. "
                 "Regenerate after dbt run: python scripts/generate_golden_metrics.py"
             ),
         },
         "all_time":    all_time,
-        "windowed_90d": windowed_90d,
     }
+    output.update(sections)        # windowed_7d … windowed_180d
+    output.update(month_sections)  # month_2026_03, month_2026_02, month_2026_01
 
     OUTPUT_PATH.write_text(json.dumps(output, indent=2, ensure_ascii=False))
 
     print(f"\n✅ Written: {OUTPUT_PATH}")
     print(f"   All-time   → Blended ROAS: {all_time['blended_roas']}x"
           f"  |  Sessions: {all_time['sessions']['total']:,}"
-          f"  |  Spend: ${all_time['spend']['total']:,.2f}"
-          f"  |  Linear Rev: ${sum(c['linear_revenue'] for c in all_time['attribution_by_channel']):,.2f}")
-    print(f"   90d window → Blended ROAS: {windowed_90d['blended_roas']}x"
-          f"  |  Sessions: {windowed_90d['sessions']['total']:,}"
-          f"  |  Spend: ${windowed_90d['spend']['total']:,.2f}"
-          f"  |  Linear Rev: ${sum(c['linear_revenue'] for c in windowed_90d['attribution_by_channel']):,.2f}")
+          f"  |  Spend: ${all_time['spend']['total']:,.2f}")
+    w90 = sections["windowed_90d"]
+    print(f"   90d window → Blended ROAS: {w90['blended_roas']}x"
+          f"  |  Sessions: {w90['sessions']['total']:,}"
+          f"  |  Spend: ${w90['spend']['total']:,.2f}")
+    print(f"\n   Pre-computed windows: {', '.join(list(sections) + list(month_sections))}")
+    print(f"   For other ranges: python scripts/query_window.py --last-days N")
 
 
 if __name__ == "__main__":

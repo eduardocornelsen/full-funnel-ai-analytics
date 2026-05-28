@@ -3,14 +3,16 @@ run_benchmark.py
 ─────────────────────────────────────────────────────────────────────────────
 SQRA — Search Quality & Retrieval Accuracy benchmark runner.
 
-Four task runners, one per retrieval surface:
-  mcp       — calls MCP server functions directly; compares against golden JSON
-  golden    — navigates golden_metrics.json at specific JSON paths
-  semantic  — executes DuckDB SQL; compares against golden JSON
-  nl2sql    — same as semantic but 5 cases are intentionally flawed (adversarial)
+Five task runners, one per retrieval surface:
+  mcp          — calls MCP server functions directly; compares against golden JSON
+  golden       — navigates golden_metrics.json at specific JSON paths
+  semantic     — executes DuckDB SQL; compares against golden JSON
+  nl2sql       — same as semantic but 5 cases are intentionally flawed (adversarial)
+  query_window — calls query_window.py for arbitrary date ranges; tests
+                 --last-days N, --month YYYY-MM, and custom --start/--end
 
 Usage (via scripts/run_sqra.py):
-    python scripts/run_sqra.py [--surface mcp|golden|semantic|nl2sql|all]
+    python scripts/run_sqra.py [--surface mcp|golden|semantic|nl2sql|query_window|all]
 """
 
 from __future__ import annotations
@@ -250,11 +252,62 @@ def run_nl2sql_tasks(cases: list[dict]) -> list[dict]:
 
 # ── Orchestrator ──────────────────────────────────────────────────────────────
 
+# ── query_window surface ──────────────────────────────────────────────────────
+
+def run_query_window_tasks(cases: list[dict]) -> list[dict]:
+    """
+    Tests query_window.py for arbitrary date ranges.
+    Imports build_csv_connection + build_window_section directly (no subprocess)
+    so the test is fast and doesn't depend on PATH.
+    """
+    from datetime import date
+    import importlib.util, types
+
+    # Import query_window without relying on it being installed
+    import importlib.util as _ilu
+    qw_path = PROJECT_ROOT / "scripts" / "query_window.py"
+    spec    = _ilu.spec_from_file_location("query_window", str(qw_path),
+                  submodule_search_locations=[])
+    qw      = _ilu.module_from_spec(spec)
+    # Patch __file__ so query_window.py can resolve DATA_DIR relative to itself
+    qw.__file__ = str(qw_path)
+    spec.loader.exec_module(qw)  # type: ignore[union-attr]
+
+    results = []
+    for case in cases:
+        try:
+            start = date.fromisoformat(case["window"]["start"])
+            end   = date.fromisoformat(case["window"]["end"])
+            label = case.get("window_label", "Test window")
+
+            section = qw.query_window(start, end, label)
+
+            # Extract the specific metric from the section
+            spec_path = case["extract_path"]
+            retrieved = _extract_from_section(section, spec_path)
+
+            p = precision_score(retrieved, case["expected_value"], case["tolerance"])
+            r = relevance_score(case, {"used_date_params": True})
+            results.append(_make_result(case, retrieved, p, r))
+        except Exception as exc:
+            results.append(_make_result(case, None, 0.0, 0.0, str(exc)))
+    return results
+
+
+def _extract_from_section(section: dict, path: str):
+    """Navigate a dot-path like 'sessions.total' or 'spend.google'."""
+    node = section
+    for part in path.split("."):
+        node = node[part]
+    return node
+
+
 SURFACE_RUNNERS = {
-    "mcp":      run_mcp_tasks,
-    "golden":   run_golden_tasks,
-    "semantic": run_semantic_tasks,
-    "nl2sql":   run_nl2sql_tasks,
+    "mcp":          run_mcp_tasks,
+    "golden":       run_golden_tasks,
+    "semantic":     run_semantic_tasks,
+    "nl2sql":       run_nl2sql_tasks,
+    "query_window": run_query_window_tasks,
 }
 
 

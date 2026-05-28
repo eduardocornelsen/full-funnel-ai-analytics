@@ -33,10 +33,11 @@ from scorer import aggregate   # noqa: E402
 # ── Report formatting ─────────────────────────────────────────────────────────
 
 SURFACE_LABEL = {
-    "mcp":      "MCP Tool Queries   ",
-    "golden":   "Golden Layer Reads ",
-    "semantic": "dbt Semantic Layer ",
-    "nl2sql":   "NL → SQL Fidelity  ",
+    "mcp":          "MCP Tool Queries   ",
+    "golden":       "Golden Layer Reads ",
+    "semantic":     "dbt Semantic Layer ",
+    "nl2sql":       "NL → SQL Fidelity  ",
+    "query_window": "query_window.py    ",
 }
 
 def _render_report(results: list[dict], summary: dict) -> str:
@@ -98,7 +99,7 @@ def main() -> int:
     parser.add_argument(
         "--surface",
         default="all",
-        choices=["all", "mcp", "golden", "semantic", "nl2sql"],
+        choices=["all", "mcp", "golden", "semantic", "nl2sql", "query_window"],
         help="Retrieval surface to benchmark (default: all)",
     )
     parser.add_argument(

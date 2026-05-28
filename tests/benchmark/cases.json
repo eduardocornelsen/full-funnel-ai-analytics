@@ -469,6 +469,132 @@
       "is_adversarial": true,
       "flaw": "Uses 'spend' field for Google Ads — correct field is 'cost' (CLAUDE.md §7 spend field mapping)",
       "tags": ["google_ads", "spend", "nl2sql", "adversarial"]
+    },
+
+    // ── query_window — Arbitrary Date Ranges (10 cases) ───────────────────────
+    // Tests scripts/query_window.py with --last-days, --month, and --start/--end.
+    // Verifies that on-demand queries return the same values as direct CSV aggregation.
+    // Uses CSV-backed DuckDB (always works without dbt mart tables).
+
+    {
+      "id": "qw_last7d_sessions",
+      "surface": "query_window",
+      "question": "Total sessions for last 7 days (--last-days 7)",
+      "window": {"start": "2026-03-09", "end": "2026-03-15"},
+      "window_label": "Last 7 days (ending 2026-03-15)",
+      "extract_path": "sessions.total",
+      "expected_value": 33330,
+      "tolerance": {"type": "count", "value": 1},
+      "relevance_check": {"type": "always_pass"},
+      "tags": ["query_window", "sessions", "7d"]
+    },
+    {
+      "id": "qw_last7d_spend",
+      "surface": "query_window",
+      "question": "Total spend for last 7 days (--last-days 7)",
+      "window": {"start": "2026-03-09", "end": "2026-03-15"},
+      "window_label": "Last 7 days (ending 2026-03-15)",
+      "extract_path": "spend.total",
+      "expected_value": 7900.05,
+      "tolerance": {"type": "dollar", "value": 1.0},
+      "relevance_check": {"type": "always_pass"},
+      "tags": ["query_window", "spend", "7d"]
+    },
+    {
+      "id": "qw_last30d_sessions",
+      "surface": "query_window",
+      "question": "Total sessions for last 30 days (--last-days 30)",
+      "window": {"start": "2026-02-14", "end": "2026-03-15"},
+      "window_label": "Last 30 days (ending 2026-03-15)",
+      "extract_path": "sessions.total",
+      "expected_value": 140508,
+      "tolerance": {"type": "count", "value": 1},
+      "relevance_check": {"type": "always_pass"},
+      "tags": ["query_window", "sessions", "30d"]
+    },
+    {
+      "id": "qw_last30d_cvr",
+      "surface": "query_window",
+      "question": "Session CVR for last 30 days (--last-days 30)",
+      "window": {"start": "2026-02-14", "end": "2026-03-15"},
+      "window_label": "Last 30 days (ending 2026-03-15)",
+      "extract_path": "conversions.session_cvr_pct",
+      "expected_value": 2.49,
+      "tolerance": {"type": "pct", "value": 0.5},
+      "relevance_check": {"type": "always_pass"},
+      "tags": ["query_window", "cvr", "30d"]
+    },
+    {
+      "id": "qw_last60d_google_spend",
+      "surface": "query_window",
+      "question": "Google Ads spend for last 60 days (--last-days 60)",
+      "window": {"start": "2026-01-15", "end": "2026-03-15"},
+      "window_label": "Last 60 days (ending 2026-03-15)",
+      "extract_path": "spend.google",
+      "expected_value": 31918.78,
+      "tolerance": {"type": "dollar", "value": 1.0},
+      "relevance_check": {"type": "always_pass"},
+      "tags": ["query_window", "spend", "google_ads", "60d"]
+    },
+    {
+      "id": "qw_last180d_sessions",
+      "surface": "query_window",
+      "question": "Total sessions for last 180 days (--last-days 180)",
+      "window": {"start": "2025-09-17", "end": "2026-03-15"},
+      "window_label": "Last 180 days (ending 2026-03-15)",
+      "extract_path": "sessions.total",
+      "expected_value": 863790,
+      "tolerance": {"type": "count", "value": 1},
+      "relevance_check": {"type": "always_pass"},
+      "tags": ["query_window", "sessions", "180d"]
+    },
+    {
+      "id": "qw_last180d_spend",
+      "surface": "query_window",
+      "question": "Total spend for last 180 days (--last-days 180)",
+      "window": {"start": "2025-09-17", "end": "2026-03-15"},
+      "window_label": "Last 180 days (ending 2026-03-15)",
+      "extract_path": "spend.total",
+      "expected_value": 227959.04,
+      "tolerance": {"type": "dollar", "value": 1.0},
+      "relevance_check": {"type": "always_pass"},
+      "tags": ["query_window", "spend", "180d"]
+    },
+    {
+      "id": "qw_month_feb2026_sessions",
+      "surface": "query_window",
+      "question": "Total sessions for February 2026 (--month 2026-02)",
+      "window": {"start": "2026-02-01", "end": "2026-02-28"},
+      "window_label": "February 2026 (full month)",
+      "extract_path": "sessions.total",
+      "expected_value": 130668,
+      "tolerance": {"type": "count", "value": 1},
+      "relevance_check": {"type": "always_pass"},
+      "tags": ["query_window", "sessions", "monthly"]
+    },
+    {
+      "id": "qw_month_jan2026_spend",
+      "surface": "query_window",
+      "question": "Total spend for January 2026 (--month 2026-01)",
+      "window": {"start": "2026-01-01", "end": "2026-01-31"},
+      "window_label": "January 2026 (full month)",
+      "extract_path": "spend.total",
+      "expected_value": 39490.1,
+      "tolerance": {"type": "dollar", "value": 1.0},
+      "relevance_check": {"type": "always_pass"},
+      "tags": ["query_window", "spend", "monthly"]
+    },
+    {
+      "id": "qw_custom_range_sessions",
+      "surface": "query_window",
+      "question": "Sessions for custom range 2026-01-01 to 2026-02-28 (--start/--end)",
+      "window": {"start": "2026-01-01", "end": "2026-02-28"},
+      "window_label": "Custom window 2026-01-01 → 2026-02-28",
+      "extract_path": "sessions.total",
+      "expected_value": 280633,
+      "tolerance": {"type": "count", "value": 1},
+      "relevance_check": {"type": "always_pass"},
+      "tags": ["query_window", "sessions", "custom"]
     }
   ]
 }

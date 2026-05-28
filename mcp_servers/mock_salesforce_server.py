@@ -18,8 +18,8 @@ def get_opportunity_pipeline(start_date: str = None, end_date: str = None):
 
     Note:
         Default (no dates) returns all-time pipeline.
-        Pass the canonical window dates (2025-12-16 → 2026-03-15) to align
-        with the 90-day ad spend window.
+        Pass window_start / window_end from golden_metrics.json _meta to align
+        with the current 90-day ad spend window (rolls forward daily).
     """
     df = pd.read_csv(DATA_DIR / "salesforce_opportunities.csv")
     df['created_date'] = pd.to_datetime(df['created_date'], errors='coerce')

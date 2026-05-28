@@ -79,7 +79,11 @@ def relevance_score(case: dict, retrieval_meta: dict) -> float:
 
     if check_type == "sql_has_date_filter":
         sql = retrieval_meta.get("sql_text", "").lower()
-        has_dates = "2025-12-16" in sql and "2026-03-15" in sql
+        # Accept any ISO date in a BETWEEN/WHERE clause — dates roll with anchor
+        import re
+        has_dates = bool(re.search(r"\d{4}-\d{2}-\d{2}", sql)) and (
+            "between" in sql or "where" in sql
+        )
         return 1.0 if has_dates else 0.0
 
     return 1.0  # unknown type → pass

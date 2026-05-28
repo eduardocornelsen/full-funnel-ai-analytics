@@ -478,7 +478,7 @@ Examples:
     )
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--last-days", type=int, metavar="N",
-                       help="N days ending at the anchor date (2026-03-15)")
+                       help="N days ending at the latest date in the CSV data (auto-detected)")
     group.add_argument("--month", metavar="YYYY-MM",
                        help="Full calendar month (e.g. 2026-02)")
     group.add_argument("--year", type=int, metavar="YYYY",

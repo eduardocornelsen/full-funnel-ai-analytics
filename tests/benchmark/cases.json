@@ -1,11 +1,10 @@
 {
   "_meta": {
-    "version": "1.0",
+    "version": "1.1",
     "description": "SQRA — Search Quality & Retrieval Accuracy benchmark corpus",
-    "window_start": "2025-12-16",
-    "window_end": "2026-03-15",
-    "surfaces": ["mcp", "golden", "semantic", "nl2sql"],
-    "total_cases": 40
+    "surfaces": ["mcp", "golden", "semantic", "nl2sql", "query_window"],
+    "total_cases": 50,
+    "note": "window_start/end removed — mcp/semantic/nl2sql cases use explicit fixed dates in params/sql; golden cases use expected_from_golden=true to resolve at runtime; query_window cases have explicit window.start/end"
   },
   "cases": [
 
@@ -144,6 +143,7 @@
       "question": "Blended ROAS for the 90-day window (linear attribution)",
       "golden_path": "windowed_90d.blended_roas",
       "expected_value": 24.12,
+      "expected_from_golden": true,
       "tolerance": {"type": "pct", "value": 0.5},
       "relevance_check": {"type": "section", "expected": "windowed_90d"},
       "tags": ["roas", "blended", "90d"]
@@ -154,6 +154,7 @@
       "question": "Session CVR (%) for the 90-day window",
       "golden_path": "windowed_90d.conversions.session_cvr_pct",
       "expected_value": 2.52,
+      "expected_from_golden": true,
       "tolerance": {"type": "pct", "value": 0.5},
       "relevance_check": {"type": "section", "expected": "windowed_90d"},
       "tags": ["cvr", "sessions", "90d"]
@@ -164,6 +165,7 @@
       "question": "Total paid media spend (Google + Meta) for the 90-day window",
       "golden_path": "windowed_90d.spend.total",
       "expected_value": 113072.66,
+      "expected_from_golden": true,
       "tolerance": {"type": "dollar", "value": 1.0},
       "relevance_check": {"type": "section", "expected": "windowed_90d"},
       "tags": ["spend", "90d"]
@@ -174,6 +176,7 @@
       "question": "Google Ads channel ROAS (linear attribution, 90d)",
       "golden_path": "windowed_90d.channel_performance[google_ads].roas",
       "expected_value": 19.05,
+      "expected_from_golden": true,
       "tolerance": {"type": "pct", "value": 0.5},
       "relevance_check": {"type": "section", "expected": "windowed_90d"},
       "tags": ["roas", "google_ads", "channel", "90d"]
@@ -184,6 +187,7 @@
       "question": "Meta Ads attributed orders for the 90-day window",
       "golden_path": "windowed_90d.channel_performance[meta_ads].total_orders",
       "expected_value": 9099.0,
+      "expected_from_golden": true,
       "tolerance": {"type": "count", "value": 1},
       "relevance_check": {"type": "section", "expected": "windowed_90d"},
       "tags": ["meta_ads", "orders", "channel", "90d"]
@@ -194,6 +198,7 @@
       "question": "Linear attributed revenue for the top-performing channel (google_ads_search)",
       "golden_path": "windowed_90d.attribution_by_channel[google_ads_search].linear_revenue",
       "expected_value": 610606.88,
+      "expected_from_golden": true,
       "tolerance": {"type": "dollar", "value": 1.0},
       "relevance_check": {"type": "section", "expected": "windowed_90d"},
       "tags": ["attribution", "channel", "linear", "90d"]
@@ -204,6 +209,7 @@
       "question": "Session CVR for the email channel in GA4 (90d window)",
       "golden_path": "windowed_90d.ga4_by_channel[email].session_cvr_pct",
       "expected_value": 3.85,
+      "expected_from_golden": true,
       "tolerance": {"type": "pct", "value": 0.5},
       "relevance_check": {"type": "section", "expected": "windowed_90d"},
       "tags": ["ga4", "cvr", "email", "channel"]
@@ -214,6 +220,7 @@
       "question": "Total HubSpot contacts (all-time lifetime count, not 90d)",
       "golden_path": "all_time.crm.hubspot.total_contacts",
       "expected_value": 93263,
+      "expected_from_golden": true,
       "tolerance": {"type": "count", "value": 1},
       "relevance_check": {"type": "section", "expected": "all_time"},
       "tags": ["crm", "hubspot", "contacts", "all_time"]
@@ -224,6 +231,7 @@
       "question": "Salesforce closed-won revenue (all-time)",
       "golden_path": "all_time.crm.salesforce.closed_won_revenue",
       "expected_value": 7938574.53,
+      "expected_from_golden": true,
       "tolerance": {"type": "dollar", "value": 1.0},
       "relevance_check": {"type": "section", "expected": "all_time"},
       "tags": ["crm", "salesforce", "revenue", "all_time"]

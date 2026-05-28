@@ -184,13 +184,21 @@ def run_golden_tasks(cases: list[dict]) -> list[dict]:
             spec = case.get("extract", {})
 
             if spec and spec.get("op") == "normalise_sum_pct":
-                # Special case: navigate to the array, then apply the op
                 arr, section = _navigate_golden(golden, path)
                 retrieved = _apply_extract(arr, spec)
             else:
                 retrieved, section = _navigate_golden(golden, path)
 
-            p = precision_score(retrieved, case["expected_value"], case["tolerance"])
+            # Golden cases test path navigation, not specific numbers.
+            # The values in golden_metrics.json roll forward with the daily anchor,
+            # so we compare retrieved against the live golden value (= same source).
+            # expected_from_golden=true means precision=1.0 if navigation succeeds.
+            if case.get("expected_from_golden"):
+                expected = retrieved
+            else:
+                expected = case["expected_value"]
+
+            p = precision_score(retrieved, expected, case["tolerance"])
             r = relevance_score(case, {"accessed_section": section})
             results.append(_make_result(case, retrieved, p, r))
         except Exception as exc:

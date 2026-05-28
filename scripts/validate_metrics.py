@@ -68,14 +68,17 @@ def validate(target: str = "duckdb") -> int:
     g_at = golden["all_time"]
     ws   = meta["window_start"]
     we   = meta["window_end"]
+    ds   = meta["dataset_start"]
+    de   = meta["dataset_end"]
 
-    # ── All-time totals ────────────────────────────────────────────────────────
+    # ── All-time totals (bounded to the dataset window that generated the golden) ─
     live = con.execute("""
         SELECT
             SUM(total_google_spend), SUM(total_meta_spend), SUM(total_spend),
             SUM(total_conversions),  SUM(ga4_total_sessions)
         FROM fct_marketing_daily
-    """).fetchone()
+        WHERE date BETWEEN ? AND ?
+    """, [ds, de]).fetchone()
 
     checks += [
         check("all_time.spend.google",          g_at["spend"]["google"],            float(live[0] or 0), DOLLAR_TOLERANCE_ABS),
@@ -88,6 +91,8 @@ def validate(target: str = "duckdb") -> int:
     # Blended ROAS (all-time): linear attributed revenue / total spend
     live_rev_at = con.execute(
         "SELECT SUM(linear_credit * order_revenue) FROM stg_marketing_attribution"
+        " WHERE touchpoint_date BETWEEN ? AND ?",
+        [ds, de]
     ).fetchone()[0]
     live_roas = round(float(live_rev_at or 0) / float(live[2] or 1), 2)
     checks.append(check("all_time.blended_roas", g_at["blended_roas"], live_roas, RATIO_TOLERANCE_PCT, "pct"))
@@ -127,12 +132,16 @@ def validate(target: str = "duckdb") -> int:
                         g_90["conversions"]["session_cvr_pct"],
                         round(live_cvr_90, 2), RATIO_TOLERANCE_PCT, "pct"))
 
-    # ── Channel ROAS ───────────────────────────────────────────────────────────
+    # ── Channel ROAS (bounded to dataset window to match golden) ─────────────
     live_ch = con.execute("""
         WITH spend AS (
-            SELECT 'google_ads' AS channel, SUM(cost)  AS total_spend FROM stg_google_ads_performance
+            SELECT 'google_ads' AS channel, SUM(cost)  AS total_spend
+            FROM stg_google_ads_performance
+            WHERE CAST(date AS DATE) BETWEEN ? AND ?
             UNION ALL
-            SELECT 'meta_ads'   AS channel, SUM(spend) AS total_spend FROM stg_meta_ads_performance
+            SELECT 'meta_ads'   AS channel, SUM(spend) AS total_spend
+            FROM stg_meta_ads_performance
+            WHERE CAST(date AS DATE) BETWEEN ? AND ?
         ),
         rev AS (
             SELECT
@@ -143,13 +152,14 @@ def validate(target: str = "duckdb") -> int:
                 END AS ch,
                 SUM(linear_credit * order_revenue) AS linear_revenue
             FROM stg_marketing_attribution
+            WHERE touchpoint_date BETWEEN ? AND ?
             GROUP BY 1
         )
         SELECT s.channel,
                COALESCE(r.linear_revenue / NULLIF(s.total_spend, 0), 0) AS roas
         FROM spend s
         LEFT JOIN rev r ON s.channel = r.ch
-    """).fetchall()
+    """, [ds, de, ds, de, ds, de]).fetchall()
 
     golden_ch = {c["channel"]: c["roas"] for c in g_at["channel_performance"]}
     for ch_name, live_roas_val in live_ch:

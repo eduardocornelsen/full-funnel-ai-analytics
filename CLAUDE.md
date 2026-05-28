@@ -132,20 +132,69 @@ This assumption must be used consistently. If the user provides a different AOV,
 
 ### Synthetic Dataset (this project's default)
 
-The original synthetic dataset has a **fixed boundary** — it does not update:
+The dataset grows daily via `daily_synthetic_append.py`. The anchor date
+auto-detects `MAX(date)` from the database so all windows always cover
+the latest appended data.
 
-| Variable | Value | Notes |
-|----------|-------|-------|
-| `ANCHOR_DATE` | **2026-03-15** | Dataset end — never use `today()` |
-| `WINDOW_START` | **2025-12-16** | 90 days before anchor |
-| `WINDOW_END`   | **2026-03-15** | Anchor date |
+| Variable | Resolved at runtime | Notes |
+|----------|---------------------|-------|
+| `anchor` | `MAX(date)` from DB | Latest appended day |
+| `window_start` | `anchor - 89 days` | 90-day window start |
+| `window_end` | `anchor` | 90-day window end |
 
-**Rule for synthetic data:** Always use these exact dates. Never compute
-`today() - 90 days`. Using `today()` produces a different window every day,
-making dashboards non-reproducible.
+**Rule for synthetic data:** Read window bounds from `golden_metrics.json`
+`_meta.window_start` / `_meta.window_end` — never hardcode dates. These are
+regenerated daily and always reflect the latest data.
 
 **How to identify synthetic data:** The dataset is in use when sourcing from
 `data/olist_analytics.duckdb` or `data/mock_marketing/*.csv`.
+
+### Available Pre-Computed Windows
+
+`golden_metrics.json` (schema v2.2) contains these sections (dates roll forward with each daily refresh):
+
+| JSON key | Window | Label |
+|----------|--------|-------|
+| `windowed_7d` | anchor-6d → anchor | Last 7 days |
+| `windowed_30d` | anchor-29d → anchor | Last 30 days |
+| `windowed_60d` | anchor-59d → anchor | Last 60 days |
+| `windowed_90d` | anchor-89d → anchor | **Canonical 90-day window** |
+| `windowed_180d` | anchor-179d → anchor | Last 180 days |
+| `month_YYYY_MM` | full calendar month | Last 3 months relative to anchor |
+| `all_time` | dataset_start → anchor | Full dataset range |
+
+The scheduled refresh (`scheduled-refresh.yml`) regenerates all windows daily at 06:00 UTC.
+
+### On-Demand Queries — Any Date Range
+
+For windows NOT listed above (e.g., last 45 days, Q1 2026, a custom range),
+use `scripts/query_window.py`. It queries the CSV source files directly via
+DuckDB and returns the same schema as a `golden_metrics.json` section.
+
+```bash
+python scripts/query_window.py --last-days 45
+python scripts/query_window.py --last-days 1          # yesterday (anchor-relative)
+python scripts/query_window.py --month 2025-11        # November 2025
+python scripts/query_window.py --year 2025            # full year
+python scripts/query_window.py --start 2025-10-01 --end 2026-03-15
+python scripts/query_window.py --last-days 60 --output metrics_60d.json
+```
+
+**Python API:**
+```python
+from datetime import date
+from scripts.query_window import query_window
+section = query_window(date(2026, 1, 1), date(2026, 3, 15))
+print(section["blended_roas"])   # same schema as golden_metrics.json
+```
+
+**Labelling rule:** Any dashboard built from `query_window.py` output must display:
+> ⚡ Ad-hoc query · not from golden layer
+
+This distinguishes it from zero-drift golden layer dashboards.
+
+**CRM data is always all-time** regardless of the query window — it is a
+lifetime count (see §1 and §5). `query_window.py` labels this with `_note`.
 
 ### Live / Real Dataset (open-source swap-in)
 
@@ -205,8 +254,9 @@ Triggered by appending `-mcp` to any skill name or by user requesting "live", "r
 | `/traffic-mcp` | ga4 | Live session data |
 | `/pipeline-mcp` | hubspot, salesforce | Live CRM data |
 
-**Rule for MCP skills:** Pass canonical dates (`start_date=2025-12-16`, `end_date=2026-03-15`)
-for synthetic data. Use rolling `today() - 90` for live datasets (see §9).
+**Rule for MCP skills:** Pass dates from `golden_metrics.json` `_meta.window_start` /
+`_meta.window_end` for synthetic data (these update daily with the appended data).
+Use rolling `today() - 90` for live datasets (see §9).
 
 ---
 
@@ -265,8 +315,10 @@ The following rules are mandatory.
 2. This file is pre-computed from the dbt golden layer (DuckDB mart tables).
 3. **Copy exact values** from this file into HTML dashboard JS constants.
    Do NOT recalculate metrics independently.
-4. Always use the `windowed_90d` section for the canonical 90-day view.
-5. Use the `all_time` section only when explicitly showing lifetime data.
+4. Check `_meta.available_windows` to see which windows are pre-computed.
+5. Use `windowed_90d` for the canonical 90-day view.
+6. Use `all_time` only when explicitly showing lifetime data.
+7. For any other window (30d, monthly, custom range) — see §9 `query_window.py`.
 
 **Why:** If you recalculate metrics from MCP data, rounding differences and
 non-deterministic AI arithmetic will cause drift versus the golden layer.
@@ -279,7 +331,7 @@ Only bypass golden_metrics.json when the user explicitly says one of:
 - "show raw platform data" / "bypass golden layer" / "live from MCP"
 
 When in Live MCP mode:
-1. Pass **canonical dates**: `start_date=2025-12-16`, `end_date=2026-03-15`
+1. Pass dates from `golden_metrics.json` `_meta.window_start` / `_meta.window_end`
 2. Add to the dashboard header badge: `⚡ Live MCP — may differ from golden layer`
 3. Still use `metrics.js` canonical functions for all calculations
 4. For HubSpot/Salesforce, pass the same dates to `get_deal_pipeline_summary()`
@@ -296,20 +348,33 @@ When in Live MCP mode:
 ### Data Source Decision Tree
 
 ```
-User asks for a dashboard
+User asks for data or a dashboard
   │
-  ├─ Skill ends in "-mcp"  OR  user says "live", "real-time", "raw platform", "bypass golden"?
+  ├─ Skill ends in "-mcp"  OR  user says "live", "real-time", "raw platform"?
   │   ├─ YES → Use MCP servers
-  │   │         · Synthetic dataset:  dates = 2025-12-16 → 2026-03-15 (fixed anchor)
-  │   │         · Live/real dataset:  dates = today()-90d → today()
+  │   │         · Synthetic:  dates from golden_metrics.json _meta.window_start/end
+  │   │         · Live/real:  dates = today()-90d → today()
   │   │         · Add ⚡ Live MCP badge
   │   │         · Use metrics.js for all calculations
-  │   └─ NO  → Read dashboards/golden_metrics.json (default)
-  │             · Use windowed_90d for 90-day views
-  │             · Use all_time for lifetime/CRM views
-  │             · Copy exact values — no recalculation
+  │   └─ NO  → Use golden layer (default)
   │
-  └─ Does golden_metrics.json exist?
-      ├─ YES → Use it
-      └─ NO  → Tell user: python scripts/generate_golden_metrics.py
+  └─ What date window does the user want?
+      │
+      ├─ 90d (default), 7d, 30d, 60d, 180d, or a recent calendar month?
+      │   └─ Read dashboards/golden_metrics.json
+      │       · Check _meta.available_windows for the exact key
+      │       · Copy exact values — no recalculation
+      │       · Use all_time only for lifetime/CRM views
+      │
+      ├─ Any other window (45d, last quarter, Q1, custom range, etc.)?
+      │   └─ Run python scripts/query_window.py
+      │       · --last-days N  |  --month YYYY-MM  |  --year YYYY
+      │       · --start YYYY-MM-DD --end YYYY-MM-DD
+      │       · OR: from scripts.query_window import query_window
+      │       · Label dashboard: ⚡ Ad-hoc query · not from golden layer
+      │       · CRM data is still all-time in the result
+      │
+      └─ Does golden_metrics.json exist?
+          ├─ YES → Use it
+          └─ NO  → Tell user: python scripts/generate_golden_metrics.py
 ```

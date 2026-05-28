@@ -141,7 +141,7 @@ FastMCP reads the type annotations and docstrings to generate the tool schema th
 
 **Critical notes:**
 - `get_contacts_summary()` has **no date filter** — it returns the all-time lifetime count. This is intentional and matches real HubSpot behaviour. Never compare this number against a 90-day attributed revenue figure (see CLAUDE.md §5 Funnel Integrity Rules)
-- `get_deal_pipeline_summary()` **does** accept dates — pass `start_date=2025-12-16`, `end_date=2026-03-15` when comparing pipeline to 90-day ad spend
+- `get_deal_pipeline_summary()` **does** accept dates — pass `start_date` / `end_date` from `golden_metrics.json` `_meta.window_start` / `_meta.window_end` when comparing pipeline to 90-day ad spend
 
 ---
 
@@ -166,9 +166,13 @@ All five servers accept optional `start_date` / `end_date` parameters in `YYYY-M
 
 **Canonical dates for this project's synthetic dataset:**
 
-```
-start_date = 2025-12-16   # 90 days before the anchor date
-end_date   = 2026-03-15   # anchor date (dataset boundary)
+Read `_meta.window_start` and `_meta.window_end` from `dashboards/golden_metrics.json` — these update every time the daily refresh runs and always reflect the latest appended data. Never hardcode the dates.
+
+```python
+import json
+meta = json.loads(open("dashboards/golden_metrics.json").read())["_meta"]
+start_date = meta["window_start"]   # e.g. "2025-12-16" (rolls forward daily)
+end_date   = meta["window_end"]     # e.g. "2026-03-15" (rolls forward daily)
 ```
 
 Always pass explicit dates to avoid cross-period contamination. The golden-layer skills pass these dates automatically — you only need to specify them when querying MCP servers directly (the `-mcp` skill variants).

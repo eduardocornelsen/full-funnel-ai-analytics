@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "generated_at": "2026-05-29T09:37:28.069029+00:00",
+    "generated_at": "2026-05-30T08:18:07.903855+00:00",
     "anchor_date": "2026-03-15",
     "dataset_start": "2024-07-16",
     "dataset_end": "2026-03-15",
@@ -2692,19 +2692,19 @@
     "channel_performance": [
       {
         "channel": "google_ads",
-        "total_spend": 12373.47,
+        "total_spend": 13423.64,
         "attributed_revenue": 28188.09,
         "total_orders": 456.0,
-        "cac": 27.13,
-        "roas": 2.28
+        "cac": 29.44,
+        "roas": 2.1
       },
       {
         "channel": "meta_ads",
-        "total_spend": 15226.88,
+        "total_spend": 16495.24,
         "attributed_revenue": 27668.44,
         "total_orders": 375.0,
-        "cac": 40.61,
-        "roas": 1.82
+        "cac": 43.99,
+        "roas": 1.68
       },
       {
         "channel": "organic_search",
@@ -2785,65 +2785,65 @@
     "ga4_by_channel": [
       {
         "channel": "organic_search",
-        "sessions": 29075,
-        "engaged_sessions": 15595,
-        "conversions": 658,
-        "session_cvr_pct": 2.26,
-        "engagement_rate_pct": 53.64,
-        "session_share_pct": 25.3
+        "sessions": 31725,
+        "engaged_sessions": 17008,
+        "conversions": 713,
+        "session_cvr_pct": 2.25,
+        "engagement_rate_pct": 53.61,
+        "session_share_pct": 25.5
       },
       {
         "channel": "paid_search",
-        "sessions": 23534,
-        "engaged_sessions": 14710,
-        "conversions": 731,
+        "sessions": 25403,
+        "engaged_sessions": 15893,
+        "conversions": 790,
         "session_cvr_pct": 3.11,
-        "engagement_rate_pct": 62.51,
-        "session_share_pct": 20.5
+        "engagement_rate_pct": 62.56,
+        "session_share_pct": 20.4
       },
       {
         "channel": "paid_social",
-        "sessions": 20778,
-        "engaged_sessions": 9309,
-        "conversions": 322,
-        "session_cvr_pct": 1.55,
-        "engagement_rate_pct": 44.8,
-        "session_share_pct": 18.1
+        "sessions": 22210,
+        "engaged_sessions": 9935,
+        "conversions": 347,
+        "session_cvr_pct": 1.56,
+        "engagement_rate_pct": 44.73,
+        "session_share_pct": 17.9
       },
       {
         "channel": "direct",
-        "sessions": 16623,
-        "engaged_sessions": 11602,
-        "conversions": 535,
-        "session_cvr_pct": 3.22,
-        "engagement_rate_pct": 69.79,
+        "sessions": 17995,
+        "engaged_sessions": 12574,
+        "conversions": 574,
+        "session_cvr_pct": 3.19,
+        "engagement_rate_pct": 69.87,
         "session_share_pct": 14.5
       },
       {
         "channel": "email",
-        "sessions": 11270,
-        "engaged_sessions": 8375,
-        "conversions": 427,
-        "session_cvr_pct": 3.79,
-        "engagement_rate_pct": 74.31,
+        "sessions": 12226,
+        "engaged_sessions": 9091,
+        "conversions": 462,
+        "session_cvr_pct": 3.78,
+        "engagement_rate_pct": 74.36,
         "session_share_pct": 9.8
       },
       {
         "channel": "referral",
-        "sessions": 8060,
-        "engaged_sessions": 4084,
-        "conversions": 122,
-        "session_cvr_pct": 1.51,
-        "engagement_rate_pct": 50.67,
+        "sessions": 8702,
+        "engaged_sessions": 4420,
+        "conversions": 134,
+        "session_cvr_pct": 1.54,
+        "engagement_rate_pct": 50.79,
         "session_share_pct": 7.0
       },
       {
         "channel": "organic_social",
-        "sessions": 5513,
-        "engaged_sessions": 2119,
-        "conversions": 30,
-        "session_cvr_pct": 0.54,
-        "engagement_rate_pct": 38.44,
+        "sessions": 5971,
+        "engaged_sessions": 2298,
+        "conversions": 34,
+        "session_cvr_pct": 0.57,
+        "engagement_rate_pct": 38.49,
         "session_share_pct": 4.8
       }
     ],
@@ -2852,125 +2852,125 @@
         {
           "campaign_name": "Generic - Home & Garden",
           "campaign_type": "SEARCH",
-          "impressions": 114671,
-          "clicks": 3938,
-          "cost": 3238.37,
-          "conversions": 109,
-          "ctr_pct": 3.43,
-          "click_cvr_pct": 2.77,
-          "roas": 3.37
-        },
-        {
-          "campaign_name": "Brand - Olist",
-          "campaign_type": "SEARCH",
-          "impressions": 107145,
-          "clicks": 3918,
-          "cost": 3210.02,
-          "conversions": 99,
-          "ctr_pct": 3.66,
-          "click_cvr_pct": 2.53,
-          "roas": 3.08
+          "impressions": 123917,
+          "clicks": 4232,
+          "cost": 3505.01,
+          "conversions": 117,
+          "ctr_pct": 3.42,
+          "click_cvr_pct": 2.76,
+          "roas": 3.34
         },
         {
           "campaign_name": "Generic - Electronics",
           "campaign_type": "SEARCH",
-          "impressions": 108991,
-          "clicks": 3733,
-          "cost": 3157.83,
-          "conversions": 97,
-          "ctr_pct": 3.43,
-          "click_cvr_pct": 2.6,
-          "roas": 3.07
+          "impressions": 117265,
+          "clicks": 4047,
+          "cost": 3477.73,
+          "conversions": 102,
+          "ctr_pct": 3.45,
+          "click_cvr_pct": 2.52,
+          "roas": 2.93
+        },
+        {
+          "campaign_name": "Brand - Olist",
+          "campaign_type": "SEARCH",
+          "impressions": 117715,
+          "clicks": 4294,
+          "cost": 3465.22,
+          "conversions": 112,
+          "ctr_pct": 3.65,
+          "click_cvr_pct": 2.61,
+          "roas": 3.23
         },
         {
           "campaign_name": "Shopping - All Products",
           "campaign_type": "SHOPPING",
-          "impressions": 187592,
-          "clicks": 3825,
-          "cost": 1653.89,
-          "conversions": 73,
-          "ctr_pct": 2.04,
-          "click_cvr_pct": 1.91,
-          "roas": 4.41
+          "impressions": 203034,
+          "clicks": 4158,
+          "cost": 1762.13,
+          "conversions": 79,
+          "ctr_pct": 2.05,
+          "click_cvr_pct": 1.9,
+          "roas": 4.48
         },
         {
           "campaign_name": "YouTube - Brand Awareness",
           "campaign_type": "VIDEO",
-          "impressions": 356100,
-          "clicks": 4305,
-          "cost": 603.42,
+          "impressions": 386504,
+          "clicks": 4647,
+          "cost": 652.43,
           "conversions": 0,
-          "ctr_pct": 1.21,
+          "ctr_pct": 1.2,
           "click_cvr_pct": 0.0,
           "roas": 0.0
         },
         {
           "campaign_name": "Display - Retargeting",
           "campaign_type": "DISPLAY",
-          "impressions": 433666,
-          "clicks": 2171,
-          "cost": 509.94,
+          "impressions": 473920,
+          "clicks": 2392,
+          "cost": 561.12,
           "conversions": 3,
           "ctr_pct": 0.5,
-          "click_cvr_pct": 0.14,
-          "roas": 0.59
+          "click_cvr_pct": 0.13,
+          "roas": 0.53
         }
       ],
       "meta": [
         {
           "campaign_name": "Catalog Sales - Dynamic",
           "objective": "CATALOG_SALES",
-          "impressions": 482606,
-          "link_clicks": 7930,
-          "spend": 3846.13,
-          "purchases": 214,
-          "cpm": 7.97,
-          "click_cvr_pct": 2.7,
-          "roas": 5.56
+          "impressions": 520768,
+          "link_clicks": 8760,
+          "spend": 4181.73,
+          "purchases": 235,
+          "cpm": 8.03,
+          "click_cvr_pct": 2.68,
+          "roas": 5.62
         },
         {
           "campaign_name": "Prospecting - Lookalike Purchasers",
           "objective": "CONVERSIONS",
-          "impressions": 392122,
-          "link_clicks": 6742,
-          "spend": 3328.3,
-          "purchases": 239,
-          "cpm": 8.49,
-          "click_cvr_pct": 3.54,
-          "roas": 7.18
+          "impressions": 436075,
+          "link_clicks": 7693,
+          "spend": 3597.94,
+          "purchases": 286,
+          "cpm": 8.25,
+          "click_cvr_pct": 3.72,
+          "roas": 7.95
         },
         {
           "campaign_name": "Instagram Stories - Flash Sales",
           "objective": "CONVERSIONS",
-          "impressions": 450999,
-          "link_clicks": 7383,
-          "spend": 3232.8,
-          "purchases": 251,
-          "cpm": 7.17,
-          "click_cvr_pct": 3.4,
-          "roas": 7.76
+          "impressions": 483815,
+          "link_clicks": 7928,
+          "spend": 3502.62,
+          "purchases": 268,
+          "cpm": 7.24,
+          "click_cvr_pct": 3.38,
+          "roas": 7.65
         },
         {
           "campaign_name": "Retargeting - Add to Cart",
           "objective": "CONVERSIONS",
-          "impressions": 446225,
-          "link_clicks": 6880,
-          "spend": 2756.95,
-          "purchases": 240,
-          "cpm": 6.18,
-          "click_cvr_pct": 3.49,
-          "roas": 8.71
+          "impressions": 492241,
+          "link_clicks": 7587,
+          "spend": 2989.15,
+          "purchases": 262,
+          "cpm": 6.07,
+          "click_cvr_pct": 3.45,
+          "roas": 8.77
         },
         {
           "campaign_name": "Brand Awareness - Video",
           "objective": "AWARENESS",
-          "impressions": 405889,
-          "link_clicks": 7342,
-          "spend": 2062.7,
-          "purchases": 237,
-          "cpm": 5.08,
-          "click_cvr_pct": 3.23,
-          "roas": 11.49
+          "impressions": 445532,
+          "link_clicks": 8143,
+          "spend": 2223.8,
+          "purchases": 271,
+          "cpm": 4.99,
+          "click_cvr_pct": 3.33,
+          "roas": 12.19
         }
       ]
     },

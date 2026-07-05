@@ -4139,3 +4139,9 @@ date,campaign_id,campaign_name,campaign_type,impressions,clicks,cost,conversions
 2026-06-05,C004,Shopping - All Products,SHOPPING,8930,160,67.62,2,410.79,1.8,0.42,33.81,6.07
 2026-06-05,C005,Display - Retargeting,DISPLAY,16914,93,35.58,0,0.0,0.55,0.38,35.58,0.0
 2026-06-05,C006,YouTube - Brand Awareness,VIDEO,12716,182,28.28,0,0.0,1.44,0.16,28.28,0.0
+2026-06-06,C001,Brand - Olist,SEARCH,4838,193,141.23,5,751.63,4.01,0.73,28.25,5.32
+2026-06-06,C002,Generic - Electronics,SEARCH,4806,181,123.86,3,492.21,3.77,0.68,41.29,3.97
+2026-06-06,C003,Generic - Home & Garden,SEARCH,4178,138,124.37,3,241.38,3.31,0.9,41.46,1.94
+2026-06-06,C004,Shopping - All Products,SHOPPING,7639,150,80.18,2,372.19,1.97,0.53,40.09,4.64
+2026-06-06,C005,Display - Retargeting,DISPLAY,18753,75,20.53,0,0.0,0.4,0.27,20.53,0.0
+2026-06-06,C006,YouTube - Brand Awareness,VIDEO,13301,153,23.0,0,0.0,1.16,0.15,23.0,0.0

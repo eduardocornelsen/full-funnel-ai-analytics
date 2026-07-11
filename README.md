@@ -142,7 +142,7 @@ This project solves that with the **dbt Semantic Layer (MetricFlow)**: define "R
 
 | Pillar       | What it does                                               | Tech                                                              |
 | ------------ | ---------------------------------------------------------- | ----------------------------------------------------------------- |
-| **AI Layer** | Query marketing data in plain English, generate dashboards | 7 MCP servers + Claude Desktop, OpenCode, Gemini CLI, Antigravity |
+| **AI Layer** | Query marketing data in plain English, generate dashboards | 6 mock MCP servers + dbt Semantic Layer MCP + Claude Desktop, OpenCode, Gemini CLI, Antigravity |
 | **ML Layer** | Predict which leads become high-value customers            | XGBoost + MLflow + FastAPI `/score` + n8n auto-routing            |
 | **BI Layer** | Self-serve dashboards for marketing and sales teams        | Looker Studio + Streamlit + Claude React artifacts                |
 
@@ -201,7 +201,7 @@ See the [Production Readiness Guide](docs/guides/production_readiness_guide.md) 
 | Layer | Location | In git? | How it's created |
 |-------|----------|---------|-----------------|
 | Olist raw dataset | `data/olist/*.csv` | ❌ Never (400MB) | `python scripts/download_olist_data.py` |
-| Mock marketing CSVs | `data/mock_marketing/*.csv` | ✅ Yes (~10MB) | Generated once; CI recreates without Olist via `--standalone` |
+| Mock marketing CSVs | `data/mock_marketing/*.csv` | ✅ Yes (~60MB, grows daily) | Generated once; appended daily by CI; recreated without Olist via `--standalone` |
 | DuckDB warehouse | `data/olist_analytics.duckdb` | ❌ Never | `load_duckdb.py` + `dbt run` locally |
 | Golden metrics snapshot | `dashboards/golden_metrics.json` | ✅ Yes (~50KB) | CI commits it after every deploy |
 
@@ -280,7 +280,7 @@ See the [Data Import Guide](docs/guides/data_import_guide.md) for all three impo
 | **Gemini CLI**      | Native             | Native BigQuery integration, free generous rate limits       | Free              |
 | **Antigravity IDE** | Native (MCP Store) | Manager View with parallel agents, VS Code fork              | Free (preview)    |
 
-> The same 7 MCP servers work with ALL 4 clients. No code changes between clients.
+> The same 6 MCP servers work with ALL 4 clients. No code changes between clients.
 
 ---
 
@@ -397,9 +397,10 @@ python ml/src/train.py
 cd api && uvicorn main:app --port 8000 &
 
 # 9. Configure MCP for your preferred client
+# Claude Code: works as-is — the repo's .mcp.json uses relative paths
 # Claude Desktop: copy mcp_servers/claude_desktop_config.example.json
 #                 to ~/Library/Application Support/Claude/claude_desktop_config.json
-# OpenCode: already configured at .opencode/opencode.json — run `opencode`
+#                 and replace /ABSOLUTE/PATH/TO/ with your clone location
 # Gemini CLI: gemini --mcp-server "bigquery=uvx mcp-server-bigquery --project YOUR_PROJECT"
 
 # 10. Query in natural language from any client:
@@ -431,13 +432,14 @@ full-funnel-ai-analytics/
 │   ├── dbt_project.yml                   #   vars block: window dates, time spine bounds
 │   └── profiles.yml.example             #   DuckDB + BigQuery + Snowflake profiles
 │
-├── mcp_servers/                          # 7 MCP servers (work with all 4 clients)
+├── mcp_servers/                          # 6 mock MCP servers (work with all 4 clients)
 │   ├── mock_google_ads_server.py
 │   ├── mock_meta_ads_server.py
 │   ├── mock_ga4_server.py
 │   ├── mock_hubspot_server.py
 │   ├── mock_salesforce_server.py
-│   └── weather_server.py
+│   ├── mock_analytics_server.py          #   Serves golden_metrics.json windows to agents
+│   └── claude_desktop_config.example.json
 │
 ├── scripts/
 │   ├── _warehouse_adapters.py            # Uniform DuckDB / BigQuery / Snowflake connection layer
@@ -473,28 +475,20 @@ full-funnel-ai-analytics/
 │   ├── commands/                         #   /marketing, /attribution, /pipeline, /score
 │   └── skills/                           #   Brand voice, metric definitions, workflows
 │
-├── .opencode/                            # OpenCode CLI config + commands + skills
-│   ├── opencode.json                     #   MCP server config
+├── .opencode/                            # OpenCode CLI commands + skills
 │   ├── commands/                         #   Same commands (OpenCode format)
 │   └── skills/
 │
 ├── ml/                                   # Lead scoring ML pipeline
 │   ├── src/train.py                      #   XGBoost + MLflow tracking
-│   └── notebooks/                        #   EDA, training, evaluation
+│   └── lead_scoring_model.json           #   Trained model artifact
 │
 ├── api/                                  # FastAPI lead scoring endpoint
-│   ├── main.py                           #   POST /score, GET /health, GET /model-info
+│   ├── main.py                           #   POST /score, GET /health
 │   └── Dockerfile
 │
 ├── automation/                           # n8n lead routing workflow
 │   └── n8n_workflow.json
-│
-├── warehouse_configs/                    # Setup scripts per warehouse
-│   ├── bigquery/
-│   ├── snowflake/
-│   ├── databricks/
-│   ├── supabase/
-│   └── duckdb/
 │
 └── docs/
     ├── README.md                         # Documentation index — start here
@@ -605,7 +599,7 @@ See the [Portability Guide](docs/guides/portability_guide.md) for Snowflake, Dat
 | -------------------------------------- | ---------- | ------------------------------------------------------------ |
 | Phase 1: Data Foundation               | ✅ Complete | Olist dataset + synthetic marketing data + warehouse loading |
 | Phase 2: dbt Semantic Layer            | ✅ Complete | 14 staging + 4 intermediate + 11 mart models                 |
-| Phase 3: AI Layer (MCP)               | ✅ Complete | 7 MCP servers + 4 AI client configs                          |
+| Phase 3: AI Layer (MCP)               | ✅ Complete | 6 mock MCP servers + 4 AI client configs                     |
 | Phase 4: ML Scoring                   | ✅ Complete | XGBoost + MLflow + FastAPI endpoint                          |
 | Phase 5: Dashboards & Automation      | ✅ Complete | Looker Studio + Streamlit + n8n routing                      |
 | Phase 6: Portability & Polish         | ✅ Complete | Snowflake/Databricks demos + documentation                   |

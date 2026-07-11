@@ -79,7 +79,7 @@ uvicorn api.main:app --port 8000
 3. **Restart Claude Desktop.**
 
 ### B. Claude Code (Terminal CLI)
-If using Claude Code, you can use the same server configurations. Claude Code automatically reads `.opencode/opencode.json` (which I created for you) if you are using that specific tool, or you can point it to your MCPs.
+Claude Code automatically reads the repo's `.mcp.json`, which uses relative paths — no configuration needed. Run `claude` from the repo root and the six mock servers plus the dbt Semantic Layer server are available immediately.
 
 ## 🚀 Step 6: Execution & Interaction
 
@@ -97,7 +97,7 @@ Open Claude (Desktop or CLI) and ask:
 ---
 
 ## 📂 Key File Locations
-- **Mock Servers:** `mcp_servers/` (5 platform mocks + 1 weather)
+- **Mock Servers:** `mcp_servers/` (5 platform mocks + 1 golden-layer analytics server)
 - **ML Training:** `ml/src/train.py`
 - **Scoring API:** `api/main.py`
 - **Dashboard:** `streamlit_app/app.py`

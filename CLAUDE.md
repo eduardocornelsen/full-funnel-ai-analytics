@@ -298,9 +298,10 @@ All new HTML dashboards MUST load it before any inline script block:
 Use `Metrics.labels.*` for canonical KPI subtitle strings (attribution windows, CVR basis).
 
 Existing dashboards that already use `metrics.js`:
-- `attribution_dashboard.html`
-- `marketing_full_funnel_dashboard.html`
 - `full_funnel_marketing_dashboard.html`
+
+(The other four dashboards predate `metrics.js` and must be migrated to it —
+until then, treat any inline metric math in them as legacy, not a pattern to copy.)
 
 ---
 

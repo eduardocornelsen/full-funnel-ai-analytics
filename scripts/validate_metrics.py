@@ -35,40 +35,107 @@ from _warehouse_adapters import get_connection  # noqa: E402
 
 PROJECT_ROOT = Path(__file__).parent.parent
 GOLDEN_PATH  = PROJECT_ROOT / "dashboards" / "golden_metrics.json"
-RAW_LEAD_CSV = PROJECT_ROOT / "data" / "mock_marketing" / "google_ads_daily_performance.csv"
+MOCK_DIR     = PROJECT_ROOT / "data" / "mock_marketing"
+
+# Every time-series table and its date column — mirrors the registry in
+# daily_synthetic_append.py. Freshness must be checked per table: the original
+# staleness bug advanced 3 tables while 4 stayed frozen, and a single-table
+# frontier check would have stayed green through it.
+RAW_TABLES = [
+    ("google_ads_daily_performance.csv", "date"),
+    ("meta_ads_daily_performance.csv",   "date"),
+    ("ga4_daily_sessions.csv",           "date"),
+    ("marketing_attribution.csv",        "order_date"),
+    ("hubspot_deals.csv",                "create_date"),
+    ("hubspot_contacts.csv",             "create_date"),
+    ("salesforce_opportunities.csv",     "created_date"),
+]
 
 DOLLAR_TOLERANCE_ABS = 1.00
 RATIO_TOLERANCE_PCT  = 0.50
 COUNT_TOLERANCE_ABS  = 1
 ANCHOR_LAG_TOLERANCE_DAYS = 1   # anchor may trail the raw data frontier by at most this
+TABLE_SKEW_TOLERANCE_DAYS = 2   # any table may trail the most-advanced table by at most this
+WALL_CLOCK_TOLERANCE_DAYS = 3   # raw frontier may trail today by at most this (strict mode)
 
 
-def check_freshness(meta: dict) -> list[str]:
+def check_freshness(meta: dict, strict: bool = False) -> list[str]:
     """Return a list of staleness errors (empty = fresh).
 
-    Compares the golden anchor against the RAW source data frontier — not the
-    mart, which can itself be frozen (that was the bug). The raw CSVs are the
-    ground truth for how far the dataset actually extends.
+    Three orthogonal checks:
+    1. Anchor vs RAW data frontier (always enforced) — catches a frozen mart or
+       stale golden snapshot. Compares against the raw CSVs, not the mart,
+       because the mart can itself be frozen (that was the bug).
+    2. Cross-table skew (always enforced) — every table's frontier must be
+       within tolerance of the most-advanced table's. Catches a partial append
+       (spend advancing while attribution revenue / CRM stay frozen), which
+       silently deflates blended ROAS in recent windows.
+    3. Raw frontier vs today's wall clock (warn by default, error with
+       --strict-freshness) — catches the append automation being down entirely.
+       Warn-only by default so a fresh clone or a fork PR with slightly older
+       committed data doesn't fail; the scheduled refresh runs strict.
     """
     errors: list[str] = []
     anchor = date.fromisoformat(meta["anchor_date"])
 
-    if RAW_LEAD_CSV.exists():
-        raw_max = pd.to_datetime(
-            pd.read_csv(RAW_LEAD_CSV, usecols=["date"])["date"]
-        ).max().date()
-        lag = (raw_max - anchor).days
-        if lag > ANCHOR_LAG_TOLERANCE_DAYS:
-            errors.append(
-                f"STALE: golden anchor_date {anchor} lags raw data frontier {raw_max} "
-                f"by {lag} days (tolerance: {ANCHOR_LAG_TOLERANCE_DAYS}). "
-                f"The mart or the golden snapshot is not rolling forward. "
-                f"Fix the pipeline, then: dbt run && python scripts/generate_golden_metrics.py"
-            )
+    frontiers: dict[str, date] = {}
+    for filename, col in RAW_TABLES:
+        path = MOCK_DIR / filename
+        if not path.exists():
+            continue
+        s = pd.to_datetime(pd.read_csv(path, usecols=[col])[col], errors="coerce")
+        if s.notna().any():
+            frontiers[filename] = s.max().date()
+
+    if not frontiers:
+        msg = "no raw CSVs found locally — freshness cannot be verified"
+        if strict:
+            errors.append(f"STALE (unverifiable): {msg}; --strict-freshness requires the raw data")
         else:
-            print(f"Freshness: anchor {anchor} vs raw frontier {raw_max} (lag {lag}d) ✅")
+            print(f"⚠️  Freshness: {msg} — skipping")
+        return errors
+
+    lead = max(frontiers.values())
+
+    # 1. Golden anchor must track the raw frontier
+    lag = (lead - anchor).days
+    if lag > ANCHOR_LAG_TOLERANCE_DAYS:
+        errors.append(
+            f"STALE: golden anchor_date {anchor} lags raw data frontier {lead} "
+            f"by {lag} days (tolerance: {ANCHOR_LAG_TOLERANCE_DAYS}). "
+            f"The mart or the golden snapshot is not rolling forward. "
+            f"Fix the pipeline, then: dbt run && python scripts/generate_golden_metrics.py"
+        )
     else:
-        print(f"Freshness: {RAW_LEAD_CSV.name} not found locally — skipping raw-frontier check")
+        print(f"Freshness: anchor {anchor} vs raw frontier {lead} (lag {lag}d) ✅")
+
+    # 2. No table may fall behind the pack
+    laggards = {f: fr for f, fr in frontiers.items()
+                if (lead - fr).days > TABLE_SKEW_TOLERANCE_DAYS}
+    if laggards:
+        detail = ", ".join(f"{f} at {fr} (-{(lead - fr).days}d)" for f, fr in laggards.items())
+        errors.append(
+            f"STALE (partial append): tables lag the {lead} frontier beyond "
+            f"{TABLE_SKEW_TOLERANCE_DAYS}d tolerance: {detail}. "
+            f"Heal with: python scripts/daily_synthetic_append.py"
+        )
+    else:
+        print(f"Freshness: all {len(frontiers)} tables within {TABLE_SKEW_TOLERANCE_DAYS}d of frontier ✅")
+
+    # 3. The frontier itself must track the wall clock (strict mode hard-fails)
+    clock_lag = (date.today() - lead).days
+    if clock_lag > WALL_CLOCK_TOLERANCE_DAYS:
+        msg = (
+            f"Raw data frontier {lead} trails today by {clock_lag} days "
+            f"(tolerance: {WALL_CLOCK_TOLERANCE_DAYS}) — is the daily append "
+            f"automation running? Catch up with: python scripts/daily_synthetic_append.py"
+        )
+        if strict:
+            errors.append("STALE (wall clock): " + msg)
+        else:
+            print(f"⚠️  {msg}")
+    else:
+        print(f"Freshness: raw frontier {lead} vs today (lag {clock_lag}d) ✅")
 
     return errors
 
@@ -95,7 +162,7 @@ def check(name: str, golden_val: float, live_val: float,
             "diff": diff_str, "drifted": drifted}
 
 
-def validate(target: str = "duckdb") -> int:
+def validate(target: str = "duckdb", strict_freshness: bool = False) -> int:
     golden = load_golden()
     meta   = golden["_meta"]
 
@@ -104,7 +171,7 @@ def validate(target: str = "duckdb") -> int:
 
     # Staleness gate first — a perfectly consistent but frozen golden layer
     # must fail loudly before any drift comparison runs.
-    staleness_errors = check_freshness(meta)
+    staleness_errors = check_freshness(meta, strict=strict_freshness)
     if staleness_errors:
         for e in staleness_errors:
             print(f"\n❌ {e}")
@@ -243,5 +310,8 @@ if __name__ == "__main__":
     parser.add_argument("--target", default="duckdb",
                         choices=["duckdb", "bigquery", "snowflake"],
                         help="dbt target warehouse (default: duckdb)")
+    parser.add_argument("--strict-freshness", action="store_true",
+                        help="Fail (not just warn) when the raw data frontier trails "
+                             "today's date — use in the scheduled refresh.")
     args = parser.parse_args()
-    sys.exit(validate(args.target))
+    sys.exit(validate(args.target, strict_freshness=args.strict_freshness))

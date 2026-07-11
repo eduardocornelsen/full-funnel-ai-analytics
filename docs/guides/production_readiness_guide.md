@@ -87,7 +87,7 @@ These three points are now enforced in the codebase as of PR #5.
 | PR gate | `.github/workflows/ci.yml` | Compile + test every pull request on DuckDB (fast, no cloud creds) |
 | Warehouse deploy | `.github/workflows/warehouse-deploy.yml` | Deploy to BigQuery **and** Snowflake on every push to `main` |
 | Scheduled refresh | `.github/workflows/scheduled-refresh.yml` | Daily 6 AM UTC — re-run dbt, regenerate golden metrics |
-| Daily synthetic data | `.github/workflows/daily-synthetic-data.yml` | Daily 5 AM UTC — append one new day to the mock dataset |
+| Daily synthetic data | `.github/workflows/daily-synthetic-data.yml` | Daily 5 AM UTC — catch the mock dataset up to today (self-healing) |
 | Warehouse adapters | `scripts/_warehouse_adapters.py` | Uniform connection layer for DuckDB / BigQuery / Snowflake |
 | Multi-target generate | `scripts/generate_golden_metrics.py` | `--target` and `--live` flags added; default (DuckDB) unchanged |
 | Multi-target validate | `scripts/validate_metrics.py` | `--target` flag; compares warehouse mart tables to golden JSON |
@@ -186,7 +186,7 @@ append today's synthetic data → load DuckDB → dbt run → dbt test
 
 #### `daily-synthetic-data.yml` — runs daily at 05:00 UTC (before the refresh)
 
-Appends one new day of synthetic data to the mock marketing CSVs.
+Catches all mock marketing CSVs up to today's date (each table backfills from its own last date; missed runs self-heal).
 Can be triggered manually with a custom `--days` count via `workflow_dispatch`.
 
 ---
@@ -236,7 +236,7 @@ The validate script checks ~20 metrics including:
 ## 3. Daily Synthetic Data
 
 The synthetic dataset originally ended on 2026-03-15. The daily append script
-adds one new day each run so the dataset grows continuously — making dashboards
+catches the dataset up to today on each run so it grows continuously and stays anchored to the wall clock — making dashboards
 feel like a live production system.
 
 ```bash

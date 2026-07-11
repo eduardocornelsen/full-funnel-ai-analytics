@@ -6,6 +6,11 @@ on:
     - cron: "0 6 * * *"
   workflow_dispatch:
 
+# Share the writers' lock with daily-synthetic-data — both commit to the repo.
+concurrency:
+  group: synthetic-data-writes
+  cancel-in-progress: false
+
 jobs:
   refresh-duckdb:
     name: Refresh DuckDB golden layer
@@ -48,8 +53,8 @@ jobs:
       - name: Generate golden metrics
         run: python scripts/generate_golden_metrics.py --target duckdb
 
-      - name: Validate — no drift
-        run: python scripts/validate_metrics.py --target duckdb
+      - name: Validate — no drift, and data must be current to today
+        run: python scripts/validate_metrics.py --target duckdb --strict-freshness
 
       - name: Commit updated golden_metrics.json
         uses: stefanzweifel/git-auto-commit-action@v5

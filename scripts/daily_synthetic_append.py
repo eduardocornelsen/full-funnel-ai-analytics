@@ -23,9 +23,19 @@ Values are seeded per calendar date (same day = same data) with day-of-week and
 monthly seasonality — a live-feed simulation with no external connection.
 
 Usage:
-    python scripts/daily_synthetic_append.py              # append 1 day
-    python scripts/daily_synthetic_append.py --days 7    # backfill 7 days
-    python scripts/daily_synthetic_append.py --reset     # regenerate full baseline
+    python scripts/daily_synthetic_append.py             # catch up to TODAY (default)
+    python scripts/daily_synthetic_append.py --days 7   # append exactly 7 days past the frontier
+    python scripts/daily_synthetic_append.py --reset    # regenerate full baseline
+
+The default (no flags) targets today's UTC date: every table backfills from its
+own last date to today, so the dataset is always current no matter how many
+scheduled runs were missed. Because rows are seeded per calendar date,
+catching up N days in one run produces byte-identical data to N daily runs —
+the operation is idempotent and a same-day re-run is a no-op.
+
+(An earlier version targeted `frontier + 1 day` per run, so any missed run
+left a permanent lag — the dataset could trail today forever. Never target
+relative-to-frontier by default; target the wall clock.)
 
 After running, re-run dbt + generate_golden_metrics.py:
     dbt run --target duckdb
@@ -36,7 +46,7 @@ import argparse
 import subprocess
 import sys
 from pathlib import Path
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 import numpy as np
 import pandas as pd
@@ -262,11 +272,28 @@ _HS_LEAD_SOURCES = ["referral", "organic_search", "paid_search", "email",
                     "paid_social", "direct", "social"]
 _BR_CITIES = [("sao paulo", "SP"), ("rio de janeiro", "RJ"), ("belo horizonte", "MG"),
               ("curitiba", "PR"), ("porto alegre", "RS"), ("campinas", "SP"),
-              ("salvador", "BA"), ("fortaleza", "CE")]
+              ("salvador", "BA"), ("fortaleza", "CE"), ("brasilia", "DF"),
+              ("recife", "PE"), ("goiania", "GO"), ("manaus", "AM"),
+              ("belem", "PA"), ("guarulhos", "SP"), ("sao bernardo do campo", "SP"),
+              ("niteroi", "RJ"), ("florianopolis", "SC"), ("joinville", "SC"),
+              ("vitoria", "ES"), ("natal", "RN"), ("cuiaba", "MT"),
+              ("uberlandia", "MG"), ("ribeirao preto", "SP"), ("sorocaba", "SP"),
+              ("londrina", "PR"), ("santos", "SP"), ("maceio", "AL"),
+              ("campo grande", "MS"), ("teresina", "PI"), ("osasco", "SP")]
 _FIRST_NAMES = ["Ana", "Bruno", "Carla", "Diego", "Elena", "Felipe", "Gabriela",
-                "Hugo", "Isabela", "Joao", "Larissa", "Marcos"]
+                "Hugo", "Isabela", "Joao", "Larissa", "Marcos", "Amanda", "Andre",
+                "Beatriz", "Caio", "Camila", "Daniel", "Eduarda", "Fabio",
+                "Fernanda", "Gustavo", "Helena", "Igor", "Julia", "Leonardo",
+                "Leticia", "Lucas", "Luiza", "Mariana", "Mateus", "Natalia",
+                "Otavio", "Patricia", "Paulo", "Rafaela", "Renato", "Sofia",
+                "Thiago", "Vanessa", "Vinicius", "Yasmin"]
 _LAST_NAMES  = ["Silva", "Santos", "Oliveira", "Souza", "Costa", "Pereira",
-                "Almeida", "Lima", "Gomes", "Ribeiro"]
+                "Almeida", "Lima", "Gomes", "Ribeiro", "Carvalho", "Ferreira",
+                "Rodrigues", "Martins", "Araujo", "Barbosa", "Cardoso", "Correia",
+                "Dias", "Fernandes", "Fonseca", "Freitas", "Machado", "Melo",
+                "Mendes", "Monteiro", "Moreira", "Nascimento", "Nunes", "Pinto",
+                "Ramos", "Rocha", "Sales", "Teixeira", "Vieira", "Azevedo",
+                "Batista", "Cavalcanti", "Duarte", "Moura"]
 
 
 def _hubspot_deals_day(d: date) -> list[dict]:
@@ -280,7 +307,13 @@ def _hubspot_deals_day(d: date) -> list[dict]:
         stage  = str(rng.choice(stages, p=weights))
         amount = round(float(rng.uniform(40, 330)), 2)
         closed = stage.startswith("closed")
-        order_id = f"syn{d.strftime('%Y%m%d')}{i:04d}"
+        # Distinct id space per table ("synhd" vs attribution's "syn"): the three
+        # generators draw independent row counts/values, so a shared id space
+        # would make accidental cross-table joins return plausible-but-wrong
+        # matches. Distinct prefixes make such joins return nothing instead.
+        # (Synthetic CRM rows intentionally don't participate in the Olist
+        # order_id funnel joins — a known realism limitation, see CHANGELOG.)
+        order_id = f"synhd{d.strftime('%Y%m%d')}{i:04d}"
         rows.append({
             "deal_id":    f"DEAL_SYN_{d.strftime('%Y%m%d')}_{i:05d}",
             "order_id":   order_id,
@@ -354,10 +387,11 @@ def _salesforce_day(d: date) -> list[dict]:
         amount = round(float(rng.uniform(40, 340)), 2)
         closed = stage.startswith("Closed")
         close_d = d if closed else d + timedelta(days=int(rng.integers(7, 60)))
+        # "synsf" prefix: see the id-space comment in _hubspot_deals_day.
         rows.append({
             "opportunity_id":   f"OPP_SYN_{d.strftime('%Y%m%d')}_{i:05d}",
-            "order_id":         f"syn{d.strftime('%Y%m%d')}{i:04d}",
-            "opportunity_name": f"Deal syn{d.strftime('%Y%m%d')}{i:04d}",
+            "order_id":         f"synsf{d.strftime('%Y%m%d')}{i:04d}",
+            "opportunity_name": f"Deal synsf{d.strftime('%Y%m%d')}{i:04d}",
             "stage":            stage,
             "probability":      prob,
             "amount":           amount,
@@ -397,8 +431,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Append daily synthetic marketing data rows."
     )
-    parser.add_argument("--days", type=int, default=1,
-                        help="Number of days to append (default: 1)")
+    parser.add_argument("--days", type=int, default=None,
+                        help="Append exactly N days past the current frontier "
+                             "(testing/backfill override). Default: catch up to today (UTC).")
     parser.add_argument("--reset", action="store_true",
                         help="Regenerate full dataset from scratch (delegates to generate_mock_marketing_data.py)")
     args = parser.parse_args()
@@ -426,12 +461,29 @@ def main() -> None:
 
     # All tables advance to one shared target end date, each backfilling from its
     # own last date — a table that fell behind heals on the next run.
+    today = datetime.now(timezone.utc).date()
     lead_last = (_last_date(tables[0][0]) or date(2026, 3, 15))
-    target_end = lead_last + timedelta(days=args.days)
-    print(f"Target end date for all tables: {target_end}")
+    if args.days is not None:
+        # Explicit override, still capped at today — synthetic data must never
+        # be future-dated (a future anchor would freeze catch-up runs and put
+        # future dates on dashboard freshness badges).
+        target_end = min(lead_last + timedelta(days=args.days), today)
+        print(f"--days override: targeting {target_end} (frontier {lead_last} + {args.days}d, capped at today)")
+    else:
+        target_end = today
+        print(f"Catch-up mode: targeting today {target_end} (lead frontier {lead_last})")
 
+    # No early exit based on the lead table: each table decides for itself.
+    # A run that died mid-loop leaves tables at different frontiers, and the
+    # lagging ones must still heal even when the lead table is already current.
+    appended = False
     for csv_path, date_col, generator in tables:
-        last = _last_date(csv_path, date_col) or (target_end - timedelta(days=args.days))
+        last = _last_date(csv_path, date_col)
+        if last is None:
+            # No baseline — appending would create a headerless orphan series.
+            print(f"   ⚠️  {csv_path.name}: missing or empty — regenerate the baseline first "
+                  f"(python scripts/generate_mock_marketing_data.py --standalone)")
+            continue
         if last >= target_end:
             print(f"   {csv_path.name}: already at {last}, nothing to append")
             continue
@@ -440,8 +492,12 @@ def main() -> None:
         for d in dates:
             rows.extend(generator(d))
         _append_rows(csv_path, rows)
+        appended = True
         print(f"   {csv_path.name}: +{len(rows)} rows ({dates[0]} → {dates[-1]})")
 
+    if not appended:
+        print(f"\n✅ Dataset already current through {target_end} — nothing to append")
+        return
     print(f"\n✅ All tables now run through {target_end}")
     print()
     print("Next steps:")

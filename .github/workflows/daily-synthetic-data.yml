@@ -7,9 +7,14 @@ on:
   workflow_dispatch:
     inputs:
       days:
-        description: "Number of days to append (default: 1)"
+        description: "Days to append past the frontier (leave empty to catch up to today)"
         required: false
-        default: "1"
+        default: ""
+
+# Never run two data-writing jobs at once — they would race on the CSV commits.
+concurrency:
+  group: synthetic-data-writes
+  cancel-in-progress: false
 
 jobs:
   append-data:
@@ -32,15 +37,21 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Append synthetic data
+      - name: Append synthetic data (catch up to today)
         run: |
-          DAYS="${{ github.event.inputs.days || '1' }}"
-          python scripts/daily_synthetic_append.py --days "$DAYS"
+          DAYS="${{ github.event.inputs.days }}"
+          if [ -n "$DAYS" ]; then
+            python scripts/daily_synthetic_append.py --days "$DAYS"
+          else
+            # Default: catch up to today's UTC date — heals any missed runs,
+            # no-op if already current. Keeps mock data anchored to the wall clock.
+            python scripts/daily_synthetic_append.py
+          fi
 
       - name: Commit updated CSV files
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "data: append ${{ github.event.inputs.days || '1' }} day(s) of synthetic data [skip ci]"
+          commit_message: "data: catch synthetic data up to today [skip ci]"
           file_pattern: "data/mock_marketing/*.csv"
           # Note: data/ is in .gitignore — update .gitignore if you want to track CSVs
           # Alternatively, remove data/mock_marketing/ from .gitignore

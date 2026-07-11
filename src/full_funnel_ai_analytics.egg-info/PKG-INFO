@@ -1,3 +1,81 @@
+Metadata-Version: 2.4
+Name: full-funnel-ai-analytics
+Version: 0.9.0
+Summary: Governed marketing analytics for AI agents — dbt golden layer + MCP servers + drift/staleness gates
+License: MIT License
+        
+        Copyright (c) 2026 Eduardo Cornelsen
+        
+        Permission is hereby granted, free of charge, to any person obtaining a copy
+        of this software and associated documentation files (the "Software"), to deal
+        in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        copies of the Software, and to permit persons to whom the Software is
+        furnished to do so, subject to the following conditions:
+        
+        The above copyright notice and this permission notice shall be included in all
+        copies or substantial portions of the Software.
+        
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        SOFTWARE.
+        
+Project-URL: Homepage, https://github.com/eduardocornelsen/full-funnel-ai-analytics
+Project-URL: Documentation, https://github.com/eduardocornelsen/full-funnel-ai-analytics/tree/main/docs
+Project-URL: Changelog, https://github.com/eduardocornelsen/full-funnel-ai-analytics/blob/main/CHANGELOG.md
+Keywords: analytics,dbt,mcp,semantic-layer,agentic-bi,duckdb,marketing-attribution
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Scientific/Engineering :: Information Analysis
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: pandas>=2.1.0
+Requires-Dist: numpy>=1.26.0
+Requires-Dist: pyarrow>=14.0.0
+Requires-Dist: duckdb>=0.9.0
+Requires-Dist: dbt-core>=1.7.0
+Requires-Dist: dbt-duckdb>=1.7.0
+Requires-Dist: fastmcp>=0.1.0
+Requires-Dist: mcp>=1.0.0
+Requires-Dist: pydantic>=2.5.0
+Requires-Dist: python-dotenv>=1.0.0
+Requires-Dist: tqdm>=4.66.0
+Provides-Extra: bigquery
+Requires-Dist: dbt-bigquery>=1.7.0; extra == "bigquery"
+Requires-Dist: google-cloud-bigquery>=3.13.0; extra == "bigquery"
+Requires-Dist: google-cloud-bigquery-storage>=2.22.0; extra == "bigquery"
+Provides-Extra: snowflake
+Requires-Dist: snowflake-connector-python>=3.6.0; extra == "snowflake"
+Provides-Extra: postgres
+Requires-Dist: dbt-postgres>=1.7.0; extra == "postgres"
+Requires-Dist: supabase>=2.0.0; extra == "postgres"
+Provides-Extra: ml
+Requires-Dist: scikit-learn>=1.3.0; extra == "ml"
+Requires-Dist: xgboost>=2.0.0; extra == "ml"
+Requires-Dist: mlflow>=2.9.0; extra == "ml"
+Requires-Dist: shap>=0.43.0; extra == "ml"
+Requires-Dist: fastapi>=0.104.0; extra == "ml"
+Requires-Dist: uvicorn>=0.24.0; extra == "ml"
+Provides-Extra: app
+Requires-Dist: streamlit>=1.30.0; extra == "app"
+Requires-Dist: plotly>=5.18.0; extra == "app"
+Requires-Dist: anthropic>=0.40.0; extra == "app"
+Requires-Dist: openpyxl>=3.1.0; extra == "app"
+Provides-Extra: olist
+Requires-Dist: kaggle>=1.5.0; extra == "olist"
+Provides-Extra: dev
+Requires-Dist: pytest>=8.0.0; extra == "dev"
+Requires-Dist: pytest-httpx>=0.30.0; extra == "dev"
+Requires-Dist: httpx>=0.25.0; extra == "dev"
+Requires-Dist: ruff>=0.4.0; extra == "dev"
+Dynamic: license-file
+
 # Full-Funnel AI Marketing Analytics Platform
 
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)
@@ -161,7 +239,7 @@ The project ships with four GitHub Actions workflows that enforce zero metric dr
 | [`ci.yml`](.github/workflows/ci.yml) | Every pull request | dbt compile + test on DuckDB → generate golden metrics → validate drift → pytest. No cloud creds needed. |
 | [`warehouse-deploy.yml`](.github/workflows/warehouse-deploy.yml) | Push to `main` | Deploys dbt to BigQuery **and** Snowflake in parallel → regenerates `golden_metrics.json` → commits it back to the repo. |
 | [`scheduled-refresh.yml`](.github/workflows/scheduled-refresh.yml) | Daily 06:00 UTC | Appends synthetic data → dbt run/test → regenerates golden metrics with `--live` flag → validates. |
-| [`daily-synthetic-data.yml`](.github/workflows/daily-synthetic-data.yml) | Daily 05:00 UTC | Catches synthetic data up to today (all 7 tables, self-healing) — realistic synthetic data to mock CSVs. Can be manually triggered with a custom `--days` count. |
+| [`daily-synthetic-data.yml`](.github/workflows/daily-synthetic-data.yml) | Daily 05:00 UTC | Adds one new day of realistic synthetic data to mock CSVs. Can be manually triggered with a custom `--days` count. |
 
 ### The Zero-Drift Guarantee
 
@@ -362,67 +440,51 @@ Enterprise warehouse demos use free trials: Snowflake (30-day, ~$400 credits) an
 
 ## Quick Start
 
-**Default path — zero credentials, under 5 minutes.** The repo ships with the
-synthetic dataset committed, so the pipeline runs end-to-end with nothing but
-Python:
-
-```bash
-git clone https://github.com/eduardocornelsen/full-funnel-ai-analytics.git
-cd full-funnel-ai-analytics
-pip install -e .
-fullfunnel demo            # data → DuckDB → dbt → golden metrics → validation
-fullfunnel demo --serve    # same, then launches the Streamlit app
-```
-
-Or with Docker:
-
-```bash
-docker compose up          # Streamlit at :8501, scoring API at :8000
-```
-
-Then ask an AI client:
-
-```bash
-# Claude Code: works as-is — the repo's .mcp.json uses relative paths.
-#   Open Claude Code in the repo and type /marketing
-# Claude Desktop: copy mcp_servers/claude_desktop_config.example.json into your
-#   Desktop config and replace /ABSOLUTE/PATH/TO/ with your clone location
-```
-
-Everyday commands:
-
-```bash
-fullfunnel append      # advance synthetic data to today (the daily cron does this)
-fullfunnel refresh     # append + rebuild + strict validation
-fullfunnel validate    # metric drift + staleness gates (must exit 0)
-fullfunnel bench       # SQRA retrieval-accuracy benchmark
-```
-
-<details>
-<summary><b>Optional paths: Olist real data, ML scoring API, cloud warehouses</b></summary>
-
-```bash
-# Realistic e-commerce base data (requires a free Kaggle API key)
-pip install -e ".[olist]"
-python scripts/download_olist_data.py
-python scripts/generate_mock_marketing_data.py
-fullfunnel refresh
-
-# ML lead scoring + API
-pip install -e ".[ml]"
-bash scripts/run_mlflow_server.sh &
-python ml/src/train.py
-cd api && uvicorn main:app --port 8000 &
-
-# Cloud warehouses
-pip install -e ".[bigquery]"       # or [snowflake], [postgres]
-python scripts/load_bigquery.py
-cd dbt_project && dbt build --target bigquery && cd ..
-```
-
 See the [Step-by-Step Setup Guide](docs/guides/setup_guide.md) for full instructions.
 
-</details>
+```bash
+# 1. Clone
+git clone https://github.com/YOUR_USERNAME/full-funnel-ai-analytics.git
+cd full-funnel-ai-analytics
+
+# 2. Setup
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env  # Fill in your credentials
+
+# 3. Download and generate data
+python scripts/download_olist_data.py
+python scripts/generate_mock_marketing_data.py
+
+# 4. Load into warehouses
+python scripts/load_bigquery.py
+python scripts/load_duckdb.py
+
+# 5. Build dbt models
+cd dbt_project && dbt build --target duckdb && cd ..
+
+# 6. Generate the golden metrics snapshot (used by all dashboards and Claude skills)
+python scripts/generate_golden_metrics.py
+python scripts/validate_metrics.py   # confirms 0 drift — must exit 0
+
+# 7. Start ML tracking and train model
+bash scripts/run_mlflow_server.sh &
+python ml/src/train.py
+
+# 8. Start scoring API
+cd api && uvicorn main:app --port 8000 &
+
+# 9. Configure MCP for your preferred client
+# Claude Code: works as-is — the repo's .mcp.json uses relative paths
+# Claude Desktop: copy mcp_servers/claude_desktop_config.example.json
+#                 to ~/Library/Application Support/Claude/claude_desktop_config.json
+#                 and replace /ABSOLUTE/PATH/TO/ with your clone location
+# Gemini CLI: gemini --mcp-server "bigquery=uvx mcp-server-bigquery --project YOUR_PROJECT"
+
+# 10. Query in natural language from any client:
+# "Show me blended ROAS across Google and Meta for Q1 2025,
+#  with attribution model comparison and lead quality breakdown."
+```
 
 ---
 

@@ -1,0 +1,17 @@
+# One-command demo: docker compose up
+#   app → http://localhost:8501  (Streamlit dashboards + governed pipeline)
+#   api → http://localhost:8000  (lead scoring; docs at /docs)
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8501:8501"
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    ports:
+      - "8000:8000"

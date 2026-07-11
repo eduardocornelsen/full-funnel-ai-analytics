@@ -150,17 +150,61 @@ stack becomes the benchmark's governed contestant and dataset.
 - [x] Delete weather server; correct every false README/docs claim
 - [x] Honest month-to-date labels
 
-### Phase 1 — Installable (1–2 weeks)
+### Phase 1 — Installable (1–2 weeks) — largely DONE, remainder below
 
-- [ ] `pyproject.toml` + `src/` package; extras: `[duckdb]` (default), `[bigquery]`, `[snowflake]`, `[ml]`
-- [ ] CLI: `init` (writes configs), `demo` (synthetic data → DuckDB → golden → Streamlit, zero credentials, <5 min), `validate`, `bench`
-- [ ] `docker-compose.yml` (streamlit + api + mlflow, seeded data)
-- [ ] Make `--standalone` synthetic the default path; Kaggle/Olist becomes opt-in
-- [ ] Stop committing daily CSVs to git — publish as GitHub Release assets / Parquet over HTTPS; keep a small seed in-repo
-- [ ] Fix `warehouse-deploy.yml`: deploy from committed data, never regenerate; add `concurrency:` groups; never let it overwrite the DuckDB-derived golden artifact
-- [ ] Tag `v0.9.0`; CHANGELOG; CONTRIBUTING with dev setup + 10 good-first-issues; issue templates; ruff + mypy in CI
-- [ ] Single-source agent configs: one `agent_config/` tree + build script rendering `.claude/`, `.opencode/`, `cowork_plugin/`, Gemini, with a CI `--check`
-- [ ] Hosted demo: Streamlit Community Cloud + dashboards on GitHub Pages
+Shipped on this branch: pyproject + `fullfunnel` CLI, docker-compose,
+zero-credential default quick start, CONTRIBUTING/CHANGELOG/templates,
+ruff + CLI + config-drift CI gates, single-sourced agent configs,
+warehouse-deploy hardening, catch-up-to-today data feed with per-table
+freshness gates.
+
+#### Phase 1 — remaining (tracked here as the near-term roadmap)
+
+**1. Hosted demo.**
+- **Streamlit Community Cloud** — previous attempts failed because the app
+  expects `data/olist_analytics.duckdb`, which is gitignored and never
+  committed (only the CSVs are). The fix is a startup bootstrap in the app:
+  if the DuckDB file is missing, build it on first boot (load CSVs → dbt run →
+  golden metrics — i.e., what `fullfunnel demo` does), cache it, then serve.
+  Owner action: deploy the repo at share.streamlit.io after the bootstrap
+  lands.
+- **GitHub Pages** for the five HTML dashboards (today they render as raw
+  source when linked from the repo). Owner action: enable Pages in repo
+  settings; then a publish workflow can ship `dashboards/` on every refresh.
+
+**2. Data out of git** — stop committing ~60MB of CSVs daily. Decision matrix:
+
+| Option | How | Pros | Cons |
+|--------|-----|------|------|
+| **A. Regenerate, don't store (recommended)** | The standalone baseline is seeded (`np.random.seed(42)`) and daily appends are date-seeded — the whole dataset is deterministic. Clone → `fullfunnel demo` regenerates everything locally in seconds; nothing is hosted. Keep only `golden_metrics.json` committed as the artifact of record. | Zero storage, zero hosting, clone shrinks permanently, "data as code" is a great story | The committed dataset today is **Olist-anchored** (real Kaggle-derived order ids); regenerated standalone data is a *different* universe, so golden metrics change once at migration. CI must guard determinism across numpy/pandas versions (pin + a reproducibility test) |
+| B. Rolling GitHub Release | Daily workflow uploads Parquet snapshots to a `data-latest` release; `load_duckdb.py` downloads with a local cache | Keeps the exact Olist-anchored dataset; Parquet is ~5–10× smaller; free | Consumers need network on first run; workflows/CI/freshness gates must read from the release manifest |
+| C. Object storage (S3/GCS/R2) + DuckDB-over-HTTPS | Publish Parquet; DuckDB queries `https://` directly | The most "modern data platform" pattern; no download step | Costs money, needs credentials/secrets, overkill for synthetic data |
+| D. Data-only git branch/repo | Move commits to an orphan branch | Main history clean | Total storage still grows unboundedly; solves the wrong problem |
+
+  Decisions to make before executing: (1) keep the Olist-anchored dataset
+  (→ B) or accept a one-time metric reset to the fully regenerable standalone
+  dataset (→ A)? (2) rewrite existing git history to reclaim the ~60MB×days
+  already committed (git-filter-repo — breaks existing clones/forks) or leave
+  history and only stop the growth? Recommendation: **A + leave history**,
+  pin numpy in `pyproject.toml`, add a determinism test to CI.
+
+**3. Release v0.9.0** — after this branch merges to `main`: tag `v0.9.0`,
+publish a GitHub Release with the CHANGELOG's Unreleased section, and move
+that section under `[0.9.0]`. Tagging the feature branch would version
+pre-merge history, so this deliberately waits for the merge.
+
+#### Phase 1 — original checklist
+
+- [x] `pyproject.toml` + `src/` package; extras: `[duckdb]` (default), `[bigquery]`, `[snowflake]`, `[ml]`
+- [x] CLI: `init` (writes configs), `demo` (synthetic data → DuckDB → golden → Streamlit, zero credentials, <5 min), `validate`, `bench`
+- [x] `docker-compose.yml` (streamlit + api + mlflow, seeded data)
+- [x] Make `--standalone` synthetic the default path; Kaggle/Olist becomes opt-in
+- [ ] Stop committing daily CSVs to git — see the decision matrix in the remainder above
+- [x] Fix `warehouse-deploy.yml`: deploy from committed data, never regenerate; add `concurrency:` groups; never let it overwrite the DuckDB-derived golden artifact
+- [x] CHANGELOG; CONTRIBUTING with dev setup + good-first-issues; issue templates; ruff in CI
+- [ ] Tag `v0.9.0` (after merge to main — see remainder above); mypy in CI
+- [x] Single-source agent configs: one `agent_config/` tree + build script rendering `.claude/`, `.opencode/`, `cowork_plugin/`, Gemini, with a CI `--check`
+- [ ] Hosted demo: Streamlit Community Cloud + dashboards on GitHub Pages — see the remainder above (needs app bootstrap + owner account actions)
 - [ ] README ≤150 lines: one sentence, one GIF, three install commands; portfolio content moves to `docs/about.md`
 
 ### Phase 2 — Make the architecture real (3–4 weeks)

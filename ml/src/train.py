@@ -1,12 +1,10 @@
 import pandas as pd
-import numpy as np
 import xgboost as xgb
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 import mlflow
 import mlflow.xgboost
 from pathlib import Path
-import os
 
 # Paths
 DATA_DIR = Path(__file__).parent.parent.parent / "data"

@@ -1,4 +1,13 @@
-Query hubspot (get_deal_pipeline_summary, get_contacts_summary) and salesforce (get_opportunity_pipeline, get_revenue_by_source) MCP servers.
+## Data sourcing (mandatory)
+
+Read `dashboards/golden_metrics.json` → `all_time.crm` (HubSpot + Salesforce) and copy exact values — never recalculate (CLAUDE.md §14).
+- All CRM figures are lifetime — label every KPI `CRM all-time` (§2); never mix with 90-day attributed revenue (§3).
+- Win rate = closed_won / (closed_won + closed_lost) (§1).
+- Freshness badge in the header: `Data as of _meta.generated_at · CRM all-time scope`.
+
+**Live MCP variant** — only if the user appends `-mcp` or asks for "live" / "real-time" / "raw platform" data: query the hubspot, salesforce MCP servers instead, passing dates from `_meta.window_start` / `_meta.window_end`, add the badge `⚡ Live MCP — may differ from golden layer`, and use `dashboards/js/metrics.js` canonical formulas for any computed metric.
+
+## Artifact
 
 Build a sales pipeline React artifact using Recharts.
 

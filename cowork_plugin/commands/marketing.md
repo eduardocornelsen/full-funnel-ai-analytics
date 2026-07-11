@@ -1,4 +1,14 @@
-Query ALL MCP servers (google-ads, meta-ads, ga4, hubspot, salesforce) for the last 90 days.
+## Data sourcing (mandatory)
+
+Read `dashboards/golden_metrics.json` and copy exact values — never recalculate (CLAUDE.md §14).
+- Spend, sessions, conversions, `blended_roas`, `channel_performance`, `campaigns`: use the `windowed_90d` section only.
+- Pipeline / CRM KPI cards: use `all_time.crm` and label them `CRM all-time` — never place CRM counts inside the funnel (§5).
+- Label every ROAS/CVR with its scope (§2): Blended ROAS → `Linear attribution · 90d`; CVR → `Session CVR`.
+- Freshness badge in the header: `_meta.window_start` – `_meta.window_end` · Data as of `_meta.generated_at`.
+
+**Live MCP variant** — only if the user appends `-mcp` or asks for "live" / "real-time" / "raw platform" data: query the google-ads, meta-ads, ga4, hubspot, salesforce MCP servers instead, passing dates from `_meta.window_start` / `_meta.window_end`, add the badge `⚡ Live MCP — may differ from golden layer`, and use `dashboards/js/metrics.js` canonical formulas for any computed metric.
+
+## Artifact
 
 Synthesize a complete marketing executive dashboard as a React artifact using Recharts.
 

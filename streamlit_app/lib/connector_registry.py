@@ -8,7 +8,6 @@ Persists connection config to ~/.full_funnel_connectors.json (never inside the r
 import json
 import os
 from pathlib import Path
-from typing import Any
 
 import pandas as pd
 

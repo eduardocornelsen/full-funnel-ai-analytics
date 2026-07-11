@@ -1,4 +1,14 @@
-Query google-ads (get_campaign_performance, list_campaigns) and meta-ads (get_campaign_insights, list_campaigns) MCP servers.
+## Data sourcing (mandatory)
+
+Read `dashboards/golden_metrics.json` → `windowed_90d.campaigns` (`google` and `meta` arrays) and copy exact values — never recalculate (CLAUDE.md §14).
+- Google ROAS is already canonical (`conversions × $100 / cost`); label `Google est. · AOV $100`.
+- Meta ROAS is platform-reported; label `Meta platform`.
+- CVRs in these tables are Click CVR — label `CVR (click)`; never compare against Session CVR (§1).
+- Freshness badge in the header: `_meta.window_start` – `_meta.window_end` · Data as of `_meta.generated_at`.
+
+**Live MCP variant** — only if the user appends `-mcp` or asks for "live" / "real-time" / "raw platform" data: query the google-ads, meta-ads MCP servers instead, passing dates from `_meta.window_start` / `_meta.window_end`, add the badge `⚡ Live MCP — may differ from golden layer`, and use `dashboards/js/metrics.js` canonical formulas for any computed metric.
+
+## Artifact
 
 Build a paid campaign performance React artifact using Recharts.
 

@@ -12,7 +12,6 @@ import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from lib.connector_registry import (  # noqa: E402
-    get_active_target,
     load_config,
     preview_table,
     save_connection,

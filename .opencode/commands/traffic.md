@@ -1,4 +1,13 @@
-Query ga4 (get_traffic_by_channel, get_daily_trends) MCP server.
+## Data sourcing (mandatory)
+
+Read `dashboards/golden_metrics.json` → `windowed_90d.ga4_by_channel` and `windowed_90d.sessions`; copy exact values — never recalculate (CLAUDE.md §14).
+- All CVRs here are Session CVR — label `CVR (session)` (§1).
+- Validate funnel ordering before rendering any funnel (§5).
+- Freshness badge in the header: `_meta.window_start` – `_meta.window_end` · Data as of `_meta.generated_at`.
+
+**Live MCP variant** — only if the user appends `-mcp` or asks for "live" / "real-time" / "raw platform" data: query the ga4 MCP servers instead, passing dates from `_meta.window_start` / `_meta.window_end`, add the badge `⚡ Live MCP — may differ from golden layer`, and use `dashboards/js/metrics.js` canonical formulas for any computed metric.
+
+## Artifact
 
 Build a web traffic analytics React artifact using Recharts.
 

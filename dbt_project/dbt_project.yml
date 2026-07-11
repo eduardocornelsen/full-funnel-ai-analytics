@@ -27,14 +27,18 @@ models:
 #   - fct_marketing_daily.sql  (window_start / window_end)
 #   - int_dates.sql            (time_spine_start / time_spine_end)
 #
-# window_start / window_end are the canonical 90-day analysis window.
-# For the synthetic dataset these are overridden at runtime by the scheduled
-# refresh (generate_golden_metrics.py auto-detects MAX(date) from the DB).
-# Update these manually after running `dbt run` with a new anchor, or use:
+# window_start / window_end default to null: fct_marketing_daily then spans the
+# full source data range, so the anchor auto-detected by
+# generate_golden_metrics.py (MAX(date)) rolls forward with every daily append.
+# Set them only for pinned, reproducible snapshots:
 #   dbt run --vars '{"window_start":"YYYY-MM-DD","window_end":"YYYY-MM-DD"}'
+#
+# Postmortem (2026-07): literal-date fallbacks here froze the mart at 2026-03-15
+# while raw data kept growing — 3 months of silent staleness that the drift
+# validator could not see. Do not reintroduce literal dates as defaults.
 # See CLAUDE.md §9 for the full anchor-detection rules.
 vars:
   time_spine_start: "2024-01-01"   # earliest date MetricFlow spine must cover; extend for older data
   time_spine_end:   "2027-12-31"   # latest date MetricFlow spine must cover; extend when dataset grows
-  window_start:     "2025-12-16"   # fallback — overridden by generate_golden_metrics.py at runtime
-  window_end:       "2026-03-15"   # fallback — overridden by generate_golden_metrics.py at runtime
+  window_start: null               # null = span full source range (see postmortem above)
+  window_end:   null               # null = span full source range (see postmortem above)

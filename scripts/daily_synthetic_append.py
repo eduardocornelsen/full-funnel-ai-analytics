@@ -1,14 +1,26 @@
 """
 daily_synthetic_append.py
 ──────────────────────────────────────────────────────────────────────────────
-Appends realistic synthetic data for N new days to:
+Appends realistic synthetic data for N new days to ALL time-series tables:
   - data/mock_marketing/google_ads_daily_performance.csv
   - data/mock_marketing/meta_ads_daily_performance.csv
   - data/mock_marketing/ga4_daily_sessions.csv
+  - data/mock_marketing/marketing_attribution.csv      (revenue for blended ROAS)
+  - data/mock_marketing/hubspot_deals.csv
+  - data/mock_marketing/hubspot_contacts.csv
+  - data/mock_marketing/salesforce_opportunities.csv
 
-Each new day's values are derived from the rolling 14-day average of existing
-data with day-of-week seasonality and ±10 % random noise — making the growing
-dataset behave like a real live feed without requiring any external connection.
+Every table advances to the same target end date, each backfilling from its own
+last date — so a table that fell behind (or was historically frozen) heals
+automatically on the next run.
+
+Postmortem (2026-07): an earlier version appended only the 3 ad/GA4 tables.
+Spend kept growing daily while attribution revenue and CRM data stayed frozen,
+which would have made blended ROAS collapse toward 0 in any recent window.
+If you add a new time-series table, it MUST be appended here too.
+
+Values are seeded per calendar date (same day = same data) with day-of-week and
+monthly seasonality — a live-feed simulation with no external connection.
 
 Usage:
     python scripts/daily_synthetic_append.py              # append 1 day
@@ -33,8 +45,9 @@ PROJECT_ROOT = Path(__file__).parent.parent
 MOCK_DIR = PROJECT_ROOT / "data" / "mock_marketing"
 
 # Reproducible per-session noise (seed per calendar date so same day = same data)
-def _rng(seed_date: date) -> np.random.Generator:
-    seed = int(seed_date.strftime("%Y%m%d"))
+# `salt` decorrelates the tables that share a date without breaking determinism.
+def _rng(seed_date: date, salt: int = 0) -> np.random.Generator:
+    seed = int(seed_date.strftime("%Y%m%d")) + salt
     return np.random.default_rng(seed)
 
 
@@ -182,15 +195,191 @@ def _ga4_day(d: date) -> list[dict]:
     return rows
 
 
+# ── Marketing attribution ─────────────────────────────────────────────────────
+# Touchpoint-level rows feeding blended / channel ROAS. Channel mix and
+# touchpoint-count distribution mirror the committed baseline data.
+
+_ATT_CHANNELS = [
+    ("google_ads_search",   "google_ads", 0.223),
+    ("meta_prospecting",    "meta_ads",   0.176),
+    ("google_ads_shopping", "google_ads", 0.153),
+    ("organic_search",      "ga4",        0.152),
+    ("meta_retargeting",    "meta_ads",   0.108),
+    ("direct",              "ga4",        0.099),
+    ("email_marketing",     "hubspot",    0.089),
+]
+_ATT_TOUCH_COUNTS  = [1, 2, 3, 4]
+_ATT_TOUCH_WEIGHTS = [0.14, 0.33, 0.35, 0.18]
+
+
+def _attribution_day(d: date) -> list[dict]:
+    rng = _rng(d, salt=1)
+    sf = _season(d)
+    n_orders = int(70 * sf * rng.uniform(0.85, 1.15))
+    ch_names   = [c[0] for c in _ATT_CHANNELS]
+    ch_weights = np.array([c[2] for c in _ATT_CHANNELS])
+    ch_weights = ch_weights / ch_weights.sum()
+    platform_of = {c[0]: c[1] for c in _ATT_CHANNELS}
+
+    rows = []
+    for i in range(n_orders):
+        order_id = f"syn{d.strftime('%Y%m%d')}{i:04d}"
+        revenue  = round(float(rng.uniform(45, 340)), 2)
+        touches  = int(rng.choice(_ATT_TOUCH_COUNTS, p=_ATT_TOUCH_WEIGHTS))
+        channels = rng.choice(ch_names, size=touches, p=ch_weights)
+        # Touchpoints lead up to the order date; the last one lands on it.
+        offsets = sorted(rng.integers(0, 7, size=touches), reverse=True)
+        offsets[-1] = 0
+        for pos in range(touches):
+            rows.append({
+                "order_id":            order_id,
+                "touchpoint_position": pos + 1,
+                "total_touchpoints":   touches,
+                "channel":             str(channels[pos]),
+                "platform":            platform_of[str(channels[pos])],
+                "touchpoint_date":     (d - timedelta(days=int(offsets[pos]))).isoformat(),
+                "order_date":          d.isoformat(),
+                "order_revenue":       revenue,
+                "first_touch_credit":  1.0 if pos == 0 else 0.0,
+                "last_touch_credit":   1.0 if pos == touches - 1 else 0.0,
+                "linear_credit":       round(1.0 / touches, 4),
+            })
+    return rows
+
+
+# ── HubSpot ────────────────────────────────────────────────────────────────────
+
+_HS_STAGES = [
+    ("closed_won",             0.653),
+    ("prospecting",            0.118),
+    ("qualified",              0.078),
+    ("presentation_scheduled", 0.052),
+    ("proposal_sent",          0.039),
+    ("closed_lost",            0.033),
+    ("negotiation",            0.027),
+]
+_HS_LEAD_SOURCES = ["referral", "organic_search", "paid_search", "email",
+                    "paid_social", "direct", "social"]
+_BR_CITIES = [("sao paulo", "SP"), ("rio de janeiro", "RJ"), ("belo horizonte", "MG"),
+              ("curitiba", "PR"), ("porto alegre", "RS"), ("campinas", "SP"),
+              ("salvador", "BA"), ("fortaleza", "CE")]
+_FIRST_NAMES = ["Ana", "Bruno", "Carla", "Diego", "Elena", "Felipe", "Gabriela",
+                "Hugo", "Isabela", "Joao", "Larissa", "Marcos"]
+_LAST_NAMES  = ["Silva", "Santos", "Oliveira", "Souza", "Costa", "Pereira",
+                "Almeida", "Lima", "Gomes", "Ribeiro"]
+
+
+def _hubspot_deals_day(d: date) -> list[dict]:
+    rng = _rng(d, salt=2)
+    sf = _season(d)
+    n = int(135 * sf * rng.uniform(0.85, 1.15))
+    stages  = [s[0] for s in _HS_STAGES]
+    weights = np.array([s[1] for s in _HS_STAGES]); weights /= weights.sum()
+    rows = []
+    for i in range(n):
+        stage  = str(rng.choice(stages, p=weights))
+        amount = round(float(rng.uniform(40, 330)), 2)
+        closed = stage.startswith("closed")
+        order_id = f"syn{d.strftime('%Y%m%d')}{i:04d}"
+        rows.append({
+            "deal_id":    f"DEAL_SYN_{d.strftime('%Y%m%d')}_{i:05d}",
+            "order_id":   order_id,
+            "deal_name":  f"Order {order_id[:11]}",
+            "deal_stage": stage,
+            "pipeline":   "default",
+            "amount":     amount,
+            "create_date": d.isoformat(),
+            "close_date":  d.isoformat() if closed else "",
+            "deal_type":   str(rng.choice(["new_business", "existing_business"], p=[0.8, 0.2])),
+            "lead_source": str(rng.choice(_HS_LEAD_SOURCES)),
+        })
+    return rows
+
+
+def _hubspot_contacts_day(d: date) -> list[dict]:
+    rng = _rng(d, salt=3)
+    sf = _season(d)
+    n = int(125 * sf * rng.uniform(0.85, 1.15))
+    rows = []
+    for i in range(n):
+        first = str(rng.choice(_FIRST_NAMES))
+        last  = str(rng.choice(_LAST_NAMES))
+        city, state = _BR_CITIES[int(rng.integers(0, len(_BR_CITIES)))]
+        num_orders = int(rng.choice([1, 2, 3], p=[0.75, 0.18, 0.07]))
+        rows.append({
+            "contact_id":       f"HS_SYN_{d.strftime('%Y%m%d')}_{i:05d}",
+            "customer_id":      f"syncust{d.strftime('%Y%m%d')}{i:05d}",
+            "email":            f"{first.lower()}.{last.lower()}{d.strftime('%y%m%d')}{i}@example.com",
+            "first_name":       first,
+            "last_name":        last,
+            "city":             city,
+            "state":            state,
+            "create_date":      d.isoformat(),
+            "lifecycle_stage":  "customer",
+            "lead_source":      str(rng.choice(_HS_LEAD_SOURCES[:6])),
+            "num_orders":       num_orders,
+            "total_revenue":    round(float(rng.uniform(45, 340)) * num_orders, 2),
+            "first_order_date": d.isoformat(),
+            "last_activity_date": d.isoformat(),
+        })
+    return rows
+
+
+# ── Salesforce ─────────────────────────────────────────────────────────────────
+
+_SF_STAGES = [
+    ("Closed Won",           1.00, 0.676),
+    ("Prospecting",          0.10, 0.101),
+    ("Qualification",        0.20, 0.068),
+    ("Needs Analysis",       0.30, 0.047),
+    ("Value Proposition",    0.50, 0.034),
+    ("Proposal/Price Quote", 0.65, 0.027),
+    ("Closed Lost",          0.00, 0.027),
+    ("Negotiation/Review",   0.80, 0.020),
+]
+_SF_LEAD_SOURCES = ["Email", "Referral", "Direct", "Web", "Paid Search",
+                    "Social Media", "Phone", "Partner", "Other"]
+
+
+def _salesforce_day(d: date) -> list[dict]:
+    rng = _rng(d, salt=4)
+    sf = _season(d)
+    n = int(100 * sf * rng.uniform(0.85, 1.15))
+    stages  = [(s[0], s[1]) for s in _SF_STAGES]
+    weights = np.array([s[2] for s in _SF_STAGES]); weights /= weights.sum()
+    rows = []
+    for i in range(n):
+        idx = int(rng.choice(len(stages), p=weights))
+        stage, prob = stages[idx]
+        amount = round(float(rng.uniform(40, 340)), 2)
+        closed = stage.startswith("Closed")
+        close_d = d if closed else d + timedelta(days=int(rng.integers(7, 60)))
+        rows.append({
+            "opportunity_id":   f"OPP_SYN_{d.strftime('%Y%m%d')}_{i:05d}",
+            "order_id":         f"syn{d.strftime('%Y%m%d')}{i:04d}",
+            "opportunity_name": f"Deal syn{d.strftime('%Y%m%d')}{i:04d}",
+            "stage":            stage,
+            "probability":      prob,
+            "amount":           amount,
+            "created_date":     d.isoformat(),
+            "close_date":       close_d.isoformat(),
+            "lead_source":      str(rng.choice(_SF_LEAD_SOURCES)),
+            "type":             str(rng.choice(["New Business", "Existing Business"], p=[0.8, 0.2])),
+            "fiscal_quarter":   f"Q{(close_d.month - 1) // 3 + 1} {close_d.year}",
+            "expected_revenue": round(amount * prob, 2),
+        })
+    return rows
+
+
 # ── I/O helpers ────────────────────────────────────────────────────────────────
 
-def _last_date(csv_path: Path) -> date | None:
+def _last_date(csv_path: Path, column: str = "date") -> date | None:
     if not csv_path.exists():
         return None
-    df = pd.read_csv(csv_path, usecols=["date"])
+    df = pd.read_csv(csv_path, usecols=[column])
     if df.empty:
         return None
-    return pd.to_datetime(df["date"]).max().date()
+    return pd.to_datetime(df[column], errors="coerce").max().date()
 
 
 def _append_rows(csv_path: Path, rows: list[dict]) -> None:
@@ -222,35 +411,42 @@ def main() -> None:
         )
         return
 
-    google_path = MOCK_DIR / "google_ads_daily_performance.csv"
-    meta_path   = MOCK_DIR / "meta_ads_daily_performance.csv"
-    ga4_path    = MOCK_DIR / "ga4_daily_sessions.csv"
+    # Every time-series table this feed maintains: (path, date column, generator).
+    # A table missing from this list silently freezes while spend keeps growing —
+    # that exact bug broke blended ROAS for post-2026-03 windows (see module docstring).
+    tables = [
+        (MOCK_DIR / "google_ads_daily_performance.csv", "date",         _google_day),
+        (MOCK_DIR / "meta_ads_daily_performance.csv",   "date",         _meta_day),
+        (MOCK_DIR / "ga4_daily_sessions.csv",           "date",         _ga4_day),
+        (MOCK_DIR / "marketing_attribution.csv",        "order_date",   _attribution_day),
+        (MOCK_DIR / "hubspot_deals.csv",                "create_date",  _hubspot_deals_day),
+        (MOCK_DIR / "hubspot_contacts.csv",             "create_date",  _hubspot_contacts_day),
+        (MOCK_DIR / "salesforce_opportunities.csv",     "created_date", _salesforce_day),
+    ]
 
-    last = (_last_date(google_path) or date(2026, 3, 15))
-    start_day = last + timedelta(days=1)
+    # All tables advance to one shared target end date, each backfilling from its
+    # own last date — a table that fell behind heals on the next run.
+    lead_last = (_last_date(tables[0][0]) or date(2026, 3, 15))
+    target_end = lead_last + timedelta(days=args.days)
+    print(f"Target end date for all tables: {target_end}")
 
-    dates = [start_day + timedelta(days=i) for i in range(args.days)]
-    print(f"Appending {args.days} day(s): {dates[0]} → {dates[-1]}")
+    for csv_path, date_col, generator in tables:
+        last = _last_date(csv_path, date_col) or (target_end - timedelta(days=args.days))
+        if last >= target_end:
+            print(f"   {csv_path.name}: already at {last}, nothing to append")
+            continue
+        dates = pd.date_range(last + timedelta(days=1), target_end).date
+        rows: list[dict] = []
+        for d in dates:
+            rows.extend(generator(d))
+        _append_rows(csv_path, rows)
+        print(f"   {csv_path.name}: +{len(rows)} rows ({dates[0]} → {dates[-1]})")
 
-    google_rows, meta_rows, ga4_rows = [], [], []
-    for d in dates:
-        google_rows.extend(_google_day(d))
-        meta_rows.extend(_meta_day(d))
-        ga4_rows.extend(_ga4_day(d))
-
-    _append_rows(google_path, google_rows)
-    _append_rows(meta_path,   meta_rows)
-    _append_rows(ga4_path,    ga4_rows)
-
-    new_end = dates[-1]
-    print(f"✅ Data now runs through {new_end}")
-    print(f"   Google Ads: {len(google_rows)} rows appended")
-    print(f"   Meta Ads:   {len(meta_rows)} rows appended")
-    print(f"   GA4:        {len(ga4_rows)} rows appended")
+    print(f"\n✅ All tables now run through {target_end}")
     print()
     print("Next steps:")
     print("  dbt run --target duckdb")
-    print("  python scripts/generate_golden_metrics.py --live")
+    print("  python scripts/generate_golden_metrics.py")
 
 
 if __name__ == "__main__":

@@ -234,14 +234,20 @@ def q_google_campaigns(con, start: date, end: date) -> list[dict]:
 
 
 def q_meta_campaigns(con, start: date, end: date) -> list[dict]:
-    """Meta Ads campaign performance. ROAS = purchases × $100 / spend (platform-native)."""
+    """Meta Ads campaign performance.
+
+    ROAS = SUM(purchase_value) / SUM(spend) — the platform-reported revenue field,
+    per CLAUDE.md §1 ("use the roas/purchase_value fields directly from Meta").
+    Never derive Meta ROAS from the $100 AOV assumption: the AOV is calibrated
+    FROM Meta's reported revenue, so deriving Meta ROAS from it is circular.
+    """
     rows = con.execute("""
         SELECT campaign_name, objective,
                SUM(impressions)                             AS impressions,
                SUM(link_clicks)                            AS link_clicks,
                SUM(spend)                                  AS spend,
                SUM(purchases)                              AS purchases,
-               SUM(purchases * 100.0) / NULLIF(SUM(spend), 0) AS platform_roas
+               SUM(purchase_value) / NULLIF(SUM(spend), 0) AS platform_roas
         FROM stg_meta_ads_performance
         WHERE date BETWEEN ? AND ?
         GROUP BY campaign_name, objective
@@ -392,7 +398,10 @@ def main():
         print(f"Connecting to {args.target} ...")
     con = get_connection(args.target)
 
-    dataset_start = date(2024, 7, 16)
+    # Auto-detect the dataset's true start — never hardcode dates (see the
+    # 2026-07 staleness postmortem: a literal date fallback froze the pipeline).
+    earliest = con.execute("SELECT MIN(date) FROM fct_marketing_daily").fetchone()[0]
+    dataset_start = date.fromisoformat(str(earliest)[:10]) if not isinstance(earliest, date) else earliest
 
     if args.anchor:
         anchor = date.fromisoformat(args.anchor)
@@ -435,8 +444,14 @@ def main():
         last_day = _cal.monthrange(y, m)[1]
         ms = date(y, m, 1)
         me = date(y, m, last_day)
-        key   = f"month_{y}_{m:02d}"
-        label = f"{ms.strftime('%B %Y')} (full month)"
+        key = f"month_{y}_{m:02d}"
+        # The anchor month is usually incomplete — cap at the anchor and label
+        # honestly so no dashboard presents a partial month as a full one.
+        if me > anchor:
+            me = anchor
+            label = f"{ms.strftime('%B %Y')} (month to date: {fd(ms)} → {fd(me)})"
+        else:
+            label = f"{ms.strftime('%B %Y')} (full month)"
         print(f"Building {label} …")
         month_sections[key] = build_section(con, ms, me, label)
 

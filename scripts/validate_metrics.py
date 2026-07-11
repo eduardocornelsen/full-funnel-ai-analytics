@@ -2,7 +2,13 @@
 validate_metrics.py
 ───────────────────────────────────────────────────────────────────────────────
 Validates that dashboards/golden_metrics.json is in sync with the live
-golden layer. Detects metric drift.
+golden layer. Detects metric drift AND staleness.
+
+Drift and staleness are different failure modes and both must be gated:
+  - Drift:     golden values diverge from the warehouse for the same window.
+  - Staleness: golden and warehouse agree perfectly — on months-old data.
+    (2026-07 postmortem: a frozen mart kept this validator green for ~3 months
+    while raw CSVs grew daily. Divergence checks alone cannot see that.)
 
 Usage:
     python scripts/validate_metrics.py                    # DuckDB (default)
@@ -10,26 +16,61 @@ Usage:
     python scripts/validate_metrics.py --target snowflake
 
 Returns:
-    Exit code 0 — no drift detected
-    Exit code 1 — drift found (details printed)
+    Exit code 0 — no drift, golden layer fresh
+    Exit code 1 — drift or staleness found (details printed)
 
 Run before generating any new dashboard, or in CI after dbt run.
 """
 
 import argparse
 import sys
+from datetime import date
 from pathlib import Path
 import json
+
+import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent))
 from _warehouse_adapters import get_connection  # noqa: E402
 
 PROJECT_ROOT = Path(__file__).parent.parent
 GOLDEN_PATH  = PROJECT_ROOT / "dashboards" / "golden_metrics.json"
+RAW_LEAD_CSV = PROJECT_ROOT / "data" / "mock_marketing" / "google_ads_daily_performance.csv"
 
 DOLLAR_TOLERANCE_ABS = 1.00
 RATIO_TOLERANCE_PCT  = 0.50
 COUNT_TOLERANCE_ABS  = 1
+ANCHOR_LAG_TOLERANCE_DAYS = 1   # anchor may trail the raw data frontier by at most this
+
+
+def check_freshness(meta: dict) -> list[str]:
+    """Return a list of staleness errors (empty = fresh).
+
+    Compares the golden anchor against the RAW source data frontier — not the
+    mart, which can itself be frozen (that was the bug). The raw CSVs are the
+    ground truth for how far the dataset actually extends.
+    """
+    errors: list[str] = []
+    anchor = date.fromisoformat(meta["anchor_date"])
+
+    if RAW_LEAD_CSV.exists():
+        raw_max = pd.to_datetime(
+            pd.read_csv(RAW_LEAD_CSV, usecols=["date"])["date"]
+        ).max().date()
+        lag = (raw_max - anchor).days
+        if lag > ANCHOR_LAG_TOLERANCE_DAYS:
+            errors.append(
+                f"STALE: golden anchor_date {anchor} lags raw data frontier {raw_max} "
+                f"by {lag} days (tolerance: {ANCHOR_LAG_TOLERANCE_DAYS}). "
+                f"The mart or the golden snapshot is not rolling forward. "
+                f"Fix the pipeline, then: dbt run && python scripts/generate_golden_metrics.py"
+            )
+        else:
+            print(f"Freshness: anchor {anchor} vs raw frontier {raw_max} (lag {lag}d) ✅")
+    else:
+        print(f"Freshness: {RAW_LEAD_CSV.name} not found locally — skipping raw-frontier check")
+
+    return errors
 
 
 def load_golden() -> dict:
@@ -60,6 +101,15 @@ def validate(target: str = "duckdb") -> int:
 
     print(f"Golden file generated: {meta['generated_at']}")
     print(f"Anchor date: {meta['anchor_date']}  |  Window: {meta['window_start']} → {meta['window_end']}")
+
+    # Staleness gate first — a perfectly consistent but frozen golden layer
+    # must fail loudly before any drift comparison runs.
+    staleness_errors = check_freshness(meta)
+    if staleness_errors:
+        for e in staleness_errors:
+            print(f"\n❌ {e}")
+        return 1
+
     print(f"Connecting to: {target}\n")
 
     con    = get_connection(target)

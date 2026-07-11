@@ -10,8 +10,16 @@
 -- the configured window appears — even days with zero spend and zero sessions.
 -- Campaign and session data LEFT JOIN onto the spine; COALESCE fills missing days with 0.
 --
--- The window is controlled by dbt vars (window_start / window_end) defined in
--- dbt_project.yml. Override at runtime with:
+-- The mart covers the FULL source data range by default so the anchor date
+-- auto-detected by generate_golden_metrics.py (MAX(date)) always rolls forward
+-- as daily_synthetic_append.py adds data. Windowing happens at query time.
+--
+-- Postmortem (2026-07): a hardcoded window_end fallback of 2026-03-15 froze this
+-- mart while raw CSVs kept growing — the golden layer was silently ~3 months
+-- stale and the drift validator (which compares golden vs the same frozen mart)
+-- stayed green. Never cap a mart at a literal date; bound it by the data.
+--
+-- Optional override for reproducible snapshots:
 --   dbt build --vars '{"window_start":"2025-06-01","window_end":"2025-09-01"}'
 
 WITH ads AS (
@@ -44,6 +52,17 @@ sessions AS (
         SUM(conversions)       AS ga4_conversions          -- GA4 conversion events (Session CVR numerator)
     FROM {{ ref('stg_ga4_sessions') }}
     GROUP BY 1  -- collapse to day grain
+),
+
+bounds AS (
+    -- Actual coverage of the source data. Used to clip the spine so the mart
+    -- always spans exactly the ingested range — no hardcoded end date to go stale.
+    SELECT MIN(u.date) AS min_date, MAX(u.date) AS max_date
+    FROM (
+        SELECT date FROM ads
+        UNION ALL
+        SELECT date FROM sessions
+    ) u
 )
 
 SELECT
@@ -83,8 +102,9 @@ FROM {{ ref('metricflow_time_spine') }} d  -- spine drives the date; ensures con
 LEFT JOIN ads      a ON d.date_day = a.date   -- join paid-media metrics; NULL → COALESCE to 0
 LEFT JOIN sessions s ON d.date_day = s.date   -- join GA4 session metrics; NULL → COALESCE to 0
 
--- Filter to the canonical 90-day analysis window.
--- Use dbt vars so the window can be changed without editing SQL.
--- Synthetic dataset window: 2025-12-16 → 2026-03-15 (fixed anchor; see CLAUDE.md §9).
-WHERE d.date_day BETWEEN '{{ var("window_start", "2025-12-16") }}'
-                     AND '{{ var("window_end",   "2026-03-15") }}'
+-- Clip the spine to the source data's actual coverage (see bounds CTE) so the
+-- mart rolls forward automatically with each daily append. window_start /
+-- window_end vars (null by default) remain available as explicit overrides
+-- for reproducible snapshots — never set literal-date fallbacks here.
+WHERE d.date_day >= {% if var("window_start", none) %}'{{ var("window_start") }}'{% else %}(SELECT min_date FROM bounds){% endif %}
+  AND d.date_day <= {% if var("window_end", none) %}'{{ var("window_end") }}'{% else %}(SELECT max_date FROM bounds){% endif %}

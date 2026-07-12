@@ -1,28 +1,29 @@
 {
+  "_comment": "Claude Desktop requires absolute paths. Replace /ABSOLUTE/PATH/TO/full-funnel-ai-analytics with the directory you cloned this repo into (run `pwd` inside the repo). Claude Code users don't need this file — the repo's .mcp.json uses relative paths and works as-is.",
   "mcpServers": {
     "google-ads": {
       "command": "python",
-      "args": ["/home/duds0/agents/projects/full-funnel-ai-analytics/mcp_servers/mock_google_ads_server.py"]
+      "args": ["/ABSOLUTE/PATH/TO/full-funnel-ai-analytics/mcp_servers/mock_google_ads_server.py"]
     },
     "meta-ads": {
       "command": "python",
-      "args": ["/home/duds0/agents/projects/full-funnel-ai-analytics/mcp_servers/mock_meta_ads_server.py"]
+      "args": ["/ABSOLUTE/PATH/TO/full-funnel-ai-analytics/mcp_servers/mock_meta_ads_server.py"]
     },
     "ga4": {
       "command": "python",
-      "args": ["/home/duds0/agents/projects/full-funnel-ai-analytics/mcp_servers/mock_ga4_server.py"]
+      "args": ["/ABSOLUTE/PATH/TO/full-funnel-ai-analytics/mcp_servers/mock_ga4_server.py"]
     },
     "hubspot": {
       "command": "python",
-      "args": ["/home/duds0/agents/projects/full-funnel-ai-analytics/mcp_servers/mock_hubspot_server.py"]
+      "args": ["/ABSOLUTE/PATH/TO/full-funnel-ai-analytics/mcp_servers/mock_hubspot_server.py"]
     },
     "salesforce": {
       "command": "python",
-      "args": ["/home/duds0/agents/projects/full-funnel-ai-analytics/mcp_servers/mock_salesforce_server.py"]
+      "args": ["/ABSOLUTE/PATH/TO/full-funnel-ai-analytics/mcp_servers/mock_salesforce_server.py"]
     },
-    "weather": {
+    "analytics": {
       "command": "python",
-      "args": ["/home/duds0/agents/projects/full-funnel-ai-analytics/mcp_servers/weather_server.py"]
+      "args": ["/ABSOLUTE/PATH/TO/full-funnel-ai-analytics/mcp_servers/mock_analytics_server.py"]
     },
     "bigquery": {
       "command": "uvx",
@@ -30,7 +31,7 @@
     },
     "dbt-semantic-layer": {
       "command": "uvx",
-      "args": ["dbt-mcp", "--project-dir", "/home/duds0/agents/projects/full-funnel-ai-analytics/dbt_project", "--profiles-dir", "/home/duds0/agents/projects/full-funnel-ai-analytics/dbt_project", "--target", "duckdb"]
+      "args": ["dbt-mcp", "--project-dir", "/ABSOLUTE/PATH/TO/full-funnel-ai-analytics/dbt_project", "--profiles-dir", "/ABSOLUTE/PATH/TO/full-funnel-ai-analytics/dbt_project", "--target", "duckdb"]
     }
   }
 }

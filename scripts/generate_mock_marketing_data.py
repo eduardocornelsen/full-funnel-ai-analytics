@@ -8,10 +8,8 @@ Use --standalone for CI or environments without Olist CSVs.
 import argparse
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
+from datetime import timedelta
 from pathlib import Path
-import json
-import csv
 
 DATA_DIR = Path(__file__).parent.parent / "data"
 OLIST_DIR = DATA_DIR / "olist"

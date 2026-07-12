@@ -39,6 +39,8 @@ If you only have time for one section, skip to [Quick-find](#quick-find-i-want-t
 | Goal | Read this |
 |------|-----------|
 | Run the project for the first time | [`guides/setup_guide.md`](guides/setup_guide.md) |
+| See the platform roadmap and strategic direction | [`STRATEGY.md`](STRATEGY.md) |
+| Prepare interview talk tracks from this project | [`INTERVIEW_STORIES.md`](INTERVIEW_STORIES.md) |
 | Understand the dbt model layers and MetricFlow | [`architecture.md`](architecture.md) |
 | Understand how mock MCP servers work | [`mcp_servers.md`](mcp_servers.md) |
 | Understand the ML model, MLflow, and n8n integration | [`ml_model.md`](ml_model.md) |

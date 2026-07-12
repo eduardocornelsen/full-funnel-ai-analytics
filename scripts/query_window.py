@@ -172,7 +172,14 @@ def parse_window(args) -> tuple[date, date, str]:
         y, m  = map(int, args.month.split("-"))
         start = date(y, m, 1)
         end   = date(y, m, calendar.monthrange(y, m)[1])
-        label = f"{start.strftime('%B %Y')} (full month)"
+        # An incomplete month must never be labeled "full month" — cap at the
+        # data frontier and say so (mirrors generate_golden_metrics.py).
+        latest = _latest_csv_date()
+        if end > latest:
+            end   = latest
+            label = f"{start.strftime('%B %Y')} (month to date: {start} → {end})"
+        else:
+            label = f"{start.strftime('%B %Y')} (full month)"
 
     elif args.year is not None:
         y     = int(args.year)
@@ -342,7 +349,7 @@ def build_window_section(con: duckdb.DuckDBPyConnection,
     m_camps = con.execute("""
         SELECT campaign_name, objective,
                SUM(impressions), SUM(link_clicks), SUM(spend), SUM(purchases),
-               SUM(purchases * 100.0) / NULLIF(SUM(spend), 0) AS platform_roas
+               SUM(purchase_value) / NULLIF(SUM(spend), 0) AS platform_roas
         FROM stg_meta_ads_performance
         WHERE CAST(date AS DATE) BETWEEN ? AND ?
         GROUP BY 1, 2 ORDER BY SUM(spend) DESC

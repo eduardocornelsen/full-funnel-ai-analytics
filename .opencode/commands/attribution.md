@@ -1,4 +1,13 @@
-Query ga4 (get_traffic_by_channel), google-ads (get_campaign_performance), and meta-ads (get_campaign_insights) MCP servers.
+## Data sourcing (mandatory)
+
+Read `dashboards/golden_metrics.json` → `windowed_90d.attribution_by_channel` and `windowed_90d.channel_performance`; copy exact values — never recalculate (CLAUDE.md §14).
+- Attribution shares must sum to 100% — normalise before any pie/donut (§4).
+- Label revenue figures `Linear attribution · 90d`; first/last-touch columns are for model comparison only.
+- Freshness badge in the header: `_meta.window_start` – `_meta.window_end` · Data as of `_meta.generated_at`.
+
+**Live MCP variant** — only if the user appends `-mcp` or asks for "live" / "real-time" / "raw platform" data: query the ga4, google-ads, meta-ads MCP servers instead, passing dates from `_meta.window_start` / `_meta.window_end`, add the badge `⚡ Live MCP — may differ from golden layer`, and use `dashboards/js/metrics.js` canonical formulas for any computed metric.
+
+## Artifact
 
 Build a channel attribution deep-dive React artifact using Recharts.
 

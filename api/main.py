@@ -1,10 +1,8 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import xgboost as xgb
-import numpy as np
 import pandas as pd
 from pathlib import Path
-import os
 
 app = FastAPI(title="Lead Scoring API", description="Predicts conversion probability for leads.")
 
@@ -16,6 +14,12 @@ model = None
 if MODEL_PATH.exists():
     model = xgb.XGBClassifier()
     model.load_model(str(MODEL_PATH))
+
+# Must match ml/src/train.py exactly — the model was trained on these four
+# columns in this order. country/channel are NOT model features today; they are
+# accepted for lead-routing metadata only and must never adjust the score
+# (a post-hoc multiplier on model output is a fabricated probability).
+MODEL_FEATURES = ["sessions", "engaged_sessions", "page_views", "is_first_visit"]
 
 class LeadFeatures(BaseModel):
     sessions: int
@@ -33,33 +37,21 @@ def health():
 def score_lead(features: LeadFeatures):
     if model is None:
         raise HTTPException(status_code=503, detail="Model not loaded")
-    
-    # In a real app, we'd use the same preprocessing as in training
-    # For mock, we'll create a simple array
-    # Note: Categorical handling should match the get_dummies in train.py
-    # This is a simplified version for demonstration
-    x_input = np.array([[
-        features.sessions,
-        features.engaged_sessions,
-        features.page_views,
-        1 if features.is_first_visit else 0
-    ]])
-    
-    # Mock prediction logic (since categories aren't fully handled here)
-    prob = model.predict_proba(x_input)[:, 1][0]
-    
-    # Add some variability based on channel for effect
-    if features.channel == "Direct":
-        prob *= 1.2
-    elif features.channel == "Organic Search":
-        prob *= 1.1
-    
-    prob = min(max(prob, 0.0), 1.0) # Clip
-    
+
+    x_input = pd.DataFrame([{
+        "sessions":         features.sessions,
+        "engaged_sessions": features.engaged_sessions,
+        "page_views":       features.page_views,
+        "is_first_visit":   1 if features.is_first_visit else 0,
+    }], columns=MODEL_FEATURES)
+
+    prob = float(model.predict_proba(x_input)[:, 1][0])
+
     return {
-        "score": float(prob),
+        "score": prob,
         "lead_tier": "A" if prob > 0.8 else "B" if prob > 0.5 else "C",
-        "recommendation": "High priority: Instant sales follow-up" if prob > 0.8 else "Nurture: Add to email drip"
+        "recommendation": "High priority: Instant sales follow-up" if prob > 0.8 else "Nurture: Add to email drip",
+        "model_features_used": MODEL_FEATURES,
     }
 
 if __name__ == "__main__":

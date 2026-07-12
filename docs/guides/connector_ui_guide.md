@@ -189,7 +189,7 @@ tab to save a DuckDB connection and tick "Set as default active connection".
 
 ## Daily Synthetic Data — Making the Dataset Feel Live
 
-The `daily_synthetic_append.py` script adds one new day of data each time it runs.
+The `daily_synthetic_append.py` script catches every time-series table up to today's date each time it runs (missed runs self-heal; a same-day re-run is a no-op).
 GitHub Actions runs it automatically at 05:00 UTC every day.
 
 To run it manually:

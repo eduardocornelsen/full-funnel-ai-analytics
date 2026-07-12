@@ -3,7 +3,6 @@ Download the Olist Brazilian E-Commerce dataset from Kaggle.
 Requires: pip install kaggle
 Set KAGGLE_USERNAME and KAGGLE_KEY in ~/.kaggle/kaggle.json
 """
-import os
 import subprocess
 from pathlib import Path
 
@@ -46,7 +45,6 @@ def download():
     files = sorted(DATA_DIR.glob("*.csv"))
     print(f"\n{len(files)} files in {DATA_DIR}:")
     for f in files:
-        import csv
         with open(f) as fh:
             rows = sum(1 for _ in fh) - 1
         size_mb = f.stat().st_size / 1e6

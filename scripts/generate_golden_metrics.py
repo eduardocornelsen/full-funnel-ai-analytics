@@ -25,7 +25,6 @@ import argparse
 import sys
 from pathlib import Path
 import json
-import duckdb
 from datetime import date, timedelta, datetime, timezone
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -234,14 +233,20 @@ def q_google_campaigns(con, start: date, end: date) -> list[dict]:
 
 
 def q_meta_campaigns(con, start: date, end: date) -> list[dict]:
-    """Meta Ads campaign performance. ROAS = purchases × $100 / spend (platform-native)."""
+    """Meta Ads campaign performance.
+
+    ROAS = SUM(purchase_value) / SUM(spend) — platform-reported revenue over
+    spend, per CLAUDE.md §1 (ratio of sums; never average per-row roas).
+    Never derive Meta ROAS from the $100 AOV assumption: the AOV is calibrated
+    FROM Meta's reported revenue, so deriving Meta ROAS from it is circular.
+    """
     rows = con.execute("""
         SELECT campaign_name, objective,
                SUM(impressions)                             AS impressions,
                SUM(link_clicks)                            AS link_clicks,
                SUM(spend)                                  AS spend,
                SUM(purchases)                              AS purchases,
-               SUM(purchases * 100.0) / NULLIF(SUM(spend), 0) AS platform_roas
+               SUM(purchase_value) / NULLIF(SUM(spend), 0) AS platform_roas
         FROM stg_meta_ads_performance
         WHERE date BETWEEN ? AND ?
         GROUP BY campaign_name, objective
@@ -392,15 +397,28 @@ def main():
         print(f"Connecting to {args.target} ...")
     con = get_connection(args.target)
 
-    dataset_start = date(2024, 7, 16)
+    # Auto-detect the dataset's true bounds — never hardcode dates (see the
+    # 2026-07 staleness postmortem: a literal date fallback froze the pipeline).
+    # str()[:10] normalises both DATE and TIMESTAMP-typed columns to a date;
+    # isinstance(date) alone would let a datetime leak through (datetime is a
+    # date subclass) and poison later date arithmetic.
+    earliest, latest = con.execute(
+        "SELECT MIN(date), MAX(date) FROM fct_marketing_daily"
+    ).fetchone()
+    if earliest is None or latest is None:
+        sys.exit(
+            "❌ fct_marketing_daily is empty — the warehouse has no mart data.\n"
+            "   Run the pipeline first: python scripts/load_duckdb.py && "
+            "cd dbt_project && dbt run --target duckdb"
+        )
+    dataset_start = date.fromisoformat(str(earliest)[:10])
 
     if args.anchor:
         anchor = date.fromisoformat(args.anchor)
         print(f"--anchor override: {anchor}")
     else:
         # Auto-detect the latest date so the window follows daily_synthetic_append.py
-        latest = con.execute("SELECT MAX(date) FROM fct_marketing_daily").fetchone()[0]
-        anchor = date.fromisoformat(str(latest)[:10]) if not isinstance(latest, date) else latest
+        anchor = date.fromisoformat(str(latest)[:10])
         print(f"Auto-detected anchor={anchor} from fct_marketing_daily")
 
     window_start = anchor - timedelta(days=WINDOW_DAYS - 1)
@@ -435,8 +453,14 @@ def main():
         last_day = _cal.monthrange(y, m)[1]
         ms = date(y, m, 1)
         me = date(y, m, last_day)
-        key   = f"month_{y}_{m:02d}"
-        label = f"{ms.strftime('%B %Y')} (full month)"
+        key = f"month_{y}_{m:02d}"
+        # The anchor month is usually incomplete — cap at the anchor and label
+        # honestly so no dashboard presents a partial month as a full one.
+        if me > anchor:
+            me = anchor
+            label = f"{ms.strftime('%B %Y')} (month to date: {fd(ms)} → {fd(me)})"
+        else:
+            label = f"{ms.strftime('%B %Y')} (full month)"
         print(f"Building {label} …")
         month_sections[key] = build_section(con, ms, me, label)
 

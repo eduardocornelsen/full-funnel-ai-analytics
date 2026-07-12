@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import json
 import sys
-import traceback
 from pathlib import Path
 from typing import Any
 
@@ -269,7 +268,6 @@ def run_query_window_tasks(cases: list[dict]) -> list[dict]:
     so the test is fast and doesn't depend on PATH.
     """
     from datetime import date
-    import importlib.util, types
 
     # Import query_window without relying on it being installed
     import importlib.util as _ilu

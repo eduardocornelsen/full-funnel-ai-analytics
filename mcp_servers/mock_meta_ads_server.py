@@ -29,12 +29,16 @@ def get_campaign_insights(start_date: str = None, end_date: str = None):
         'reach': 'sum',
         'spend': 'sum',
         'link_clicks': 'sum',
-        'purchases': 'sum'
+        'purchases': 'sum',
+        'purchase_value': 'sum'
     }).reset_index()
-    
+
     summary['cpm'] = (summary['spend'] / summary['impressions']) * 1000
     summary['cpc'] = summary['spend'] / summary['link_clicks']
-    summary['roas'] = (summary['purchases'] * 100) / summary['spend'] # Assumes avg $100 per purchase for mock
+    # Platform-reported ROAS: revenue the platform tracked / spend. Never derive
+    # this from the $100 AOV assumption — the AOV is calibrated FROM this
+    # revenue, so an AOV-derived "platform" ROAS would be circular.
+    summary['roas'] = summary['purchase_value'] / summary['spend']
     
     return summary.to_dict(orient="records")
 

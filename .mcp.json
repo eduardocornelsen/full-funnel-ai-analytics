@@ -2,34 +2,34 @@
   "mcpServers": {
     "google-ads": {
       "command": "python",
-      "args": ["/home/duds0/agents/projects/full-funnel-ai-analytics/mcp_servers/mock_google_ads_server.py"]
+      "args": ["mcp_servers/mock_google_ads_server.py"]
     },
     "meta-ads": {
       "command": "python",
-      "args": ["/home/duds0/agents/projects/full-funnel-ai-analytics/mcp_servers/mock_meta_ads_server.py"]
+      "args": ["mcp_servers/mock_meta_ads_server.py"]
     },
     "ga4": {
       "command": "python",
-      "args": ["/home/duds0/agents/projects/full-funnel-ai-analytics/mcp_servers/mock_ga4_server.py"]
+      "args": ["mcp_servers/mock_ga4_server.py"]
     },
     "hubspot": {
       "command": "python",
-      "args": ["/home/duds0/agents/projects/full-funnel-ai-analytics/mcp_servers/mock_hubspot_server.py"]
+      "args": ["mcp_servers/mock_hubspot_server.py"]
     },
     "salesforce": {
       "command": "python",
-      "args": ["/home/duds0/agents/projects/full-funnel-ai-analytics/mcp_servers/mock_salesforce_server.py"]
+      "args": ["mcp_servers/mock_salesforce_server.py"]
     },
     "analytics": {
       "command": "python",
-      "args": ["/home/duds0/agents/projects/full-funnel-ai-analytics/mcp_servers/mock_analytics_server.py"]
+      "args": ["mcp_servers/mock_analytics_server.py"]
     },
     "dbt-semantic-layer": {
       "command": "uvx",
       "args": [
         "dbt-mcp",
-        "--project-dir", "/home/duds0/agents/projects/full-funnel-ai-analytics/dbt_project",
-        "--profiles-dir", "/home/duds0/agents/projects/full-funnel-ai-analytics/dbt_project",
+        "--project-dir", "dbt_project",
+        "--profiles-dir", "dbt_project",
         "--target", "duckdb"
       ]
     }

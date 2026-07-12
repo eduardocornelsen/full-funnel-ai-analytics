@@ -2,9 +2,14 @@ name: Scheduled Refresh — Daily Golden Metrics
 
 on:
   schedule:
-    # 06:00 UTC daily — after daily-synthetic-data (05:00 UTC)
+    # 06:00 UTC daily
     - cron: "0 6 * * *"
   workflow_dispatch:
+
+# Only one data-refresh run at a time — it commits to the repo.
+concurrency:
+  group: synthetic-data-writes
+  cancel-in-progress: false
 
 jobs:
   refresh-duckdb:
@@ -31,7 +36,11 @@ jobs:
       - name: Write dbt profiles.yml
         run: cp dbt_project/profiles.yml.example dbt_project/profiles.yml
 
-      - name: Generate / append synthetic data
+      # Regenerated in the runner, NOT committed: appends are deterministic
+      # (seeded per calendar date), so every machine — CI, a fresh clone, the
+      # owner's laptop — recomputes identical rows locally. The committed CSVs
+      # are a frozen baseline; only golden_metrics.json is committed daily.
+      - name: Regenerate synthetic appends up to today
         run: python scripts/daily_synthetic_append.py
 
       - name: Load DuckDB
@@ -48,11 +57,11 @@ jobs:
       - name: Generate golden metrics
         run: python scripts/generate_golden_metrics.py --target duckdb
 
-      - name: Validate — no drift
-        run: python scripts/validate_metrics.py --target duckdb
+      - name: Validate — no drift, and data must be current to today
+        run: python scripts/validate_metrics.py --target duckdb --strict-freshness
 
-      - name: Commit updated golden_metrics.json
+      - name: Commit updated golden_metrics.json (never the CSVs)
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: daily refresh — golden_metrics.json [skip ci]"
-          file_pattern: "dashboards/golden_metrics.json data/mock_marketing/*.csv"
+          file_pattern: "dashboards/golden_metrics.json"

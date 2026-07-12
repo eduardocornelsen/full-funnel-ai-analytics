@@ -10,8 +10,12 @@
 -- declares a time dimension is implicitly joined to this spine when you run
 -- `mf query --metrics <m> --group-by metric_time__month`.
 --
--- Bounds are driven by dbt vars (time_spine_start / time_spine_end) defined in
--- dbt_project.yml. Override at run-time with:
+-- The spine start is a dbt var; the END defaults to one year past today's
+-- build date so the spine can never silently cap a growing dataset. A literal
+-- end date here would recreate the 2026-07 staleness bug on a longer fuse:
+-- the mart's bounds CTE can only clip to spine rows that exist, so a spine
+-- frozen at a fixed date freezes the mart the day the data passes it.
+-- Override for pinned snapshots:
 --   dbt build --vars '{"time_spine_start":"2024-01-01","time_spine_end":"2027-12-31"}'
 --
 -- The column MUST be named `date_day` — MetricFlow looks for this exact name
@@ -21,6 +25,6 @@ SELECT
     CAST(d AS DATE) AS date_day
 FROM generate_series(
     '{{ var("time_spine_start", "2024-01-01") }}'::DATE,
-    '{{ var("time_spine_end", "2026-12-31") }}'::DATE,
+    {% if var("time_spine_end", none) %}'{{ var("time_spine_end") }}'::DATE{% else %}current_date + INTERVAL '1 year'{% endif %},
     INTERVAL '1 day'
 ) AS t(d)

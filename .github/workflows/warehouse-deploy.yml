@@ -10,6 +10,11 @@ on:
         required: false
         default: "both"
 
+# One deploy at a time per branch — truncate-reload deploys must never overlap.
+concurrency:
+  group: warehouse-deploy-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   deploy:
     name: Deploy to ${{ matrix.target }}
@@ -56,8 +61,20 @@ jobs:
           SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
 
       # ── Load raw data into warehouse ─────────────────────────────────────────
-      - name: Generate mock marketing data
-        run: python scripts/generate_mock_marketing_data.py --standalone
+      # Deploy the COMMITTED dataset — the same CSVs the golden layer was
+      # generated from. Regenerating data here would load a different random
+      # universe into the warehouse and break cross-warehouse metric parity.
+      - name: Verify committed dataset present (fallback: standalone)
+        id: dataset
+        run: |
+          if [ -f data/mock_marketing/google_ads_daily_performance.csv ]; then
+            echo "✅ Deploying committed CSVs"
+            echo "committed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "⚠️  No committed CSVs — generating standalone (structural deploy only)"
+            python scripts/generate_mock_marketing_data.py --standalone
+            echo "committed=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Load data into ${{ matrix.target }}
         run: python scripts/load_${{ matrix.target }}.py
@@ -95,19 +112,21 @@ jobs:
           SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
           SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
 
-      # ── Generate + validate golden metrics from warehouse ────────────────────
-      - name: Generate golden metrics from ${{ matrix.target }}
-        run: python scripts/generate_golden_metrics.py --target ${{ matrix.target }}
-        env:
-          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
-          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-          SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
-          SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
-          SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
-
-      - name: Validate — no drift between ${{ matrix.target }} and golden layer
+      # ── Cross-warehouse parity gate ───────────────────────────────────────────
+      # Validate the COMMITTED golden_metrics.json (generated from DuckDB by the
+      # scheduled refresh) against this warehouse. Same data + same dbt models
+      # on a different engine must produce the same metrics — this is the
+      # project's cross-warehouse zero-drift guarantee, enforced.
+      #
+      # This workflow never writes golden_metrics.json: the DuckDB scheduled
+      # refresh is its single writer. (Previously the BigQuery job committed a
+      # golden file generated from freshly randomized data, silently clobbering
+      # the real artifact.)
+      # Skipped on the standalone fallback: freshly generated random data is a
+      # different universe than the committed golden file, so parity would be
+      # guaranteed to fail — the fallback is a structural deploy only.
+      - name: Validate — committed golden layer matches ${{ matrix.target }}
+        if: steps.dataset.outputs.committed == 'true'
         run: python scripts/validate_metrics.py --target ${{ matrix.target }}
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
@@ -117,11 +136,3 @@ jobs:
           SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
           SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
           SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
-
-      # ── Commit updated golden_metrics.json (only bigquery job wins the race) ─
-      - name: Commit updated golden_metrics.json
-        if: matrix.target == 'bigquery'
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "chore: refresh golden_metrics.json from BigQuery deploy"
-          file_pattern: "dashboards/golden_metrics.json"

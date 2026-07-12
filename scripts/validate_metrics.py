@@ -2,7 +2,13 @@
 validate_metrics.py
 ───────────────────────────────────────────────────────────────────────────────
 Validates that dashboards/golden_metrics.json is in sync with the live
-golden layer. Detects metric drift.
+golden layer. Detects metric drift AND staleness.
+
+Drift and staleness are different failure modes and both must be gated:
+  - Drift:     golden values diverge from the warehouse for the same window.
+  - Staleness: golden and warehouse agree perfectly — on months-old data.
+    (2026-07 postmortem: a frozen mart kept this validator green for ~3 months
+    while raw CSVs grew daily. Divergence checks alone cannot see that.)
 
 Usage:
     python scripts/validate_metrics.py                    # DuckDB (default)
@@ -10,26 +16,128 @@ Usage:
     python scripts/validate_metrics.py --target snowflake
 
 Returns:
-    Exit code 0 — no drift detected
-    Exit code 1 — drift found (details printed)
+    Exit code 0 — no drift, golden layer fresh
+    Exit code 1 — drift or staleness found (details printed)
 
 Run before generating any new dashboard, or in CI after dbt run.
 """
 
 import argparse
 import sys
+from datetime import date
 from pathlib import Path
 import json
+
+import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent))
 from _warehouse_adapters import get_connection  # noqa: E402
 
 PROJECT_ROOT = Path(__file__).parent.parent
 GOLDEN_PATH  = PROJECT_ROOT / "dashboards" / "golden_metrics.json"
+MOCK_DIR     = PROJECT_ROOT / "data" / "mock_marketing"
+
+# Every time-series table and its date column — mirrors the registry in
+# daily_synthetic_append.py. Freshness must be checked per table: the original
+# staleness bug advanced 3 tables while 4 stayed frozen, and a single-table
+# frontier check would have stayed green through it.
+RAW_TABLES = [
+    ("google_ads_daily_performance.csv", "date"),
+    ("meta_ads_daily_performance.csv",   "date"),
+    ("ga4_daily_sessions.csv",           "date"),
+    ("marketing_attribution.csv",        "order_date"),
+    ("hubspot_deals.csv",                "create_date"),
+    ("hubspot_contacts.csv",             "create_date"),
+    ("salesforce_opportunities.csv",     "created_date"),
+]
 
 DOLLAR_TOLERANCE_ABS = 1.00
 RATIO_TOLERANCE_PCT  = 0.50
 COUNT_TOLERANCE_ABS  = 1
+ANCHOR_LAG_TOLERANCE_DAYS = 1   # anchor may trail the raw data frontier by at most this
+TABLE_SKEW_TOLERANCE_DAYS = 2   # any table may trail the most-advanced table by at most this
+WALL_CLOCK_TOLERANCE_DAYS = 3   # raw frontier may trail today by at most this (strict mode)
+
+
+def check_freshness(meta: dict, strict: bool = False) -> list[str]:
+    """Return a list of staleness errors (empty = fresh).
+
+    Three orthogonal checks:
+    1. Anchor vs RAW data frontier (always enforced) — catches a frozen mart or
+       stale golden snapshot. Compares against the raw CSVs, not the mart,
+       because the mart can itself be frozen (that was the bug).
+    2. Cross-table skew (always enforced) — every table's frontier must be
+       within tolerance of the most-advanced table's. Catches a partial append
+       (spend advancing while attribution revenue / CRM stay frozen), which
+       silently deflates blended ROAS in recent windows.
+    3. Raw frontier vs today's wall clock (warn by default, error with
+       --strict-freshness) — catches the append automation being down entirely.
+       Warn-only by default so a fresh clone or a fork PR with slightly older
+       committed data doesn't fail; the scheduled refresh runs strict.
+    """
+    errors: list[str] = []
+    anchor = date.fromisoformat(meta["anchor_date"])
+
+    frontiers: dict[str, date] = {}
+    for filename, col in RAW_TABLES:
+        path = MOCK_DIR / filename
+        if not path.exists():
+            continue
+        s = pd.to_datetime(pd.read_csv(path, usecols=[col])[col], errors="coerce")
+        if s.notna().any():
+            frontiers[filename] = s.max().date()
+
+    if not frontiers:
+        msg = "no raw CSVs found locally — freshness cannot be verified"
+        if strict:
+            errors.append(f"STALE (unverifiable): {msg}; --strict-freshness requires the raw data")
+        else:
+            print(f"⚠️  Freshness: {msg} — skipping")
+        return errors
+
+    lead = max(frontiers.values())
+
+    # 1. Golden anchor must track the raw frontier
+    lag = (lead - anchor).days
+    if lag > ANCHOR_LAG_TOLERANCE_DAYS:
+        errors.append(
+            f"STALE: golden anchor_date {anchor} lags raw data frontier {lead} "
+            f"by {lag} days (tolerance: {ANCHOR_LAG_TOLERANCE_DAYS}). "
+            f"The mart or the golden snapshot is not rolling forward. "
+            f"Fix the pipeline, then: dbt run && python scripts/generate_golden_metrics.py"
+        )
+    else:
+        print(f"Freshness: anchor {anchor} vs raw frontier {lead} (lag {lag}d) ✅")
+
+    # 2. No table may fall behind the pack
+    laggards = {f: fr for f, fr in frontiers.items()
+                if (lead - fr).days > TABLE_SKEW_TOLERANCE_DAYS}
+    if laggards:
+        detail = ", ".join(f"{f} at {fr} (-{(lead - fr).days}d)" for f, fr in laggards.items())
+        errors.append(
+            f"STALE (partial append): tables lag the {lead} frontier beyond "
+            f"{TABLE_SKEW_TOLERANCE_DAYS}d tolerance: {detail}. "
+            f"Heal with: python scripts/daily_synthetic_append.py"
+        )
+    else:
+        print(f"Freshness: all {len(frontiers)} tables within {TABLE_SKEW_TOLERANCE_DAYS}d of frontier ✅")
+
+    # 3. The frontier itself must track the wall clock (strict mode hard-fails)
+    clock_lag = (date.today() - lead).days
+    if clock_lag > WALL_CLOCK_TOLERANCE_DAYS:
+        msg = (
+            f"Raw data frontier {lead} trails today by {clock_lag} days "
+            f"(tolerance: {WALL_CLOCK_TOLERANCE_DAYS}) — is the daily append "
+            f"automation running? Catch up with: python scripts/daily_synthetic_append.py"
+        )
+        if strict:
+            errors.append("STALE (wall clock): " + msg)
+        else:
+            print(f"⚠️  {msg}")
+    else:
+        print(f"Freshness: raw frontier {lead} vs today (lag {clock_lag}d) ✅")
+
+    return errors
 
 
 def load_golden() -> dict:
@@ -54,12 +162,84 @@ def check(name: str, golden_val: float, live_val: float,
             "diff": diff_str, "drifted": drifted}
 
 
-def validate(target: str = "duckdb") -> int:
+def validate_completed_months(target: str = "duckdb") -> int:
+    """Spot-check the COMMITTED golden artifact against the warehouse.
+
+    Regular validation runs after the generator, so it checks a freshly
+    generated artifact — the committed file itself is only validated at the
+    moment the scheduled refresh writes it. This mode closes that gap for PR
+    CI: completed calendar months are anchor-independent (identical no matter
+    which day generated them), so the committed file's full-month sections
+    must match a warehouse rebuilt on any later day. Run BEFORE regenerating
+    golden_metrics.json in the workspace.
+
+    Deliberately skips freshness gates and CRM/all-time values: the committed
+    anchor legitimately trails a CI runner's regenerated frontier, and CRM
+    sections are lifetime-scoped, not month-scoped.
+    """
+    golden = load_golden()
+    months = {k: v for k, v in golden.items()
+              if k.startswith("month_") and "(full month)" in v.get("label", "")}
+    if not months:
+        print("No completed-month sections in golden_metrics.json — nothing to spot-check.")
+        return 0
+
+    con = get_connection(target)
+    checks = []
+    for key, sec in sorted(months.items()):
+        ws, we = sec["window"]["start"], sec["window"]["end"]
+        live = con.execute("""
+            SELECT SUM(total_google_spend), SUM(total_meta_spend), SUM(total_spend),
+                   SUM(total_conversions),  SUM(ga4_total_sessions)
+            FROM fct_marketing_daily
+            WHERE date BETWEEN ? AND ?
+        """, [ws, we]).fetchone()
+        live_rev = con.execute(
+            "SELECT SUM(linear_credit * order_revenue) FROM stg_marketing_attribution"
+            " WHERE touchpoint_date BETWEEN ? AND ?", [ws, we]
+        ).fetchone()[0]
+        live_roas = round(float(live_rev or 0) / float(live[2] or 1), 2)
+        checks += [
+            check(f"{key}.spend.google",          sec["spend"]["google"],            float(live[0] or 0), DOLLAR_TOLERANCE_ABS),
+            check(f"{key}.spend.meta",            sec["spend"]["meta"],              float(live[1] or 0), DOLLAR_TOLERANCE_ABS),
+            check(f"{key}.spend.total",           sec["spend"]["total"],             float(live[2] or 0), DOLLAR_TOLERANCE_ABS),
+            check(f"{key}.conversions.ga4_total", sec["conversions"]["ga4_total"],   float(live[3] or 0), COUNT_TOLERANCE_ABS),
+            check(f"{key}.sessions.total",        sec["sessions"]["total"],          float(live[4] or 0), COUNT_TOLERANCE_ABS),
+            check(f"{key}.blended_roas",          sec["blended_roas"],               live_roas,           RATIO_TOLERANCE_PCT, "pct"),
+        ]
+    con.close()
+
+    drifted = [c for c in checks if c["drifted"]]
+    print(f"Committed-artifact spot check ({len(months)} completed months): "
+          f"{len(checks)} checks, ❌ {len(drifted)} drifted")
+    if drifted:
+        print("\nThe COMMITTED golden_metrics.json disagrees with a warehouse rebuilt "
+              "from this checkout. Either this PR changed metric logic without "
+              "regenerating the artifact (fix: python scripts/generate_golden_metrics.py, "
+              "commit the result in the same PR) or generation is no longer deterministic "
+              "(see tests/test_determinism.py).")
+        for c in drifted:
+            print(f"  ❌ {c['metric']}: golden={c['golden']}  live={c['live']}  diff={c['diff']}")
+        return 1
+    print("✅ Committed golden artifact matches the regenerated warehouse.")
+    return 0
+
+
+def validate(target: str = "duckdb", strict_freshness: bool = False) -> int:
     golden = load_golden()
     meta   = golden["_meta"]
 
     print(f"Golden file generated: {meta['generated_at']}")
     print(f"Anchor date: {meta['anchor_date']}  |  Window: {meta['window_start']} → {meta['window_end']}")
+
+    # Staleness gate first — a perfectly consistent but frozen golden layer
+    # must fail loudly before any drift comparison runs.
+    staleness_errors = check_freshness(meta, strict=strict_freshness)
+    if staleness_errors:
+        for e in staleness_errors:
+            print(f"\n❌ {e}")
+        return 1
+
     print(f"Connecting to: {target}\n")
 
     con    = get_connection(target)
@@ -193,5 +373,14 @@ if __name__ == "__main__":
     parser.add_argument("--target", default="duckdb",
                         choices=["duckdb", "bigquery", "snowflake"],
                         help="dbt target warehouse (default: duckdb)")
+    parser.add_argument("--strict-freshness", action="store_true",
+                        help="Fail (not just warn) when the raw data frontier trails "
+                             "today's date — use in the scheduled refresh.")
+    parser.add_argument("--completed-months-only", action="store_true",
+                        help="Spot-check the COMMITTED artifact's completed-month "
+                             "sections (anchor-independent) against the warehouse. "
+                             "Run in CI before regenerating golden_metrics.json.")
     args = parser.parse_args()
-    sys.exit(validate(args.target))
+    if args.completed_months_only:
+        sys.exit(validate_completed_months(args.target))
+    sys.exit(validate(args.target, strict_freshness=args.strict_freshness))

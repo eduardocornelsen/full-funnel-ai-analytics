@@ -304,4 +304,4 @@ mlflow runs list --experiment-name "Lead Scoring Optimization"
 | n8n ↔ HubSpot (write-back) | 🔲 Not yet implemented — planned to update contact score in CRM |
 | Channel as model feature | 🔲 Planned — requires one-hot encoding in the feature pipeline |
 | MLflow Model Registry | 🔲 Planned — currently uses file-based artefact store only |
-| Automated retraining trigger | 🔲 Planned — would hook into `daily-synthetic-data.yml` GitHub Actions workflow |
+| Automated retraining trigger | 🔲 Planned — would hook into `scheduled-refresh.yml` GitHub Actions workflow |

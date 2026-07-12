@@ -456,7 +456,7 @@ Mart models are persisted DuckDB tables. They are the direct source for MetricFl
 
 **Grain:** One row per calendar day (driven by `metricflow_time_spine` — no gaps on zero-campaign days).
 
-**Window:** Filtered to `var("window_start")` → `var("window_end")` at build time.
+**Window:** spans the full source data range by default (bounds derived from the data — no literal dates). `var("window_start")` / `var("window_end")` remain as explicit overrides for pinned snapshots. Windowing (90d etc.) happens at query time in `generate_golden_metrics.py` / `query_window.py`; an unfiltered `SELECT` or unfiltered MetricFlow query against this mart is ALL-TIME scoped and must be labelled as such.
 
 **Key Columns:** `date`, `total_google_spend`, `total_meta_spend`, `total_spend`, `total_ad_conversions`, `total_conversions`, `ga4_total_sessions`, `ga4_engaged_sessions`, `blended_cac`, `cost_per_session`
 

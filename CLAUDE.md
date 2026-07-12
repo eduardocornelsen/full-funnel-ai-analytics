@@ -23,12 +23,13 @@ Session CVR ≈ 2–4% for e-commerce. Click CVR ≈ 5–20%. Values are **not c
 
 | Source | Formula | Notes |
 |--------|---------|-------|
-| **Meta Ads (platform)** | Use `roas` field directly from MCP response | Platform-reported; last-click, 7-day window |
+| **Meta Ads (platform)** | `SUM(purchase_value) / SUM(spend)` — platform-reported revenue over spend | Equals the platform `roas` field for a single row; aggregate as ratio-of-sums, never an average of per-row `roas` |
 | **Google Ads (estimated)** | `(conversions × AOV) / spend` where `AOV = $100` | Google MCP does not return revenue; use $100 AOV consistently |
 | **Blended ROAS** | `total_attributed_revenue / total_spend` | Linear attribution; must label as "Linear · 90d" |
 
 **Rule:** Never use a hardcoded spend multiplier (e.g., `spend × 3.5` or `spend × 0.8`) to estimate ROAS.
-Always use `conversions × $100` for Google. Always use platform `roas` field for Meta.
+Always use `conversions × $100` for Google. Never derive Meta ROAS from the $100 AOV — the AOV is
+calibrated FROM Meta's reported revenue, so an AOV-derived "platform" ROAS is circular.
 
 ### CTR
 
@@ -132,9 +133,10 @@ This assumption must be used consistently. If the user provides a different AOV,
 
 ### Synthetic Dataset (this project's default)
 
-The dataset grows daily via `daily_synthetic_append.py`. The anchor date
-auto-detects `MAX(date)` from the database so all windows always cover
-the latest appended data.
+The dataset grows daily via `daily_synthetic_append.py`, which by default
+catches every table up to **today (UTC)** — missed runs self-heal, and a
+same-day re-run is a no-op. The anchor date auto-detects `MAX(date)` from the
+database, so all windows always end at today once the daily refresh has run.
 
 | Variable | Resolved at runtime | Notes |
 |----------|---------------------|-------|
@@ -160,8 +162,12 @@ regenerated daily and always reflect the latest data.
 | `windowed_60d` | anchor-59d → anchor | Last 60 days |
 | `windowed_90d` | anchor-89d → anchor | **Canonical 90-day window** |
 | `windowed_180d` | anchor-179d → anchor | Last 180 days |
-| `month_YYYY_MM` | full calendar month | Last 3 months relative to anchor |
+| `month_YYYY_MM` | calendar month; the anchor month is capped at the anchor and labelled `(month to date: …)` | Last 3 months relative to anchor |
 | `all_time` | dataset_start → anchor | Full dataset range |
+
+**Partial-month rule:** the anchor month's section is month-to-date and its
+`label` says so. Never present it as a full month or compare it 1:1 against a
+complete month without noting the day counts.
 
 The scheduled refresh (`scheduled-refresh.yml`) regenerates all windows daily at 06:00 UTC.
 
@@ -242,17 +248,24 @@ zero metric drift; the -mcp mode shows raw real-time platform data.
 | `/traffic` | `windowed_90d.ga4_by_channel` | Session CVR by channel |
 | `/pipeline` | `all_time.crm` | Win rate, pipeline value (CRM all-time) |
 
-### Live MCP Skills (opt-in — bypasses golden layer)
+### Live MCP Mode (opt-in — bypasses golden layer)
 
-Triggered by appending `-mcp` to any skill name or by user requesting "live", "real-time", or "raw platform" data.
+There are no separate `-mcp` command files: each command in
+`agent_config/commands/` contains a **Live MCP variant** section. It activates
+when the user appends `-mcp` to a skill name or asks for "live", "real-time",
+or "raw platform" data.
 
-| Skill | MCP servers queried | Notes |
+| Skill (live mode) | MCP servers queried | Notes |
 |-------|--------------------|-|
-| `/marketing-mcp` | google-ads, meta-ads, ga4, hubspot, salesforce | Add ⚡ Live MCP badge |
-| `/campaign-mcp` | google-ads, meta-ads | Per-campaign raw platform data |
-| `/attribution-mcp` | ga4, google-ads, meta-ads | Raw channel attribution |
-| `/traffic-mcp` | ga4 | Live session data |
-| `/pipeline-mcp` | hubspot, salesforce | Live CRM data |
+| `/marketing` -mcp | google-ads, meta-ads, ga4, hubspot, salesforce | Add ⚡ Live MCP badge |
+| `/campaign` -mcp | google-ads, meta-ads | Per-campaign raw platform data |
+| `/attribution` -mcp | ga4, google-ads, meta-ads | Raw channel attribution |
+| `/traffic` -mcp | ga4 | Live session data |
+| `/pipeline` -mcp | hubspot, salesforce | Live CRM data |
+
+Commands are single-sourced: edit `agent_config/commands/*.md`, then run
+`python scripts/build_agent_configs.py` to render `.claude/`, `.opencode/`,
+and `cowork_plugin/`. CI fails if the trees drift from the canonical source.
 
 **Rule for MCP skills:** Pass dates from `golden_metrics.json` `_meta.window_start` /
 `_meta.window_end` for synthetic data (these update daily with the appended data).
@@ -298,9 +311,10 @@ All new HTML dashboards MUST load it before any inline script block:
 Use `Metrics.labels.*` for canonical KPI subtitle strings (attribution windows, CVR basis).
 
 Existing dashboards that already use `metrics.js`:
-- `attribution_dashboard.html`
-- `marketing_full_funnel_dashboard.html`
 - `full_funnel_marketing_dashboard.html`
+
+(The other four dashboards predate `metrics.js` and must be migrated to it —
+until then, treat any inline metric math in them as legacy, not a pattern to copy.)
 
 ---
 

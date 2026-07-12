@@ -19,9 +19,10 @@ FROM range(
     -- Inclusive start: driven by dbt var, defaults to project start date.
     DATE '{{ var("time_spine_start", "2024-01-01") }}',
 
-    -- DuckDB range() is exclusive on the upper bound, so we add 1 day to
-    -- ensure the configured end date (e.g. 2026-12-31) is included.
-    DATE '{{ var("time_spine_end", "2026-12-31") }}' + INTERVAL 1 DAY,
+    -- DuckDB range() is exclusive on the upper bound, so we add 1 day.
+    -- End defaults to one year past the build date (mirrors
+    -- metricflow_time_spine.sql — never cap a spine at a literal date).
+    {% if var("time_spine_end", none) %}DATE '{{ var("time_spine_end") }}'{% else %}current_date + INTERVAL 1 YEAR{% endif %} + INTERVAL 1 DAY,
 
     -- Step: one calendar day per row.
     INTERVAL 1 DAY

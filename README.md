@@ -277,6 +277,7 @@ See the [Data Import Guide](docs/guides/data_import_guide.md) for all three impo
 
 | Server                 | What it exposes                   | Key tools                                                                     |
 | ---------------------- | --------------------------------- | ----------------------------------------------------------------------------- |
+| **Analytics (governed)** | Golden-layer metrics with governance envelopes — the primary agent interface | `list_metrics`, `get_metric`, `explain_metric`, `get_funnel`, `compare_windows`, `query_metrics` |
 | **BigQuery**           | Warehouse queries                 | `execute_query`, `list_tables`, `get_schema`                                  |
 | **dbt Semantic Layer** | Governed metrics + SQL generation | `text_to_sql`, `get_metrics`, `get_dimensions` (60+ tools)                    |
 | **Google Ads**         | Campaign performance, keywords    | `get_campaign_performance`, `get_keyword_performance`, `list_campaigns`       |
@@ -471,7 +472,7 @@ full-funnel-ai-analytics/
 │   ├── mock_ga4_server.py
 │   ├── mock_hubspot_server.py
 │   ├── mock_salesforce_server.py
-│   ├── mock_analytics_server.py          #   Serves golden_metrics.json windows to agents
+│   ├── analytics_server.py               #   GOVERNED metrics server (golden layer + envelopes)
 │   └── claude_desktop_config.example.json
 │
 ├── scripts/

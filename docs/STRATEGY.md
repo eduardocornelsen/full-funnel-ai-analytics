@@ -220,7 +220,14 @@ pre-merge history, so this deliberately waits for the merge.
   windowing basis. Python formula duplication collapsed into
   `src/fullfunnel/metrics.py`.
 - [ ] MetricFlow as the only computation path: replace the generator's and `query_window.py`'s section SQL with `mf query` calls (the remaining half — presentation-shaped sections like campaign tables and CRM stages need per-dimension queries).
-- [ ] A single governed **analytics MCP server** as the product: `list_metrics`, `get_metric(metric, window, grain)`, `explain_metric`, `get_funnel` (server-side ordering validation), `compare_windows` — every response carrying `{value, metric_id, formula, scope, window, attribution_model, source}`. Guardrails as tool contract, not prompt. Platform mocks demoted to test fixtures.
+- [x] **Governed analytics MCP server shipped** (`mcp_servers/analytics_server.py`):
+  `list_metrics` / `get_metric` / `explain_metric` / `get_funnel` (server-side
+  ordering validation; CRM lifetime excluded by contract) / `compare_windows`
+  (month-to-date warnings) — every response carries the governance envelope
+  `{value, formula, scope_label, window, attribution_model, source}` with
+  formulas read live from metrics.yml. Commands now direct file-less clients
+  (Claude Desktop) to it. Remaining: demote the platform mocks to test
+  fixtures once the live-MCP command variant is re-pointed.
 - [ ] Rebuild the Streamlit chat on those tools: full conversation history, metric definitions injected from `metrics.yml` at runtime, "how was this computed" expander, streaming.
 - [ ] Memory: persist analyses to DuckDB; `recall_analyses(topic, since)` tool.
 - [ ] Real EL: dlt pipelines (verified sources exist for Google Ads, GA4, Facebook Ads, HubSpot, Salesforce); ship one real connector (GA4 Data API — free) behind a small Connector protocol; delete `load_supabase.py`'s silent `except: pass`.

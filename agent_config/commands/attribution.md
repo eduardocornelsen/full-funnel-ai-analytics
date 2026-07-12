@@ -5,6 +5,8 @@ Read `dashboards/golden_metrics.json` → `windowed_90d.attribution_by_channel` 
 - Label revenue figures `Linear attribution · 90d`; first/last-touch columns are for model comparison only.
 - Freshness badge in the header: `_meta.window_start` – `_meta.window_end` · Data as of `_meta.generated_at`.
 
+**No file access?** (e.g. Claude Desktop): the `analytics` MCP server serves the same golden layer — `get_metric(metric, window)` returns governed values with formula/scope/window envelopes, `get_funnel(window)` validates funnel ordering server-side, `get_precomputed_window(window)` returns full sections. Same zero-drift guarantee as the file.
+
 **Live MCP variant** — only if the user appends `-mcp` or asks for "live" / "real-time" / "raw platform" data: query the ga4, google-ads, meta-ads MCP servers instead, passing dates from `_meta.window_start` / `_meta.window_end`, add the badge `⚡ Live MCP — may differ from golden layer`, and use `dashboards/js/metrics.js` canonical formulas for any computed metric.
 
 ## Artifact

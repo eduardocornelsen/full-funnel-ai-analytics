@@ -23,7 +23,7 @@
     },
     "analytics": {
       "command": "python",
-      "args": ["/ABSOLUTE/PATH/TO/full-funnel-ai-analytics/mcp_servers/mock_analytics_server.py"]
+      "args": ["/ABSOLUTE/PATH/TO/full-funnel-ai-analytics/mcp_servers/analytics_server.py"]
     },
     "bigquery": {
       "command": "uvx",

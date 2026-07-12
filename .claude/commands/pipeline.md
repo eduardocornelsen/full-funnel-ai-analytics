@@ -5,6 +5,8 @@ Read `dashboards/golden_metrics.json` → `all_time.crm` (HubSpot + Salesforce) 
 - Win rate = closed_won / (closed_won + closed_lost) (§1).
 - Freshness badge in the header: `Data as of _meta.generated_at · CRM all-time scope`.
 
+**No file access?** (e.g. Claude Desktop): the `analytics` MCP server serves the same golden layer — `get_metric(metric, window)` returns governed values with formula/scope/window envelopes, `get_funnel(window)` validates funnel ordering server-side, `get_precomputed_window(window)` returns full sections. Same zero-drift guarantee as the file.
+
 **Live MCP variant** — only if the user appends `-mcp` or asks for "live" / "real-time" / "raw platform" data: query the hubspot, salesforce MCP servers instead, passing dates from `_meta.window_start` / `_meta.window_end`, add the badge `⚡ Live MCP — may differ from golden layer`, and use `dashboards/js/metrics.js` canonical formulas for any computed metric.
 
 ## Artifact

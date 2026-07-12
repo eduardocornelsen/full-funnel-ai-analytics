@@ -22,7 +22,7 @@
     },
     "analytics": {
       "command": "python",
-      "args": ["mcp_servers/mock_analytics_server.py"]
+      "args": ["mcp_servers/analytics_server.py"]
     },
     "dbt-semantic-layer": {
       "command": "uvx",

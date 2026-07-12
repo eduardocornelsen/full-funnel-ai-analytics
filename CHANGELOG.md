@@ -6,6 +6,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: [SemVer](
 ## [Unreleased]
 
 ### Added
+- **Governed analytics MCP server** (`mcp_servers/analytics_server.py`,
+  renamed from mock_analytics_server): metric-first tools — `list_metrics`,
+  `get_metric`, `explain_metric`, `get_funnel` (server-side funnel-ordering
+  validation, CRM lifetime counts excluded by contract), `compare_windows`
+  (flags month-to-date comparability) — every numeric response carries a
+  governance envelope {value, formula, scope_label, window, source,
+  semantic_layer_crosscheck}. Formulas read live from metrics.yml, never
+  duplicated. Guardrails as tool contract, not prompt. 8 contract tests
 - **Semantic layer is now load-bearing** (schema v2.3): CI and the scheduled
   refresh run `mf validate-configs`; `generate_golden_metrics.py` cross-checks
   its governed metrics against `mf query` and fails on divergence, recording

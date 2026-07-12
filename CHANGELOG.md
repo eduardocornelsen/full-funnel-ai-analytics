@@ -6,6 +6,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: [SemVer](
 ## [Unreleased]
 
 ### Added
+- **dbt hardening**: `packages.yml` with dbt_utils (git-pinned — package hub
+  blocked in some network policies); model contract ENFORCED on
+  `fct_marketing_daily` (the golden-feeding mart) with full column typing;
+  grain tests (`unique_combination_of_columns`) on `fct_channel_performance`
+  and `fct_marketing_attribution`; dbt-native source freshness on all 7
+  time-series sources (warn 2d / error 4d) run in CI and the daily refresh;
+  `exposures.yml` declaring the golden artifact, analytics MCP server,
+  Streamlit app, and HTML dashboards in the lineage graph. 91 dbt tests
+  (was 82)
 - **Governed AI analyst chat** (Streamlit): rebuilt on the governed analytics
   tools — the model can no longer run raw SQL from the chat. Full conversation
   history (previously only the last message was sent), runtime-rendered system

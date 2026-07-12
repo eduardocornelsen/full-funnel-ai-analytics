@@ -54,6 +54,12 @@ jobs:
         working-directory: dbt_project
         run: dbt test --target duckdb
 
+      # dbt-native freshness on every time-series source (staleness postmortem:
+      # frozen tables must fail the build, not just the Python validator).
+      - name: dbt source freshness
+        working-directory: dbt_project
+        run: dbt source freshness --target duckdb
+
       - name: Validate semantic layer (MetricFlow)
         working-directory: dbt_project
         run: mf validate-configs

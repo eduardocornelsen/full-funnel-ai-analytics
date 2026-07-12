@@ -235,7 +235,13 @@ pre-merge history, so this deliberately waits for the merge.
   Owner action remaining: deploy at share.streamlit.io.
 - [ ] Memory: persist analyses to DuckDB; `recall_analyses(topic, since)` tool.
 - [ ] Real EL: dlt pipelines (verified sources exist for Google Ads, GA4, Facebook Ads, HubSpot, Salesforce); ship one real connector (GA4 Data API — free) behind a small Connector protocol; delete `load_supabase.py`'s silent `except: pass`.
-- [ ] dbt hardening: `packages.yml` (dbt_utils, dbt-expectations, elementary), grain tests on composite-key marts, model contracts on golden-feeding marts, `sources.yml` freshness blocks + `dbt source freshness` in CI, `exposures:` for dashboards and MCP servers, dbt docs to GitHub Pages.
+- [x] **dbt hardening shipped**: dbt_utils (git-pinned; hub blocked by network
+  policy), enforced contract on `fct_marketing_daily`, grain tests on both
+  composite-key marts, source freshness on all 7 time-series sources in CI +
+  daily refresh, exposures for all four consumers. Deferred: dbt-expectations
+  (hub-dependent transitive deps; range checks covered by pytest + validators),
+  elementary (same), dbt docs to GitHub Pages (needs Pages enabled — owner
+  action, grouped with the hosted-demo item).
 - [ ] JSON Schema + pydantic contract for `golden_metrics.json`; dashboards `fetch()` it at load instead of baking constants; retire or golden-route `generate_dashboards.py`.
 
 ### Phase 3 — The wedge (ongoing)

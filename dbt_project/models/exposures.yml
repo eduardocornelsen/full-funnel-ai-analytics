@@ -1,0 +1,78 @@
+version: 2
+
+# Downstream consumers of the dbt models, declared so `dbt ls --select +exposure:*`
+# and the docs lineage graph show exactly what breaks when a mart changes.
+exposures:
+  - name: golden_metrics_artifact
+    label: golden_metrics.json (golden layer artifact)
+    type: application
+    maturity: high
+    url: https://github.com/eduardocornelsen/full-funnel-ai-analytics/blob/main/dashboards/golden_metrics.json
+    description: >
+      Pre-computed metrics artifact regenerated daily by scripts/generate_golden_metrics.py
+      and cross-checked against MetricFlow. Single source for all HTML dashboards,
+      the governed analytics MCP server, and AI agent skills.
+    depends_on:
+      - ref('fct_marketing_daily')
+      - ref('fct_channel_performance')
+      - ref('stg_marketing_attribution')
+      - ref('stg_ga4_sessions')
+      - ref('stg_google_ads_performance')
+      - ref('stg_meta_ads_performance')
+      - ref('stg_hubspot_deals')
+      - ref('stg_hubspot_contacts')
+      - ref('stg_salesforce_opportunities')
+    owner:
+      name: Eduardo Cornelsen
+      email: eduardo.cornelsen@gmail.com
+
+  - name: governed_analytics_mcp_server
+    label: Analytics MCP server (governed agent interface)
+    type: application
+    maturity: high
+    url: https://github.com/eduardocornelsen/full-funnel-ai-analytics/blob/main/mcp_servers/analytics_server.py
+    description: >
+      Serves golden-layer metrics to AI clients with governance envelopes
+      (value + formula + scope + window + provenance). Reads golden_metrics.json
+      and metrics.yml; ad-hoc windows via scripts/query_window.py.
+    depends_on:
+      - ref('fct_marketing_daily')
+      - ref('fct_channel_performance')
+    owner:
+      name: Eduardo Cornelsen
+      email: eduardo.cornelsen@gmail.com
+
+  - name: streamlit_app
+    label: Streamlit dashboard + governed AI analyst
+    type: dashboard
+    maturity: high
+    url: https://github.com/eduardocornelsen/full-funnel-ai-analytics/blob/main/streamlit_app/app.py
+    description: >
+      Multi-tab Streamlit app querying the DuckDB marts directly, plus the
+      governed AI analyst chat (which consumes the analytics MCP server tools).
+    depends_on:
+      - ref('fct_marketing_daily')
+      - ref('fct_channel_performance')
+      - ref('fct_marketing_attribution')
+      - ref('fct_pipeline')
+      - ref('fct_orders')
+      - ref('fct_daily_revenue')
+    owner:
+      name: Eduardo Cornelsen
+      email: eduardo.cornelsen@gmail.com
+
+  - name: html_dashboards
+    label: Static HTML dashboards (5)
+    type: dashboard
+    maturity: medium
+    url: https://github.com/eduardocornelsen/full-funnel-ai-analytics/tree/main/dashboards
+    description: >
+      full_funnel_marketing, attribution, campaign_performance, pipeline, and
+      traffic_ga4 dashboards. Consume golden_metrics.json values (via the
+      golden_metrics_artifact exposure's upstream models).
+    depends_on:
+      - ref('fct_marketing_daily')
+      - ref('fct_channel_performance')
+    owner:
+      name: Eduardo Cornelsen
+      email: eduardo.cornelsen@gmail.com

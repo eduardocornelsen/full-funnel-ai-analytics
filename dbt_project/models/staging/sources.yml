@@ -19,14 +19,30 @@ sources:
   - name: marketing
     schema: main
     description: "Synthetic marketing platform data"
+    # dbt-native freshness on every time-series table. The 2026-07 staleness
+    # postmortem: sources had NO freshness config, so a frozen table could
+    # never fail a build. Date columns are DATE-typed, so cast to TIMESTAMP
+    # for loaded_at. Dimension tables (campaigns, accounts) are static by
+    # design and opt out.
+    freshness:
+      warn_after: {count: 2, period: day}
+      error_after: {count: 4, period: day}
+    loaded_at_field: "CAST(date AS TIMESTAMP)"
     tables:
       - name: google_ads_daily_performance
       - name: google_ads_campaigns
+        freshness: null   # static dimension
       - name: meta_ads_daily_performance
       - name: meta_ads_campaigns
+        freshness: null   # static dimension
       - name: ga4_daily_sessions
       - name: hubspot_contacts
+        loaded_at_field: "CAST(create_date AS TIMESTAMP)"
       - name: hubspot_deals
+        loaded_at_field: "CAST(create_date AS TIMESTAMP)"
       - name: salesforce_opportunities
+        loaded_at_field: "CAST(created_date AS TIMESTAMP)"
       - name: salesforce_accounts
+        freshness: null   # static dimension
       - name: marketing_attribution
+        loaded_at_field: "CAST(order_date AS TIMESTAMP)"

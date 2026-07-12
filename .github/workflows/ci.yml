@@ -76,6 +76,13 @@ jobs:
         working-directory: dbt_project
         run: dbt test --target duckdb
 
+      # The semantic layer is load-bearing: YAML must parse AND agree with the
+      # warehouse. generate_golden_metrics.py additionally cross-checks its
+      # governed metrics against `mf query` and fails on divergence.
+      - name: Validate semantic layer (MetricFlow)
+        working-directory: dbt_project
+        run: mf validate-configs
+
       # Validate the COMMITTED artifact before regenerating it: completed
       # calendar months are anchor-independent, so the checked-in golden file
       # must match a warehouse rebuilt from this checkout. Catches PRs that

@@ -31,6 +31,7 @@ dependencies = [
     "duckdb>=0.9.0",
     "dbt-core>=1.7.0",
     "dbt-duckdb>=1.7.0",
+    "dbt-metricflow>=0.8.0",
     "fastmcp>=0.1.0",
     "mcp>=1.0.0",
     "pydantic>=2.5.0",

@@ -209,7 +209,17 @@ pre-merge history, so this deliberately waits for the merge.
 
 ### Phase 2 — Make the architecture real (3–4 weeks)
 
-- [ ] MetricFlow on the query path: `generate_golden_metrics.py` calls `mf query`; delete duplicated SQL in `query_window.py` / `validate_metrics.py`; `mf validate-configs` in CI. One metric definition, everywhere.
+- [x] **Semantic layer made load-bearing** (first half of "MetricFlow on the query path"):
+  `mf validate-configs` in CI + scheduled refresh; `generate_golden_metrics.py`
+  cross-checks 5 governed metrics against `mf query` at every generation and
+  fails on divergence (negative-tested with the 71.1× value). First real run
+  caught three latent YAML defects: a dimension mapped to a renamed column,
+  `blended_roas` defined on empty-for-recent-windows fct_orders revenue, and an
+  orders-based CVR diverging from the canonical GA4 one — all fixed; a new
+  `attribution_touchpoints` semantic model encodes the touchpoint-date
+  windowing basis. Python formula duplication collapsed into
+  `src/fullfunnel/metrics.py`.
+- [ ] MetricFlow as the only computation path: replace the generator's and `query_window.py`'s section SQL with `mf query` calls (the remaining half — presentation-shaped sections like campaign tables and CRM stages need per-dimension queries).
 - [ ] A single governed **analytics MCP server** as the product: `list_metrics`, `get_metric(metric, window, grain)`, `explain_metric`, `get_funnel` (server-side ordering validation), `compare_windows` — every response carrying `{value, metric_id, formula, scope, window, attribution_model, source}`. Guardrails as tool contract, not prompt. Platform mocks demoted to test fixtures.
 - [ ] Rebuild the Streamlit chat on those tools: full conversation history, metric definitions injected from `metrics.yml` at runtime, "how was this computed" expander, streaming.
 - [ ] Memory: persist analyses to DuckDB; `recall_analyses(topic, since)` tool.

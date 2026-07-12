@@ -182,15 +182,26 @@ instruction file. The semantic layer existed — but nothing queried through it,
 so it was a credential, not an architecture. I had rebuilt, by hand, the exact
 sprawl semantic layers exist to kill.
 
-**The plan (in progress, documented in docs/STRATEGY.md):** make MetricFlow the
-only definition point — the golden generator calls `mf query` instead of
-carrying its own SQL; the ad-hoc script becomes a thin parameterized wrapper;
-`mf validate-configs` runs in CI. One definition, N consumers.
+**What happened when I finally ran it (the punchline):** the first-ever
+`mf validate-configs` run failed immediately — a dimension mapped to a column
+that had been renamed. Then the first real `mf query` revealed the YAML's two
+headline metrics were quietly wrong: `blended_roas` was defined over an order
+table that is EMPTY for all recent windows (it returned NULL), and the
+"canonical" CVR was orders-based while every dashboard used the GA4 ratio. The
+semantic layer wasn't just unused — it had drifted, unexecuted, into being
+incorrect. I redefined both metrics (adding a touchpoint-grain semantic model
+to encode the correct attribution windowing), verified MetricFlow equals the
+golden layer to four decimal places, and then made it load-bearing:
+`mf validate-configs` in CI, plus a generation-time cross-check that fails the
+pipeline if the YAML and the golden layer ever disagree again — negative-tested
+with the infamous 71.1× value. Python formula copies collapsed into one module.
 
 **Kicker:** "Industry data says only ~18% of teams use dbt's semantic layer,
 and having lived why, I get it: the layer is easy to *write* and hard to make
 *load-bearing*. The test I now apply: if you deleted the YAML, would anything
-break? If not, you don't have a semantic layer — you have documentation."
+break? For three years of this repo's history, nothing would have — and the
+YAML was wrong. Today, deleting it fails CI within one pipeline run. That's
+the difference between a semantic layer and documentation."
 
 ---
 

@@ -153,7 +153,7 @@ regenerated daily and always reflect the latest data.
 
 ### Available Pre-Computed Windows
 
-`golden_metrics.json` (schema v2.2) contains these sections (dates roll forward with each daily refresh):
+`golden_metrics.json` (schema v2.3) contains these sections (dates roll forward with each daily refresh):
 
 | JSON key | Window | Label |
 |----------|--------|-------|
@@ -278,19 +278,26 @@ Use rolling `today() - 90` for live datasets (see §9).
 Canonical metric definitions live in:
 `dbt_project/models/metrics/metrics.yml`
 
-When in doubt about a metric formula, read that file. It is the single source of truth for computed metrics.
+When in doubt about a metric formula, read that file. It is the single source of truth for computed metrics — and it is **load-bearing**: `generate_golden_metrics.py` cross-checks its governed metrics against `mf query` at every generation and fails on divergence, and CI runs `mf validate-configs`. Break the YAML and the pipeline goes red.
 
-Key metrics:
-- `session_conversion_rate` = `total_orders / total_sessions` ← **canonical cross-channel CVR**
-- `blended_roas` = `total_revenue / total_spend` (linear attribution, 90d)
-- `channel_roas` = `channel_revenue / channel_spend` (linear attribution, 90d)
+Key metrics (aligned with §1 — the YAML and this file must always agree):
+- `session_conversion_rate` = `total_ga4_conversions / total_sessions` ← **canonical Session CVR (§1)**
+- `blended_roas` = `total_attributed_revenue / total_spend` (linear attribution, TOUCHPOINT-date windowing)
+- `channel_roas` = `channel_revenue / channel_spend` (linear attribution, order-date windowing — differs from blended_roas basis; never mix)
+
+The `_meta.semantic_layer_crosscheck` field in `golden_metrics.json` records the verification status of every snapshot.
 
 
 ---
 
-## 13. Shared Metrics Module (code-level enforcement)
+## 13. Shared Metrics Modules (code-level enforcement)
 
-`dashboards/js/metrics.js` is the **mandatory** runtime enforcement of all metric rules.
+**Python:** `src/fullfunnel/metrics.py` is the only place Python metric
+formulas live (`GOOGLE_AOV`, `google_roas`, `meta_roas`, `session_cvr`,
+`click_cvr`, `blended_roas`). Scripts import it — never redefine a formula in
+another module.
+
+**JavaScript:** `dashboards/js/metrics.js` is the **mandatory** runtime enforcement of all metric rules in browser dashboards.
 
 All new HTML dashboards MUST load it before any inline script block:
 ```html

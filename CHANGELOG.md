@@ -6,6 +6,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: [SemVer](
 ## [Unreleased]
 
 ### Added
+- **Semantic layer is now load-bearing** (schema v2.3): CI and the scheduled
+  refresh run `mf validate-configs`; `generate_golden_metrics.py` cross-checks
+  its governed metrics against `mf query` and fails on divergence, recording
+  the result in `_meta.semantic_layer_crosscheck`. New `attribution_touchpoints`
+  semantic model. Python metric formulas collapsed into `src/fullfunnel/metrics.py`
 - Committed-artifact spot check: `validate_metrics.py --completed-months-only`
   validates the checked-in `golden_metrics.json` against the warehouse using
   completed calendar months (anchor-independent), wired into PR CI before the
@@ -34,6 +39,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: [SemVer](
 - Workflow concurrency groups so data-writing jobs can't race
 
 ### Fixed
+- **Semantic layer YAML had never run and was silently wrong** — first
+  MetricFlow execution caught: `payment_type` dimension mapped to a renamed
+  column; `blended_roas` defined on `fct_orders` revenue (NULL for all recent
+  windows, different scope than the golden layer); `session_conversion_rate`
+  defined orders-based (returned 0) instead of the canonical GA4 ratio. All
+  redefined to match CLAUDE.md §1 and verified equal to the golden layer to 4
+  decimal places
 - **Golden layer silently stale for 93 days**: `fct_marketing_daily` was capped
   by a literal-date var fallback and the scheduled refresh passed no `--vars`;
   the mart now derives bounds from source data and cannot freeze

@@ -54,6 +54,10 @@ jobs:
         working-directory: dbt_project
         run: dbt test --target duckdb
 
+      - name: Validate semantic layer (MetricFlow)
+        working-directory: dbt_project
+        run: mf validate-configs
+
       - name: Generate golden metrics
         run: python scripts/generate_golden_metrics.py --target duckdb
 

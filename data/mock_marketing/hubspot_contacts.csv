@@ -108036,3 +108036,92 @@ HS_SYN_20260711_00109,syncust2026071100109,igor.dias260711109@example.com,Igor,D
 HS_SYN_20260711_00110,syncust2026071100110,caio.araujo260711110@example.com,Caio,Araujo,vitoria,ES,2026-07-11,customer,email,1,316.69,2026-07-11,2026-07-11
 HS_SYN_20260711_00111,syncust2026071100111,yasmin.duarte260711111@example.com,Yasmin,Duarte,santos,SP,2026-07-11,customer,email,1,308.44,2026-07-11,2026-07-11
 HS_SYN_20260711_00112,syncust2026071100112,igor.monteiro260711112@example.com,Igor,Monteiro,salvador,BA,2026-07-11,customer,paid_search,1,68.74,2026-07-11,2026-07-11
+HS_SYN_20260712_00000,syncust2026071200000,gustavo.santos2607120@example.com,Gustavo,Santos,sao bernardo do campo,SP,2026-07-12,customer,email,1,229.0,2026-07-12,2026-07-12
+HS_SYN_20260712_00001,syncust2026071200001,luiza.pereira2607121@example.com,Luiza,Pereira,manaus,AM,2026-07-12,customer,email,1,311.24,2026-07-12,2026-07-12
+HS_SYN_20260712_00002,syncust2026071200002,lucas.melo2607122@example.com,Lucas,Melo,santos,SP,2026-07-12,customer,direct,1,92.78,2026-07-12,2026-07-12
+HS_SYN_20260712_00003,syncust2026071200003,bruno.fernandes2607123@example.com,Bruno,Fernandes,teresina,PI,2026-07-12,customer,paid_search,1,182.5,2026-07-12,2026-07-12
+HS_SYN_20260712_00004,syncust2026071200004,amanda.souza2607124@example.com,Amanda,Souza,fortaleza,CE,2026-07-12,customer,direct,2,604.11,2026-07-12,2026-07-12
+HS_SYN_20260712_00005,syncust2026071200005,vinicius.melo2607125@example.com,Vinicius,Melo,teresina,PI,2026-07-12,customer,organic_search,2,194.47,2026-07-12,2026-07-12
+HS_SYN_20260712_00006,syncust2026071200006,renato.oliveira2607126@example.com,Renato,Oliveira,belem,PA,2026-07-12,customer,paid_social,1,152.21,2026-07-12,2026-07-12
+HS_SYN_20260712_00007,syncust2026071200007,lucas.ferreira2607127@example.com,Lucas,Ferreira,natal,RN,2026-07-12,customer,paid_search,1,94.17,2026-07-12,2026-07-12
+HS_SYN_20260712_00008,syncust2026071200008,daniel.fonseca2607128@example.com,Daniel,Fonseca,sao bernardo do campo,SP,2026-07-12,customer,paid_social,2,662.85,2026-07-12,2026-07-12
+HS_SYN_20260712_00009,syncust2026071200009,fabio.souza2607129@example.com,Fabio,Souza,campo grande,MS,2026-07-12,customer,direct,1,235.64,2026-07-12,2026-07-12
+HS_SYN_20260712_00010,syncust2026071200010,leticia.gomes26071210@example.com,Leticia,Gomes,osasco,SP,2026-07-12,customer,organic_search,2,196.01,2026-07-12,2026-07-12
+HS_SYN_20260712_00011,syncust2026071200011,eduarda.cardoso26071211@example.com,Eduarda,Cardoso,uberlandia,MG,2026-07-12,customer,paid_social,1,58.88,2026-07-12,2026-07-12
+HS_SYN_20260712_00012,syncust2026071200012,yasmin.oliveira26071212@example.com,Yasmin,Oliveira,cuiaba,MT,2026-07-12,customer,direct,1,239.74,2026-07-12,2026-07-12
+HS_SYN_20260712_00013,syncust2026071200013,otavio.ferreira26071213@example.com,Otavio,Ferreira,rio de janeiro,RJ,2026-07-12,customer,email,1,174.17,2026-07-12,2026-07-12
+HS_SYN_20260712_00014,syncust2026071200014,natalia.araujo26071214@example.com,Natalia,Araujo,belem,PA,2026-07-12,customer,organic_search,2,239.12,2026-07-12,2026-07-12
+HS_SYN_20260712_00015,syncust2026071200015,beatriz.santos26071215@example.com,Beatriz,Santos,campo grande,MS,2026-07-12,customer,organic_search,1,165.68,2026-07-12,2026-07-12
+HS_SYN_20260712_00016,syncust2026071200016,mariana.moreira26071216@example.com,Mariana,Moreira,sao bernardo do campo,SP,2026-07-12,customer,organic_search,1,211.95,2026-07-12,2026-07-12
+HS_SYN_20260712_00017,syncust2026071200017,joao.teixeira26071217@example.com,Joao,Teixeira,joinville,SC,2026-07-12,customer,email,1,217.81,2026-07-12,2026-07-12
+HS_SYN_20260712_00018,syncust2026071200018,natalia.nunes26071218@example.com,Natalia,Nunes,santos,SP,2026-07-12,customer,paid_social,1,191.72,2026-07-12,2026-07-12
+HS_SYN_20260712_00019,syncust2026071200019,vanessa.dias26071219@example.com,Vanessa,Dias,florianopolis,SC,2026-07-12,customer,paid_search,3,379.37,2026-07-12,2026-07-12
+HS_SYN_20260712_00020,syncust2026071200020,beatriz.ribeiro26071220@example.com,Beatriz,Ribeiro,belo horizonte,MG,2026-07-12,customer,referral,1,141.36,2026-07-12,2026-07-12
+HS_SYN_20260712_00021,syncust2026071200021,leonardo.freitas26071221@example.com,Leonardo,Freitas,manaus,AM,2026-07-12,customer,email,1,154.82,2026-07-12,2026-07-12
+HS_SYN_20260712_00022,syncust2026071200022,mariana.gomes26071222@example.com,Mariana,Gomes,brasilia,DF,2026-07-12,customer,organic_search,2,379.22,2026-07-12,2026-07-12
+HS_SYN_20260712_00023,syncust2026071200023,beatriz.costa26071223@example.com,Beatriz,Costa,belem,PA,2026-07-12,customer,paid_social,3,378.81,2026-07-12,2026-07-12
+HS_SYN_20260712_00024,syncust2026071200024,caio.souza26071224@example.com,Caio,Souza,vitoria,ES,2026-07-12,customer,paid_social,1,123.9,2026-07-12,2026-07-12
+HS_SYN_20260712_00025,syncust2026071200025,ana.lima26071225@example.com,Ana,Lima,salvador,BA,2026-07-12,customer,direct,1,75.75,2026-07-12,2026-07-12
+HS_SYN_20260712_00026,syncust2026071200026,ana.pereira26071226@example.com,Ana,Pereira,rio de janeiro,RJ,2026-07-12,customer,organic_search,1,241.9,2026-07-12,2026-07-12
+HS_SYN_20260712_00027,syncust2026071200027,natalia.mendes26071227@example.com,Natalia,Mendes,campinas,SP,2026-07-12,customer,referral,2,613.22,2026-07-12,2026-07-12
+HS_SYN_20260712_00028,syncust2026071200028,mateus.mendes26071228@example.com,Mateus,Mendes,guarulhos,SP,2026-07-12,customer,referral,2,329.64,2026-07-12,2026-07-12
+HS_SYN_20260712_00029,syncust2026071200029,ana.correia26071229@example.com,Ana,Correia,salvador,BA,2026-07-12,customer,paid_search,1,261.17,2026-07-12,2026-07-12
+HS_SYN_20260712_00030,syncust2026071200030,isabela.freitas26071230@example.com,Isabela,Freitas,teresina,PI,2026-07-12,customer,paid_social,1,313.26,2026-07-12,2026-07-12
+HS_SYN_20260712_00031,syncust2026071200031,sofia.rocha26071231@example.com,Sofia,Rocha,manaus,AM,2026-07-12,customer,organic_search,2,348.03,2026-07-12,2026-07-12
+HS_SYN_20260712_00032,syncust2026071200032,joao.azevedo26071232@example.com,Joao,Azevedo,florianopolis,SC,2026-07-12,customer,referral,1,67.02,2026-07-12,2026-07-12
+HS_SYN_20260712_00033,syncust2026071200033,mariana.moura26071233@example.com,Mariana,Moura,niteroi,RJ,2026-07-12,customer,paid_social,1,108.62,2026-07-12,2026-07-12
+HS_SYN_20260712_00034,syncust2026071200034,vanessa.rodrigues26071234@example.com,Vanessa,Rodrigues,florianopolis,SC,2026-07-12,customer,paid_search,1,166.62,2026-07-12,2026-07-12
+HS_SYN_20260712_00035,syncust2026071200035,rafaela.freitas26071235@example.com,Rafaela,Freitas,londrina,PR,2026-07-12,customer,organic_search,1,276.84,2026-07-12,2026-07-12
+HS_SYN_20260712_00036,syncust2026071200036,bruno.oliveira26071236@example.com,Bruno,Oliveira,joinville,SC,2026-07-12,customer,referral,1,195.01,2026-07-12,2026-07-12
+HS_SYN_20260712_00037,syncust2026071200037,fernanda.cardoso26071237@example.com,Fernanda,Cardoso,santos,SP,2026-07-12,customer,organic_search,1,270.1,2026-07-12,2026-07-12
+HS_SYN_20260712_00038,syncust2026071200038,otavio.teixeira26071238@example.com,Otavio,Teixeira,ribeirao preto,SP,2026-07-12,customer,organic_search,2,454.19,2026-07-12,2026-07-12
+HS_SYN_20260712_00039,syncust2026071200039,helena.souza26071239@example.com,Helena,Souza,curitiba,PR,2026-07-12,customer,paid_search,1,114.33,2026-07-12,2026-07-12
+HS_SYN_20260712_00040,syncust2026071200040,mariana.rodrigues26071240@example.com,Mariana,Rodrigues,londrina,PR,2026-07-12,customer,paid_search,1,237.07,2026-07-12,2026-07-12
+HS_SYN_20260712_00041,syncust2026071200041,marcos.araujo26071241@example.com,Marcos,Araujo,campo grande,MS,2026-07-12,customer,referral,2,396.17,2026-07-12,2026-07-12
+HS_SYN_20260712_00042,syncust2026071200042,sofia.monteiro26071242@example.com,Sofia,Monteiro,florianopolis,SC,2026-07-12,customer,organic_search,2,659.58,2026-07-12,2026-07-12
+HS_SYN_20260712_00043,syncust2026071200043,gustavo.carvalho26071243@example.com,Gustavo,Carvalho,santos,SP,2026-07-12,customer,paid_search,2,201.81,2026-07-12,2026-07-12
+HS_SYN_20260712_00044,syncust2026071200044,helena.barbosa26071244@example.com,Helena,Barbosa,campinas,SP,2026-07-12,customer,direct,1,57.62,2026-07-12,2026-07-12
+HS_SYN_20260712_00045,syncust2026071200045,diego.rocha26071245@example.com,Diego,Rocha,sao paulo,SP,2026-07-12,customer,paid_social,3,576.21,2026-07-12,2026-07-12
+HS_SYN_20260712_00046,syncust2026071200046,joao.duarte26071246@example.com,Joao,Duarte,curitiba,PR,2026-07-12,customer,paid_social,3,175.9,2026-07-12,2026-07-12
+HS_SYN_20260712_00047,syncust2026071200047,fernanda.monteiro26071247@example.com,Fernanda,Monteiro,fortaleza,CE,2026-07-12,customer,paid_search,1,151.38,2026-07-12,2026-07-12
+HS_SYN_20260712_00048,syncust2026071200048,mariana.mendes26071248@example.com,Mariana,Mendes,maceio,AL,2026-07-12,customer,referral,1,253.98,2026-07-12,2026-07-12
+HS_SYN_20260712_00049,syncust2026071200049,bruno.martins26071249@example.com,Bruno,Martins,rio de janeiro,RJ,2026-07-12,customer,referral,1,251.06,2026-07-12,2026-07-12
+HS_SYN_20260712_00050,syncust2026071200050,marcos.souza26071250@example.com,Marcos,Souza,sao paulo,SP,2026-07-12,customer,paid_social,1,223.99,2026-07-12,2026-07-12
+HS_SYN_20260712_00051,syncust2026071200051,bruno.araujo26071251@example.com,Bruno,Araujo,sao bernardo do campo,SP,2026-07-12,customer,email,1,314.94,2026-07-12,2026-07-12
+HS_SYN_20260712_00052,syncust2026071200052,isabela.silva26071252@example.com,Isabela,Silva,belo horizonte,MG,2026-07-12,customer,paid_social,1,258.39,2026-07-12,2026-07-12
+HS_SYN_20260712_00053,syncust2026071200053,felipe.ferreira26071253@example.com,Felipe,Ferreira,rio de janeiro,RJ,2026-07-12,customer,organic_search,1,125.54,2026-07-12,2026-07-12
+HS_SYN_20260712_00054,syncust2026071200054,julia.teixeira26071254@example.com,Julia,Teixeira,vitoria,ES,2026-07-12,customer,email,1,196.17,2026-07-12,2026-07-12
+HS_SYN_20260712_00055,syncust2026071200055,gabriela.nascimento26071255@example.com,Gabriela,Nascimento,campinas,SP,2026-07-12,customer,direct,2,426.59,2026-07-12,2026-07-12
+HS_SYN_20260712_00056,syncust2026071200056,isabela.nunes26071256@example.com,Isabela,Nunes,teresina,PI,2026-07-12,customer,organic_search,2,165.15,2026-07-12,2026-07-12
+HS_SYN_20260712_00057,syncust2026071200057,gabriela.nascimento26071257@example.com,Gabriela,Nascimento,sao bernardo do campo,SP,2026-07-12,customer,organic_search,1,108.61,2026-07-12,2026-07-12
+HS_SYN_20260712_00058,syncust2026071200058,bruno.nunes26071258@example.com,Bruno,Nunes,curitiba,PR,2026-07-12,customer,direct,1,322.19,2026-07-12,2026-07-12
+HS_SYN_20260712_00059,syncust2026071200059,vinicius.santos26071259@example.com,Vinicius,Santos,sao paulo,SP,2026-07-12,customer,direct,1,90.76,2026-07-12,2026-07-12
+HS_SYN_20260712_00060,syncust2026071200060,beatriz.nunes26071260@example.com,Beatriz,Nunes,salvador,BA,2026-07-12,customer,referral,2,675.6,2026-07-12,2026-07-12
+HS_SYN_20260712_00061,syncust2026071200061,luiza.cardoso26071261@example.com,Luiza,Cardoso,recife,PE,2026-07-12,customer,paid_search,1,60.33,2026-07-12,2026-07-12
+HS_SYN_20260712_00062,syncust2026071200062,fabio.batista26071262@example.com,Fabio,Batista,recife,PE,2026-07-12,customer,email,3,267.33,2026-07-12,2026-07-12
+HS_SYN_20260712_00063,syncust2026071200063,eduarda.moura26071263@example.com,Eduarda,Moura,curitiba,PR,2026-07-12,customer,referral,2,433.39,2026-07-12,2026-07-12
+HS_SYN_20260712_00064,syncust2026071200064,helena.nascimento26071264@example.com,Helena,Nascimento,goiania,GO,2026-07-12,customer,organic_search,1,60.64,2026-07-12,2026-07-12
+HS_SYN_20260712_00065,syncust2026071200065,ana.fernandes26071265@example.com,Ana,Fernandes,guarulhos,SP,2026-07-12,customer,paid_social,2,449.55,2026-07-12,2026-07-12
+HS_SYN_20260712_00066,syncust2026071200066,igor.pereira26071266@example.com,Igor,Pereira,belo horizonte,MG,2026-07-12,customer,email,3,196.21,2026-07-12,2026-07-12
+HS_SYN_20260712_00067,syncust2026071200067,daniel.martins26071267@example.com,Daniel,Martins,brasilia,DF,2026-07-12,customer,paid_social,1,268.14,2026-07-12,2026-07-12
+HS_SYN_20260712_00068,syncust2026071200068,fernanda.araujo26071268@example.com,Fernanda,Araujo,osasco,SP,2026-07-12,customer,email,1,242.91,2026-07-12,2026-07-12
+HS_SYN_20260712_00069,syncust2026071200069,renato.freitas26071269@example.com,Renato,Freitas,fortaleza,CE,2026-07-12,customer,referral,2,313.16,2026-07-12,2026-07-12
+HS_SYN_20260712_00070,syncust2026071200070,otavio.araujo26071270@example.com,Otavio,Araujo,salvador,BA,2026-07-12,customer,paid_social,2,265.75,2026-07-12,2026-07-12
+HS_SYN_20260712_00071,syncust2026071200071,felipe.rocha26071271@example.com,Felipe,Rocha,natal,RN,2026-07-12,customer,organic_search,1,267.13,2026-07-12,2026-07-12
+HS_SYN_20260712_00072,syncust2026071200072,camila.moreira26071272@example.com,Camila,Moreira,niteroi,RJ,2026-07-12,customer,direct,2,307.8,2026-07-12,2026-07-12
+HS_SYN_20260712_00073,syncust2026071200073,felipe.correia26071273@example.com,Felipe,Correia,brasilia,DF,2026-07-12,customer,email,1,82.97,2026-07-12,2026-07-12
+HS_SYN_20260712_00074,syncust2026071200074,diego.sales26071274@example.com,Diego,Sales,londrina,PR,2026-07-12,customer,referral,2,463.17,2026-07-12,2026-07-12
+HS_SYN_20260712_00075,syncust2026071200075,luiza.fernandes26071275@example.com,Luiza,Fernandes,osasco,SP,2026-07-12,customer,email,1,136.06,2026-07-12,2026-07-12
+HS_SYN_20260712_00076,syncust2026071200076,carla.barbosa26071276@example.com,Carla,Barbosa,manaus,AM,2026-07-12,customer,paid_search,1,198.1,2026-07-12,2026-07-12
+HS_SYN_20260712_00077,syncust2026071200077,otavio.sales26071277@example.com,Otavio,Sales,cuiaba,MT,2026-07-12,customer,email,2,549.29,2026-07-12,2026-07-12
+HS_SYN_20260712_00078,syncust2026071200078,yasmin.nunes26071278@example.com,Yasmin,Nunes,manaus,AM,2026-07-12,customer,referral,2,512.71,2026-07-12,2026-07-12
+HS_SYN_20260712_00079,syncust2026071200079,natalia.rodrigues26071279@example.com,Natalia,Rodrigues,rio de janeiro,RJ,2026-07-12,customer,email,1,236.76,2026-07-12,2026-07-12
+HS_SYN_20260712_00080,syncust2026071200080,mariana.nascimento26071280@example.com,Mariana,Nascimento,niteroi,RJ,2026-07-12,customer,paid_search,1,314.18,2026-07-12,2026-07-12
+HS_SYN_20260712_00081,syncust2026071200081,isabela.almeida26071281@example.com,Isabela,Almeida,santos,SP,2026-07-12,customer,referral,1,251.87,2026-07-12,2026-07-12
+HS_SYN_20260712_00082,syncust2026071200082,helena.nascimento26071282@example.com,Helena,Nascimento,maceio,AL,2026-07-12,customer,email,1,155.18,2026-07-12,2026-07-12
+HS_SYN_20260712_00083,syncust2026071200083,felipe.moura26071283@example.com,Felipe,Moura,porto alegre,RS,2026-07-12,customer,paid_search,1,215.88,2026-07-12,2026-07-12
+HS_SYN_20260712_00084,syncust2026071200084,paulo.teixeira26071284@example.com,Paulo,Teixeira,maceio,AL,2026-07-12,customer,direct,1,253.72,2026-07-12,2026-07-12
+HS_SYN_20260712_00085,syncust2026071200085,caio.correia26071285@example.com,Caio,Correia,fortaleza,CE,2026-07-12,customer,referral,3,797.22,2026-07-12,2026-07-12
+HS_SYN_20260712_00086,syncust2026071200086,igor.nascimento26071286@example.com,Igor,Nascimento,niteroi,RJ,2026-07-12,customer,email,1,180.38,2026-07-12,2026-07-12
+HS_SYN_20260712_00087,syncust2026071200087,larissa.melo26071287@example.com,Larissa,Melo,vitoria,ES,2026-07-12,customer,email,1,297.18,2026-07-12,2026-07-12
+HS_SYN_20260712_00088,syncust2026071200088,ana.costa26071288@example.com,Ana,Costa,sao bernardo do campo,SP,2026-07-12,customer,paid_social,1,146.08,2026-07-12,2026-07-12

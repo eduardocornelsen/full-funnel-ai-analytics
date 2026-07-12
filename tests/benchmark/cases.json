@@ -1,124 +1,274 @@
 {
   "_meta": {
-    "version": "1.1",
-    "description": "SQRA — Search Quality & Retrieval Accuracy benchmark corpus",
-    "surfaces": ["mcp", "golden", "semantic", "nl2sql", "query_window"],
-    "total_cases": 50,
-    "note": "window_start/end removed — mcp/semantic/nl2sql cases use explicit fixed dates in params/sql; golden cases use expected_from_golden=true to resolve at runtime; query_window cases have explicit window.start/end"
+    "version": "2.0",
+    "note": "SQRA v2 cases: dates are anchor-relative tokens resolved from golden _meta at load time; expected values resolve from the golden artifact (expected_ref) so each surface is a cross-implementation check that survives the daily-growing dataset. Adversarial cases carry the CANONICAL expected value — detection is divergence on merit, not a label."
   },
   "cases": [
-
-    // ── MCP Tool Queries (10 cases) ────────────────────────────────────────────
-    // Call MCP server functions directly; compare CSV-aggregated values against
-    // golden_metrics.json ground truth.
-
     {
       "id": "mcp_ga4_total_sessions_90d",
       "surface": "mcp",
       "question": "Total sessions across all channels for the 90-day window",
       "tool": "ga4.get_traffic_by_channel",
-      "params": {"start_date": "2025-12-16", "end_date": "2026-03-15"},
-      "extract": {"op": "sum", "field": "sessions"},
-      "expected_value": 431698,
-      "tolerance": {"type": "count", "value": 1},
-      "relevance_check": {"type": "date_params_present"},
-      "tags": ["ga4", "sessions", "funnel"]
+      "params": {
+        "start_date": "$window_start",
+        "end_date": "$window_end"
+      },
+      "extract": {
+        "op": "sum",
+        "field": "sessions"
+      },
+      "tolerance": {
+        "type": "count",
+        "value": 1
+      },
+      "relevance_check": {
+        "type": "date_params_present"
+      },
+      "tags": [
+        "ga4",
+        "sessions",
+        "funnel"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_90d.sessions.total"
+      }
     },
     {
       "id": "mcp_ga4_total_engaged_sessions_90d",
       "surface": "mcp",
       "question": "Total engaged sessions for the 90-day window",
       "tool": "ga4.get_traffic_by_channel",
-      "params": {"start_date": "2025-12-16", "end_date": "2026-03-15"},
-      "extract": {"op": "sum", "field": "engaged_sessions"},
-      "expected_value": 248639,
-      "tolerance": {"type": "count", "value": 1},
-      "relevance_check": {"type": "date_params_present"},
-      "tags": ["ga4", "sessions", "funnel"]
+      "params": {
+        "start_date": "$window_start",
+        "end_date": "$window_end"
+      },
+      "extract": {
+        "op": "sum",
+        "field": "engaged_sessions"
+      },
+      "tolerance": {
+        "type": "count",
+        "value": 1
+      },
+      "relevance_check": {
+        "type": "date_params_present"
+      },
+      "tags": [
+        "ga4",
+        "sessions",
+        "funnel"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_90d.sessions.engaged"
+      }
     },
     {
       "id": "mcp_ga4_total_conversions_90d",
       "surface": "mcp",
       "question": "Total GA4 conversions for the 90-day window",
       "tool": "ga4.get_traffic_by_channel",
-      "params": {"start_date": "2025-12-16", "end_date": "2026-03-15"},
-      "extract": {"op": "sum", "field": "conversions"},
-      "expected_value": 10882,
-      "tolerance": {"type": "count", "value": 1},
-      "relevance_check": {"type": "date_params_present"},
-      "tags": ["ga4", "conversions", "funnel"]
+      "params": {
+        "start_date": "$window_start",
+        "end_date": "$window_end"
+      },
+      "extract": {
+        "op": "sum",
+        "field": "conversions"
+      },
+      "tolerance": {
+        "type": "count",
+        "value": 1
+      },
+      "relevance_check": {
+        "type": "date_params_present"
+      },
+      "tags": [
+        "ga4",
+        "conversions",
+        "funnel"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_90d.conversions.ga4_total"
+      }
     },
     {
       "id": "mcp_ga4_paid_search_sessions_90d",
       "surface": "mcp",
       "question": "Sessions from paid_search channel for the 90-day window",
       "tool": "ga4.get_traffic_by_channel",
-      "params": {"start_date": "2025-12-16", "end_date": "2026-03-15"},
-      "extract": {"op": "filter_sum", "by": "channel_group", "value": "paid_search", "field": "sessions"},
-      "expected_value": 86821,
-      "tolerance": {"type": "count", "value": 1},
-      "relevance_check": {"type": "date_params_present"},
-      "tags": ["ga4", "sessions", "channel"]
+      "params": {
+        "start_date": "$window_start",
+        "end_date": "$window_end"
+      },
+      "extract": {
+        "op": "filter_sum",
+        "by": "channel_group",
+        "value": "paid_search",
+        "field": "sessions"
+      },
+      "tolerance": {
+        "type": "count",
+        "value": 1
+      },
+      "relevance_check": {
+        "type": "date_params_present"
+      },
+      "tags": [
+        "ga4",
+        "sessions",
+        "channel"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_90d.ga4_by_channel[paid_search].sessions"
+      }
     },
     {
       "id": "mcp_ga4_organic_search_cvr_90d",
       "surface": "mcp",
       "question": "Session CVR for organic_search channel in the 90-day window (%)",
       "tool": "ga4.get_traffic_by_channel",
-      "params": {"start_date": "2025-12-16", "end_date": "2026-03-15"},
-      "extract": {"op": "filter_cvr", "by": "channel_group", "value": "organic_search", "conv_field": "conversions", "sess_field": "sessions"},
-      "expected_value": 2.34,
-      "tolerance": {"type": "pct", "value": 0.5},
-      "relevance_check": {"type": "date_params_present"},
-      "tags": ["ga4", "cvr", "channel"]
+      "params": {
+        "start_date": "$window_start",
+        "end_date": "$window_end"
+      },
+      "extract": {
+        "op": "filter_cvr",
+        "by": "channel_group",
+        "value": "organic_search",
+        "conv_field": "conversions",
+        "sess_field": "sessions"
+      },
+      "tolerance": {
+        "type": "pct",
+        "value": 0.5
+      },
+      "relevance_check": {
+        "type": "date_params_present"
+      },
+      "tags": [
+        "ga4",
+        "cvr",
+        "channel"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_90d.ga4_by_channel[organic_search].session_cvr_pct"
+      }
     },
     {
       "id": "mcp_google_total_spend_90d",
       "surface": "mcp",
       "question": "Total Google Ads spend (cost) for the 90-day window",
       "tool": "google_ads.get_campaign_performance",
-      "params": {"start_date": "2025-12-16", "end_date": "2026-03-15"},
-      "extract": {"op": "sum", "field": "cost"},
-      "expected_value": 53860.4,
-      "tolerance": {"type": "dollar", "value": 1.0},
-      "relevance_check": {"type": "date_params_present"},
-      "tags": ["google_ads", "spend"]
+      "params": {
+        "start_date": "$window_start",
+        "end_date": "$window_end"
+      },
+      "extract": {
+        "op": "sum",
+        "field": "cost"
+      },
+      "tolerance": {
+        "type": "dollar",
+        "value": 1.0
+      },
+      "relevance_check": {
+        "type": "date_params_present"
+      },
+      "tags": [
+        "google_ads",
+        "spend"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_90d.spend.google"
+      }
     },
     {
       "id": "mcp_google_total_conversions_90d",
       "surface": "mcp",
       "question": "Total Google Ads conversions for the 90-day window",
       "tool": "google_ads.get_campaign_performance",
-      "params": {"start_date": "2025-12-16", "end_date": "2026-03-15"},
-      "extract": {"op": "sum", "field": "conversions"},
-      "expected_value": 1606,
-      "tolerance": {"type": "count", "value": 1},
-      "relevance_check": {"type": "date_params_present"},
-      "tags": ["google_ads", "conversions"]
+      "params": {
+        "start_date": "$window_start",
+        "end_date": "$window_end"
+      },
+      "extract": {
+        "op": "sum",
+        "field": "conversions"
+      },
+      "tolerance": {
+        "type": "count",
+        "value": 1
+      },
+      "relevance_check": {
+        "type": "date_params_present"
+      },
+      "tags": [
+        "google_ads",
+        "conversions"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_90d.campaigns.google",
+        "op": "sum",
+        "field": "conversions"
+      }
     },
     {
       "id": "mcp_meta_total_spend_90d",
       "surface": "mcp",
       "question": "Total Meta Ads spend for the 90-day window",
       "tool": "meta_ads.get_campaign_insights",
-      "params": {"start_date": "2025-12-16", "end_date": "2026-03-15"},
-      "extract": {"op": "sum", "field": "spend"},
-      "expected_value": 59212.26,
-      "tolerance": {"type": "dollar", "value": 1.0},
-      "relevance_check": {"type": "date_params_present"},
-      "tags": ["meta_ads", "spend"]
+      "params": {
+        "start_date": "$window_start",
+        "end_date": "$window_end"
+      },
+      "extract": {
+        "op": "sum",
+        "field": "spend"
+      },
+      "tolerance": {
+        "type": "dollar",
+        "value": 1.0
+      },
+      "relevance_check": {
+        "type": "date_params_present"
+      },
+      "tags": [
+        "meta_ads",
+        "spend"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_90d.spend.meta"
+      }
     },
     {
       "id": "mcp_meta_total_purchases_90d",
       "surface": "mcp",
       "question": "Total Meta Ads purchases for the 90-day window",
       "tool": "meta_ads.get_campaign_insights",
-      "params": {"start_date": "2025-12-16", "end_date": "2026-03-15"},
-      "extract": {"op": "sum", "field": "purchases"},
-      "expected_value": 4751,
-      "tolerance": {"type": "count", "value": 1},
-      "relevance_check": {"type": "date_params_present"},
-      "tags": ["meta_ads", "conversions"]
+      "params": {
+        "start_date": "$window_start",
+        "end_date": "$window_end"
+      },
+      "extract": {
+        "op": "sum",
+        "field": "purchases"
+      },
+      "tolerance": {
+        "type": "count",
+        "value": 1
+      },
+      "relevance_check": {
+        "type": "date_params_present"
+      },
+      "tags": [
+        "meta_ads",
+        "conversions"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_90d.campaigns.meta",
+        "op": "sum",
+        "field": "purchases"
+      }
     },
     {
       "id": "mcp_hubspot_total_contacts",
@@ -126,27 +276,45 @@
       "question": "Total HubSpot contacts (all-time lifetime count)",
       "tool": "hubspot.get_contacts_summary",
       "params": {},
-      "extract": {"op": "direct", "field": "total_contacts"},
-      "expected_value": 93263,
-      "tolerance": {"type": "count", "value": 1},
-      "relevance_check": {"type": "always_pass"},
-      "tags": ["crm", "hubspot", "contacts"]
+      "extract": {
+        "op": "direct",
+        "field": "total_contacts"
+      },
+      "tolerance": {
+        "type": "count",
+        "value": 1
+      },
+      "relevance_check": {
+        "type": "always_pass"
+      },
+      "tags": [
+        "crm",
+        "hubspot",
+        "contacts"
+      ],
+      "expected_ref": {
+        "golden_path": "all_time.crm.hubspot.total_contacts"
+      }
     },
-
-    // ── Golden Layer Reads (10 cases) ──────────────────────────────────────────
-    // Extract values from golden_metrics.json; tests correct JSON path navigation
-    // and scope (windowed_90d vs all_time).
-
     {
       "id": "golden_blended_roas_90d",
       "surface": "golden",
       "question": "Blended ROAS for the 90-day window (linear attribution)",
       "golden_path": "windowed_90d.blended_roas",
       "expected_value": 24.12,
-      "expected_from_golden": true,
-      "tolerance": {"type": "pct", "value": 0.5},
-      "relevance_check": {"type": "section", "expected": "windowed_90d"},
-      "tags": ["roas", "blended", "90d"]
+      "tolerance": {
+        "type": "pct",
+        "value": 0.5
+      },
+      "relevance_check": {
+        "type": "section",
+        "expected": "windowed_90d"
+      },
+      "tags": [
+        "roas",
+        "blended",
+        "90d"
+      ]
     },
     {
       "id": "golden_session_cvr_90d",
@@ -154,10 +322,19 @@
       "question": "Session CVR (%) for the 90-day window",
       "golden_path": "windowed_90d.conversions.session_cvr_pct",
       "expected_value": 2.52,
-      "expected_from_golden": true,
-      "tolerance": {"type": "pct", "value": 0.5},
-      "relevance_check": {"type": "section", "expected": "windowed_90d"},
-      "tags": ["cvr", "sessions", "90d"]
+      "tolerance": {
+        "type": "pct",
+        "value": 0.5
+      },
+      "relevance_check": {
+        "type": "section",
+        "expected": "windowed_90d"
+      },
+      "tags": [
+        "cvr",
+        "sessions",
+        "90d"
+      ]
     },
     {
       "id": "golden_total_spend_90d",
@@ -165,10 +342,18 @@
       "question": "Total paid media spend (Google + Meta) for the 90-day window",
       "golden_path": "windowed_90d.spend.total",
       "expected_value": 113072.66,
-      "expected_from_golden": true,
-      "tolerance": {"type": "dollar", "value": 1.0},
-      "relevance_check": {"type": "section", "expected": "windowed_90d"},
-      "tags": ["spend", "90d"]
+      "tolerance": {
+        "type": "dollar",
+        "value": 1.0
+      },
+      "relevance_check": {
+        "type": "section",
+        "expected": "windowed_90d"
+      },
+      "tags": [
+        "spend",
+        "90d"
+      ]
     },
     {
       "id": "golden_google_channel_roas_90d",
@@ -176,10 +361,20 @@
       "question": "Google Ads channel ROAS (linear attribution, 90d)",
       "golden_path": "windowed_90d.channel_performance[google_ads].roas",
       "expected_value": 19.05,
-      "expected_from_golden": true,
-      "tolerance": {"type": "pct", "value": 0.5},
-      "relevance_check": {"type": "section", "expected": "windowed_90d"},
-      "tags": ["roas", "google_ads", "channel", "90d"]
+      "tolerance": {
+        "type": "pct",
+        "value": 0.5
+      },
+      "relevance_check": {
+        "type": "section",
+        "expected": "windowed_90d"
+      },
+      "tags": [
+        "roas",
+        "google_ads",
+        "channel",
+        "90d"
+      ]
     },
     {
       "id": "golden_meta_channel_orders_90d",
@@ -187,10 +382,20 @@
       "question": "Meta Ads attributed orders for the 90-day window",
       "golden_path": "windowed_90d.channel_performance[meta_ads].total_orders",
       "expected_value": 9099.0,
-      "expected_from_golden": true,
-      "tolerance": {"type": "count", "value": 1},
-      "relevance_check": {"type": "section", "expected": "windowed_90d"},
-      "tags": ["meta_ads", "orders", "channel", "90d"]
+      "tolerance": {
+        "type": "count",
+        "value": 1
+      },
+      "relevance_check": {
+        "type": "section",
+        "expected": "windowed_90d"
+      },
+      "tags": [
+        "meta_ads",
+        "orders",
+        "channel",
+        "90d"
+      ]
     },
     {
       "id": "golden_top_attribution_channel_linear_revenue",
@@ -198,10 +403,20 @@
       "question": "Linear attributed revenue for the top-performing channel (google_ads_search)",
       "golden_path": "windowed_90d.attribution_by_channel[google_ads_search].linear_revenue",
       "expected_value": 610606.88,
-      "expected_from_golden": true,
-      "tolerance": {"type": "dollar", "value": 1.0},
-      "relevance_check": {"type": "section", "expected": "windowed_90d"},
-      "tags": ["attribution", "channel", "linear", "90d"]
+      "tolerance": {
+        "type": "dollar",
+        "value": 1.0
+      },
+      "relevance_check": {
+        "type": "section",
+        "expected": "windowed_90d"
+      },
+      "tags": [
+        "attribution",
+        "channel",
+        "linear",
+        "90d"
+      ]
     },
     {
       "id": "golden_email_ga4_cvr_90d",
@@ -209,10 +424,20 @@
       "question": "Session CVR for the email channel in GA4 (90d window)",
       "golden_path": "windowed_90d.ga4_by_channel[email].session_cvr_pct",
       "expected_value": 3.85,
-      "expected_from_golden": true,
-      "tolerance": {"type": "pct", "value": 0.5},
-      "relevance_check": {"type": "section", "expected": "windowed_90d"},
-      "tags": ["ga4", "cvr", "email", "channel"]
+      "tolerance": {
+        "type": "pct",
+        "value": 0.5
+      },
+      "relevance_check": {
+        "type": "section",
+        "expected": "windowed_90d"
+      },
+      "tags": [
+        "ga4",
+        "cvr",
+        "email",
+        "channel"
+      ]
     },
     {
       "id": "golden_hubspot_contacts_alltime",
@@ -220,10 +445,20 @@
       "question": "Total HubSpot contacts (all-time lifetime count, not 90d)",
       "golden_path": "all_time.crm.hubspot.total_contacts",
       "expected_value": 93263,
-      "expected_from_golden": true,
-      "tolerance": {"type": "count", "value": 1},
-      "relevance_check": {"type": "section", "expected": "all_time"},
-      "tags": ["crm", "hubspot", "contacts", "all_time"]
+      "tolerance": {
+        "type": "count",
+        "value": 1
+      },
+      "relevance_check": {
+        "type": "section",
+        "expected": "all_time"
+      },
+      "tags": [
+        "crm",
+        "hubspot",
+        "contacts",
+        "all_time"
+      ]
     },
     {
       "id": "golden_sf_closed_won_alltime",
@@ -231,378 +466,760 @@
       "question": "Salesforce closed-won revenue (all-time)",
       "golden_path": "all_time.crm.salesforce.closed_won_revenue",
       "expected_value": 7938574.53,
-      "expected_from_golden": true,
-      "tolerance": {"type": "dollar", "value": 1.0},
-      "relevance_check": {"type": "section", "expected": "all_time"},
-      "tags": ["crm", "salesforce", "revenue", "all_time"]
+      "tolerance": {
+        "type": "dollar",
+        "value": 1.0
+      },
+      "relevance_check": {
+        "type": "section",
+        "expected": "all_time"
+      },
+      "tags": [
+        "crm",
+        "salesforce",
+        "revenue",
+        "all_time"
+      ]
     },
     {
       "id": "golden_attribution_pct_sum_100",
       "surface": "golden",
       "question": "Attribution percentages across all channels must sum to exactly 100%",
       "golden_path": "windowed_90d.attribution_by_channel",
-      "extract": {"op": "normalise_sum_pct"},
+      "extract": {
+        "op": "normalise_sum_pct"
+      },
       "expected_value": 100.0,
-      "tolerance": {"type": "pct", "value": 0.1},
-      "relevance_check": {"type": "section", "expected": "windowed_90d"},
-      "tags": ["attribution", "normalisation", "integrity"]
+      "tolerance": {
+        "type": "pct",
+        "value": 0.1
+      },
+      "relevance_check": {
+        "type": "section",
+        "expected": "windowed_90d"
+      },
+      "tags": [
+        "attribution",
+        "normalisation",
+        "integrity"
+      ]
     },
-
-    // ── dbt Semantic Layer / SQL (10 cases) ────────────────────────────────────
-    // Execute DuckDB SQL against the CSV source files (equivalent to mart queries).
-    // All queries use canonical date filtering on the 90-day window.
-
     {
       "id": "sql_total_sessions_90d",
       "surface": "semantic",
       "question": "Total sessions from GA4 for the 90-day window",
-      "sql": "SELECT SUM(sessions) FROM read_csv_auto('{DATA_DIR}/ga4_daily_sessions.csv') WHERE date >= '2025-12-16' AND date <= '2026-03-15'",
-      "expected_value": 431698,
-      "tolerance": {"type": "count", "value": 1},
-      "relevance_check": {"type": "sql_has_date_filter"},
-      "tags": ["ga4", "sessions", "sql"]
+      "sql": "SELECT SUM(sessions) FROM read_csv_auto('{DATA_DIR}/ga4_daily_sessions.csv') WHERE date >= '$window_start' AND date <= '$window_end'",
+      "tolerance": {
+        "type": "count",
+        "value": 1
+      },
+      "relevance_check": {
+        "type": "sql_has_date_filter"
+      },
+      "tags": [
+        "ga4",
+        "sessions",
+        "sql"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_90d.sessions.total"
+      }
     },
     {
       "id": "sql_total_engaged_sessions_90d",
       "surface": "semantic",
       "question": "Total engaged sessions from GA4 for the 90-day window",
-      "sql": "SELECT SUM(engaged_sessions) FROM read_csv_auto('{DATA_DIR}/ga4_daily_sessions.csv') WHERE date >= '2025-12-16' AND date <= '2026-03-15'",
-      "expected_value": 248639,
-      "tolerance": {"type": "count", "value": 1},
-      "relevance_check": {"type": "sql_has_date_filter"},
-      "tags": ["ga4", "sessions", "sql"]
+      "sql": "SELECT SUM(engaged_sessions) FROM read_csv_auto('{DATA_DIR}/ga4_daily_sessions.csv') WHERE date >= '$window_start' AND date <= '$window_end'",
+      "tolerance": {
+        "type": "count",
+        "value": 1
+      },
+      "relevance_check": {
+        "type": "sql_has_date_filter"
+      },
+      "tags": [
+        "ga4",
+        "sessions",
+        "sql"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_90d.sessions.engaged"
+      }
     },
     {
       "id": "sql_session_cvr_90d",
       "surface": "semantic",
       "question": "Session CVR (%) for the 90-day window — conversions / sessions * 100",
-      "sql": "SELECT ROUND(SUM(conversions) * 100.0 / NULLIF(SUM(sessions), 0), 2) FROM read_csv_auto('{DATA_DIR}/ga4_daily_sessions.csv') WHERE date >= '2025-12-16' AND date <= '2026-03-15'",
-      "expected_value": 2.52,
-      "tolerance": {"type": "pct", "value": 0.5},
-      "relevance_check": {"type": "sql_has_date_filter"},
-      "tags": ["cvr", "sessions", "sql"]
+      "sql": "SELECT ROUND(SUM(conversions) * 100.0 / NULLIF(SUM(sessions), 0), 2) FROM read_csv_auto('{DATA_DIR}/ga4_daily_sessions.csv') WHERE date >= '$window_start' AND date <= '$window_end'",
+      "tolerance": {
+        "type": "pct",
+        "value": 0.5
+      },
+      "relevance_check": {
+        "type": "sql_has_date_filter"
+      },
+      "tags": [
+        "cvr",
+        "sessions",
+        "sql"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_90d.conversions.session_cvr_pct"
+      }
     },
     {
       "id": "sql_google_spend_90d",
       "surface": "semantic",
       "question": "Total Google Ads spend (cost field) for the 90-day window",
-      "sql": "SELECT ROUND(SUM(cost), 2) FROM read_csv_auto('{DATA_DIR}/google_ads_daily_performance.csv') WHERE date >= '2025-12-16' AND date <= '2026-03-15'",
-      "expected_value": 53860.4,
-      "tolerance": {"type": "dollar", "value": 1.0},
-      "relevance_check": {"type": "sql_has_date_filter"},
-      "tags": ["google_ads", "spend", "sql"]
+      "sql": "SELECT ROUND(SUM(cost), 2) FROM read_csv_auto('{DATA_DIR}/google_ads_daily_performance.csv') WHERE date >= '$window_start' AND date <= '$window_end'",
+      "tolerance": {
+        "type": "dollar",
+        "value": 1.0
+      },
+      "relevance_check": {
+        "type": "sql_has_date_filter"
+      },
+      "tags": [
+        "google_ads",
+        "spend",
+        "sql"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_90d.spend.google"
+      }
     },
     {
       "id": "sql_meta_spend_90d",
       "surface": "semantic",
       "question": "Total Meta Ads spend (spend field) for the 90-day window",
-      "sql": "SELECT ROUND(SUM(spend), 2) FROM read_csv_auto('{DATA_DIR}/meta_ads_daily_performance.csv') WHERE date >= '2025-12-16' AND date <= '2026-03-15'",
-      "expected_value": 59212.26,
-      "tolerance": {"type": "dollar", "value": 1.0},
-      "relevance_check": {"type": "sql_has_date_filter"},
-      "tags": ["meta_ads", "spend", "sql"]
+      "sql": "SELECT ROUND(SUM(spend), 2) FROM read_csv_auto('{DATA_DIR}/meta_ads_daily_performance.csv') WHERE date >= '$window_start' AND date <= '$window_end'",
+      "tolerance": {
+        "type": "dollar",
+        "value": 1.0
+      },
+      "relevance_check": {
+        "type": "sql_has_date_filter"
+      },
+      "tags": [
+        "meta_ads",
+        "spend",
+        "sql"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_90d.spend.meta"
+      }
     },
     {
       "id": "sql_total_spend_90d",
       "surface": "semantic",
       "question": "Combined Google + Meta spend for the 90-day window",
-      "sql": "SELECT ROUND((SELECT SUM(cost) FROM read_csv_auto('{DATA_DIR}/google_ads_daily_performance.csv') WHERE date >= '2025-12-16' AND date <= '2026-03-15') + (SELECT SUM(spend) FROM read_csv_auto('{DATA_DIR}/meta_ads_daily_performance.csv') WHERE date >= '2025-12-16' AND date <= '2026-03-15'), 2)",
-      "expected_value": 113072.66,
-      "tolerance": {"type": "dollar", "value": 1.0},
-      "relevance_check": {"type": "sql_has_date_filter"},
-      "tags": ["spend", "blended", "sql"]
+      "sql": "SELECT ROUND((SELECT SUM(cost) FROM read_csv_auto('{DATA_DIR}/google_ads_daily_performance.csv') WHERE date >= '$window_start' AND date <= '$window_end') + (SELECT SUM(spend) FROM read_csv_auto('{DATA_DIR}/meta_ads_daily_performance.csv') WHERE date >= '$window_start' AND date <= '$window_end'), 2)",
+      "tolerance": {
+        "type": "dollar",
+        "value": 1.0
+      },
+      "relevance_check": {
+        "type": "sql_has_date_filter"
+      },
+      "tags": [
+        "spend",
+        "blended",
+        "sql"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_90d.spend.total"
+      }
     },
     {
       "id": "sql_top_ga4_channel_by_sessions",
       "surface": "semantic",
       "question": "Which GA4 channel had the most sessions in the 90-day window?",
-      "sql": "SELECT channel_group FROM read_csv_auto('{DATA_DIR}/ga4_daily_sessions.csv') WHERE date >= '2025-12-16' AND date <= '2026-03-15' GROUP BY channel_group ORDER BY SUM(sessions) DESC LIMIT 1",
-      "expected_value": "organic_search",
-      "tolerance": {"type": "exact"},
-      "relevance_check": {"type": "sql_has_date_filter"},
-      "tags": ["ga4", "channel", "ranking", "sql"]
+      "sql": "SELECT channel_group FROM read_csv_auto('{DATA_DIR}/ga4_daily_sessions.csv') WHERE date >= '$window_start' AND date <= '$window_end' GROUP BY channel_group ORDER BY SUM(sessions) DESC LIMIT 1",
+      "tolerance": {
+        "type": "exact"
+      },
+      "relevance_check": {
+        "type": "sql_has_date_filter"
+      },
+      "tags": [
+        "ga4",
+        "channel",
+        "ranking",
+        "sql"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_90d.ga4_by_channel",
+        "op": "first_field",
+        "field": "channel"
+      }
     },
     {
       "id": "sql_email_sessions_90d",
       "surface": "semantic",
       "question": "Sessions from email channel in the 90-day window",
-      "sql": "SELECT SUM(sessions) FROM read_csv_auto('{DATA_DIR}/ga4_daily_sessions.csv') WHERE date >= '2025-12-16' AND date <= '2026-03-15' AND channel_group = 'email'",
-      "expected_value": 42924,
-      "tolerance": {"type": "count", "value": 1},
-      "relevance_check": {"type": "sql_has_date_filter"},
-      "tags": ["ga4", "sessions", "email", "sql"]
+      "sql": "SELECT SUM(sessions) FROM read_csv_auto('{DATA_DIR}/ga4_daily_sessions.csv') WHERE date >= '$window_start' AND date <= '$window_end' AND channel_group = 'email'",
+      "tolerance": {
+        "type": "count",
+        "value": 1
+      },
+      "relevance_check": {
+        "type": "sql_has_date_filter"
+      },
+      "tags": [
+        "ga4",
+        "sessions",
+        "email",
+        "sql"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_90d.ga4_by_channel[email].sessions"
+      }
     },
     {
       "id": "sql_hubspot_total_contacts",
       "surface": "semantic",
       "question": "Total HubSpot contacts (all-time count)",
       "sql": "SELECT COUNT(*) FROM read_csv_auto('{DATA_DIR}/hubspot_contacts.csv')",
-      "expected_value": 93263,
-      "tolerance": {"type": "count", "value": 1},
-      "relevance_check": {"type": "always_pass"},
-      "tags": ["crm", "hubspot", "contacts", "sql"]
+      "tolerance": {
+        "type": "count",
+        "value": 1
+      },
+      "relevance_check": {
+        "type": "always_pass"
+      },
+      "tags": [
+        "crm",
+        "hubspot",
+        "contacts",
+        "sql"
+      ],
+      "expected_ref": {
+        "golden_path": "all_time.crm.hubspot.total_contacts"
+      }
     },
     {
       "id": "sql_sf_paid_search_revenue",
       "surface": "semantic",
-      "question": "Salesforce closed-won revenue from Paid Search lead source (all-time)",
-      "sql": "SELECT ROUND(SUM(amount), 2) FROM read_csv_auto('{DATA_DIR}/salesforce_opportunities.csv') WHERE stage = 'Closed Won' AND lead_source = 'Paid Search'",
-      "expected_value": 1602688.16,
-      "tolerance": {"type": "dollar", "value": 1.0},
-      "relevance_check": {"type": "always_pass"},
-      "tags": ["crm", "salesforce", "revenue", "sql"]
+      "question": "Closed-won Salesforce revenue from Paid Search (all-time)",
+      "sql": "SELECT ROUND(SUM(amount), 2) FROM read_csv_auto('{DATA_DIR}/salesforce_opportunities.csv') WHERE lead_source = 'Paid Search' AND stage = 'Closed Won'",
+      "tolerance": {
+        "type": "dollar",
+        "value": 1.0
+      },
+      "relevance_check": {
+        "type": "always_pass"
+      },
+      "tags": [
+        "crm",
+        "salesforce",
+        "revenue",
+        "sql"
+      ],
+      "expected_ref": {
+        "golden_path": "all_time.crm.salesforce.closed_won_by_source[Paid Search].revenue"
+      }
     },
-
-    // ── NL → SQL Fidelity (10 cases: 5 correct + 5 adversarial) ───────────────
-    // Tests whether SQL faithfully represents the question asked.
-    // Adversarial cases use deliberately wrong queries to verify the scorer
-    // can detect retrieval errors (low relevance = expected outcome).
-
     {
       "id": "nlsql_correct_sessions_90d",
       "surface": "nl2sql",
       "question": "How many sessions did the site get in the 90-day window?",
-      "sql": "SELECT SUM(sessions) FROM read_csv_auto('{DATA_DIR}/ga4_daily_sessions.csv') WHERE date >= '2025-12-16' AND date <= '2026-03-15'",
-      "expected_value": 431698,
-      "tolerance": {"type": "count", "value": 1},
-      "relevance_check": {"type": "sql_has_date_filter"},
+      "sql": "SELECT SUM(sessions) FROM read_csv_auto('{DATA_DIR}/ga4_daily_sessions.csv') WHERE date >= '$window_start' AND date <= '$window_end'",
+      "tolerance": {
+        "type": "count",
+        "value": 1
+      },
+      "relevance_check": {
+        "type": "sql_has_date_filter"
+      },
       "is_adversarial": false,
       "flaw": null,
-      "tags": ["ga4", "sessions", "nl2sql", "correct"]
+      "tags": [
+        "ga4",
+        "sessions",
+        "nl2sql",
+        "correct"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_90d.sessions.total"
+      }
     },
     {
       "id": "nlsql_correct_google_spend_90d",
       "surface": "nl2sql",
       "question": "What was the Google Ads spend for the 90-day window?",
-      "sql": "SELECT ROUND(SUM(cost), 2) FROM read_csv_auto('{DATA_DIR}/google_ads_daily_performance.csv') WHERE date >= '2025-12-16' AND date <= '2026-03-15'",
-      "expected_value": 53860.4,
-      "tolerance": {"type": "dollar", "value": 1.0},
-      "relevance_check": {"type": "sql_has_date_filter"},
+      "sql": "SELECT ROUND(SUM(cost), 2) FROM read_csv_auto('{DATA_DIR}/google_ads_daily_performance.csv') WHERE date >= '$window_start' AND date <= '$window_end'",
+      "tolerance": {
+        "type": "dollar",
+        "value": 1.0
+      },
+      "relevance_check": {
+        "type": "sql_has_date_filter"
+      },
       "is_adversarial": false,
       "flaw": null,
-      "tags": ["google_ads", "spend", "nl2sql", "correct"]
+      "tags": [
+        "google_ads",
+        "spend",
+        "nl2sql",
+        "correct"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_90d.spend.google"
+      }
     },
     {
       "id": "nlsql_correct_meta_spend_90d",
       "surface": "nl2sql",
       "question": "What was the Meta Ads spend for the 90-day window?",
-      "sql": "SELECT ROUND(SUM(spend), 2) FROM read_csv_auto('{DATA_DIR}/meta_ads_daily_performance.csv') WHERE date >= '2025-12-16' AND date <= '2026-03-15'",
-      "expected_value": 59212.26,
-      "tolerance": {"type": "dollar", "value": 1.0},
-      "relevance_check": {"type": "sql_has_date_filter"},
+      "sql": "SELECT ROUND(SUM(spend), 2) FROM read_csv_auto('{DATA_DIR}/meta_ads_daily_performance.csv') WHERE date >= '$window_start' AND date <= '$window_end'",
+      "tolerance": {
+        "type": "dollar",
+        "value": 1.0
+      },
+      "relevance_check": {
+        "type": "sql_has_date_filter"
+      },
       "is_adversarial": false,
       "flaw": null,
-      "tags": ["meta_ads", "spend", "nl2sql", "correct"]
+      "tags": [
+        "meta_ads",
+        "spend",
+        "nl2sql",
+        "correct"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_90d.spend.meta"
+      }
     },
     {
       "id": "nlsql_correct_session_cvr",
       "surface": "nl2sql",
       "question": "What is the cross-channel session conversion rate for the 90-day window?",
-      "sql": "SELECT ROUND(SUM(conversions) * 100.0 / NULLIF(SUM(sessions), 0), 2) FROM read_csv_auto('{DATA_DIR}/ga4_daily_sessions.csv') WHERE date >= '2025-12-16' AND date <= '2026-03-15'",
-      "expected_value": 2.52,
-      "tolerance": {"type": "pct", "value": 0.5},
-      "relevance_check": {"type": "sql_has_date_filter"},
+      "sql": "SELECT ROUND(SUM(conversions) * 100.0 / NULLIF(SUM(sessions), 0), 2) FROM read_csv_auto('{DATA_DIR}/ga4_daily_sessions.csv') WHERE date >= '$window_start' AND date <= '$window_end'",
+      "tolerance": {
+        "type": "pct",
+        "value": 0.5
+      },
+      "relevance_check": {
+        "type": "sql_has_date_filter"
+      },
       "is_adversarial": false,
       "flaw": null,
-      "tags": ["cvr", "sessions", "nl2sql", "correct"]
+      "tags": [
+        "cvr",
+        "sessions",
+        "nl2sql",
+        "correct"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_90d.conversions.session_cvr_pct"
+      }
     },
     {
       "id": "nlsql_correct_hubspot_contacts",
       "surface": "nl2sql",
       "question": "How many total contacts are in HubSpot?",
       "sql": "SELECT COUNT(*) FROM read_csv_auto('{DATA_DIR}/hubspot_contacts.csv')",
-      "expected_value": 93263,
-      "tolerance": {"type": "count", "value": 1},
-      "relevance_check": {"type": "always_pass"},
+      "tolerance": {
+        "type": "count",
+        "value": 1
+      },
+      "relevance_check": {
+        "type": "always_pass"
+      },
       "is_adversarial": false,
       "flaw": null,
-      "tags": ["crm", "hubspot", "nl2sql", "correct"]
+      "tags": [
+        "crm",
+        "hubspot",
+        "nl2sql",
+        "correct"
+      ],
+      "expected_ref": {
+        "golden_path": "all_time.crm.hubspot.total_contacts"
+      }
     },
     {
       "id": "nlsql_wrong_no_date_filter",
       "surface": "nl2sql",
       "question": "How many sessions did the site get in the 90-day window? [FLAW: missing date filter returns all-time]",
       "sql": "SELECT SUM(sessions) FROM read_csv_auto('{DATA_DIR}/ga4_daily_sessions.csv')",
-      "expected_value": 431698,
-      "tolerance": {"type": "count", "value": 1},
-      "relevance_check": {"type": "adversarial"},
+      "tolerance": {
+        "type": "count",
+        "value": 1
+      },
+      "relevance_check": {
+        "type": "adversarial"
+      },
       "is_adversarial": true,
       "flaw": "Missing WHERE date filter — returns all-time sessions, not 90d window",
-      "tags": ["ga4", "sessions", "nl2sql", "adversarial"]
+      "tags": [
+        "ga4",
+        "sessions",
+        "nl2sql",
+        "adversarial"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_90d.sessions.total"
+      }
     },
     {
       "id": "nlsql_wrong_meta_uses_cost_field",
       "surface": "nl2sql",
       "question": "What was the Meta Ads spend for the 90-day window? [FLAW: uses 'cost' field instead of 'spend']",
-      "sql": "SELECT ROUND(SUM(cost), 2) FROM read_csv_auto('{DATA_DIR}/meta_ads_daily_performance.csv') WHERE date >= '2025-12-16' AND date <= '2026-03-15'",
-      "expected_value": 59212.26,
-      "tolerance": {"type": "dollar", "value": 1.0},
-      "relevance_check": {"type": "adversarial"},
+      "sql": "SELECT ROUND(SUM(cost), 2) FROM read_csv_auto('{DATA_DIR}/meta_ads_daily_performance.csv') WHERE date >= '$window_start' AND date <= '$window_end'",
+      "tolerance": {
+        "type": "dollar",
+        "value": 1.0
+      },
+      "relevance_check": {
+        "type": "adversarial"
+      },
       "is_adversarial": true,
       "flaw": "Uses 'cost' field for Meta Ads — correct field is 'spend' (CLAUDE.md §7 spend field mapping)",
-      "tags": ["meta_ads", "spend", "nl2sql", "adversarial"]
+      "tags": [
+        "meta_ads",
+        "spend",
+        "nl2sql",
+        "adversarial"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_90d.spend.meta"
+      }
     },
     {
       "id": "nlsql_wrong_click_cvr_cross_channel",
       "surface": "nl2sql",
       "question": "What is the cross-channel conversion rate? [FLAW: uses clicks denominator instead of sessions]",
-      "sql": "SELECT ROUND(SUM(conversions) * 100.0 / NULLIF(SUM(link_clicks), 0), 2) FROM read_csv_auto('{DATA_DIR}/meta_ads_daily_performance.csv') WHERE date >= '2025-12-16' AND date <= '2026-03-15'",
-      "expected_value": 2.52,
-      "tolerance": {"type": "pct", "value": 0.5},
-      "relevance_check": {"type": "adversarial"},
+      "sql": "SELECT ROUND(SUM(conversions) * 100.0 / NULLIF(SUM(link_clicks), 0), 2) FROM read_csv_auto('{DATA_DIR}/meta_ads_daily_performance.csv') WHERE date >= '$window_start' AND date <= '$window_end'",
+      "tolerance": {
+        "type": "pct",
+        "value": 0.5
+      },
+      "relevance_check": {
+        "type": "adversarial"
+      },
       "is_adversarial": true,
       "flaw": "Cross-channel CVR must use sessions (GA4) as denominator, not clicks — click CVR is 2-4x higher and not comparable",
-      "tags": ["cvr", "nl2sql", "adversarial"]
+      "tags": [
+        "cvr",
+        "nl2sql",
+        "adversarial"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_90d.conversions.session_cvr_pct"
+      }
     },
     {
       "id": "nlsql_wrong_scope_mix_roas",
       "surface": "nl2sql",
       "question": "What is the blended ROAS for the 90-day window? [FLAW: uses all-time conversions / 90d spend]",
-      "sql": "SELECT ROUND((SELECT SUM(conversions) * 100.0 FROM read_csv_auto('{DATA_DIR}/google_ads_daily_performance.csv')) / NULLIF((SELECT SUM(cost) FROM read_csv_auto('{DATA_DIR}/google_ads_daily_performance.csv') WHERE date >= '2025-12-16' AND date <= '2026-03-15'), 0), 2)",
-      "expected_value": 24.12,
-      "tolerance": {"type": "pct", "value": 0.5},
-      "relevance_check": {"type": "adversarial"},
+      "sql": "SELECT ROUND((SELECT SUM(conversions) * 100.0 FROM read_csv_auto('{DATA_DIR}/google_ads_daily_performance.csv')) / NULLIF((SELECT SUM(cost) FROM read_csv_auto('{DATA_DIR}/google_ads_daily_performance.csv') WHERE date >= '$window_start' AND date <= '$window_end'), 0), 2)",
+      "tolerance": {
+        "type": "pct",
+        "value": 0.5
+      },
+      "relevance_check": {
+        "type": "adversarial"
+      },
       "is_adversarial": true,
       "flaw": "Scope mixing: numerator uses all-time conversions, denominator uses 90d spend — inflates ROAS significantly",
-      "tags": ["roas", "scope", "nl2sql", "adversarial"]
+      "tags": [
+        "roas",
+        "scope",
+        "nl2sql",
+        "adversarial"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_90d.blended_roas"
+      }
     },
     {
       "id": "nlsql_wrong_google_uses_spend_field",
       "surface": "nl2sql",
       "question": "What was the Google Ads spend for the 90-day window? [FLAW: uses 'spend' field — correct field is 'cost']",
-      "sql": "SELECT ROUND(SUM(spend), 2) FROM read_csv_auto('{DATA_DIR}/google_ads_daily_performance.csv') WHERE date >= '2025-12-16' AND date <= '2026-03-15'",
-      "expected_value": 53860.4,
-      "tolerance": {"type": "dollar", "value": 1.0},
-      "relevance_check": {"type": "adversarial"},
+      "sql": "SELECT ROUND(SUM(spend), 2) FROM read_csv_auto('{DATA_DIR}/google_ads_daily_performance.csv') WHERE date >= '$window_start' AND date <= '$window_end'",
+      "tolerance": {
+        "type": "dollar",
+        "value": 1.0
+      },
+      "relevance_check": {
+        "type": "adversarial"
+      },
       "is_adversarial": true,
       "flaw": "Uses 'spend' field for Google Ads — correct field is 'cost' (CLAUDE.md §7 spend field mapping)",
-      "tags": ["google_ads", "spend", "nl2sql", "adversarial"]
+      "tags": [
+        "google_ads",
+        "spend",
+        "nl2sql",
+        "adversarial"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_90d.spend.google"
+      }
     },
-
-    // ── query_window — Arbitrary Date Ranges (10 cases) ───────────────────────
-    // Tests scripts/query_window.py with --last-days, --month, and --start/--end.
-    // Verifies that on-demand queries return the same values as direct CSV aggregation.
-    // Uses CSV-backed DuckDB (always works without dbt mart tables).
-
     {
       "id": "qw_last7d_sessions",
       "surface": "query_window",
       "question": "Total sessions for last 7 days (--last-days 7)",
-      "window": {"start": "2026-03-09", "end": "2026-03-15"},
-      "window_label": "Last 7 days (ending 2026-03-15)",
+      "window": {
+        "start": "$anchor-6d",
+        "end": "$anchor"
+      },
+      "window_label": "benchmark window",
       "extract_path": "sessions.total",
-      "expected_value": 33330,
-      "tolerance": {"type": "count", "value": 1},
-      "relevance_check": {"type": "always_pass"},
-      "tags": ["query_window", "sessions", "7d"]
+      "tolerance": {
+        "type": "count",
+        "value": 1
+      },
+      "relevance_check": {
+        "type": "always_pass"
+      },
+      "tags": [
+        "query_window",
+        "sessions",
+        "7d"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_7d.sessions.total"
+      }
     },
     {
       "id": "qw_last7d_spend",
       "surface": "query_window",
       "question": "Total spend for last 7 days (--last-days 7)",
-      "window": {"start": "2026-03-09", "end": "2026-03-15"},
-      "window_label": "Last 7 days (ending 2026-03-15)",
+      "window": {
+        "start": "$anchor-6d",
+        "end": "$anchor"
+      },
+      "window_label": "benchmark window",
       "extract_path": "spend.total",
-      "expected_value": 7900.05,
-      "tolerance": {"type": "dollar", "value": 1.0},
-      "relevance_check": {"type": "always_pass"},
-      "tags": ["query_window", "spend", "7d"]
+      "tolerance": {
+        "type": "dollar",
+        "value": 1.0
+      },
+      "relevance_check": {
+        "type": "always_pass"
+      },
+      "tags": [
+        "query_window",
+        "spend",
+        "7d"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_7d.spend.total"
+      }
     },
     {
       "id": "qw_last30d_sessions",
       "surface": "query_window",
       "question": "Total sessions for last 30 days (--last-days 30)",
-      "window": {"start": "2026-02-14", "end": "2026-03-15"},
-      "window_label": "Last 30 days (ending 2026-03-15)",
+      "window": {
+        "start": "$anchor-29d",
+        "end": "$anchor"
+      },
+      "window_label": "benchmark window",
       "extract_path": "sessions.total",
-      "expected_value": 140508,
-      "tolerance": {"type": "count", "value": 1},
-      "relevance_check": {"type": "always_pass"},
-      "tags": ["query_window", "sessions", "30d"]
+      "tolerance": {
+        "type": "count",
+        "value": 1
+      },
+      "relevance_check": {
+        "type": "always_pass"
+      },
+      "tags": [
+        "query_window",
+        "sessions",
+        "30d"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_30d.sessions.total"
+      }
     },
     {
       "id": "qw_last30d_cvr",
       "surface": "query_window",
       "question": "Session CVR for last 30 days (--last-days 30)",
-      "window": {"start": "2026-02-14", "end": "2026-03-15"},
-      "window_label": "Last 30 days (ending 2026-03-15)",
+      "window": {
+        "start": "$anchor-29d",
+        "end": "$anchor"
+      },
+      "window_label": "benchmark window",
       "extract_path": "conversions.session_cvr_pct",
-      "expected_value": 2.49,
-      "tolerance": {"type": "pct", "value": 0.5},
-      "relevance_check": {"type": "always_pass"},
-      "tags": ["query_window", "cvr", "30d"]
+      "tolerance": {
+        "type": "pct",
+        "value": 0.5
+      },
+      "relevance_check": {
+        "type": "always_pass"
+      },
+      "tags": [
+        "query_window",
+        "cvr",
+        "30d"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_30d.conversions.session_cvr_pct"
+      }
     },
     {
       "id": "qw_last60d_google_spend",
       "surface": "query_window",
       "question": "Google Ads spend for last 60 days (--last-days 60)",
-      "window": {"start": "2026-01-15", "end": "2026-03-15"},
-      "window_label": "Last 60 days (ending 2026-03-15)",
+      "window": {
+        "start": "$anchor-59d",
+        "end": "$anchor"
+      },
+      "window_label": "benchmark window",
       "extract_path": "spend.google",
-      "expected_value": 31918.78,
-      "tolerance": {"type": "dollar", "value": 1.0},
-      "relevance_check": {"type": "always_pass"},
-      "tags": ["query_window", "spend", "google_ads", "60d"]
+      "tolerance": {
+        "type": "dollar",
+        "value": 1.0
+      },
+      "relevance_check": {
+        "type": "always_pass"
+      },
+      "tags": [
+        "query_window",
+        "spend",
+        "google_ads",
+        "60d"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_60d.spend.google"
+      }
     },
     {
       "id": "qw_last180d_sessions",
       "surface": "query_window",
       "question": "Total sessions for last 180 days (--last-days 180)",
-      "window": {"start": "2025-09-17", "end": "2026-03-15"},
-      "window_label": "Last 180 days (ending 2026-03-15)",
+      "window": {
+        "start": "$anchor-179d",
+        "end": "$anchor"
+      },
+      "window_label": "benchmark window",
       "extract_path": "sessions.total",
-      "expected_value": 863790,
-      "tolerance": {"type": "count", "value": 1},
-      "relevance_check": {"type": "always_pass"},
-      "tags": ["query_window", "sessions", "180d"]
+      "tolerance": {
+        "type": "count",
+        "value": 1
+      },
+      "relevance_check": {
+        "type": "always_pass"
+      },
+      "tags": [
+        "query_window",
+        "sessions",
+        "180d"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_180d.sessions.total"
+      }
     },
     {
       "id": "qw_last180d_spend",
       "surface": "query_window",
       "question": "Total spend for last 180 days (--last-days 180)",
-      "window": {"start": "2025-09-17", "end": "2026-03-15"},
-      "window_label": "Last 180 days (ending 2026-03-15)",
+      "window": {
+        "start": "$anchor-179d",
+        "end": "$anchor"
+      },
+      "window_label": "benchmark window",
       "extract_path": "spend.total",
-      "expected_value": 227959.04,
-      "tolerance": {"type": "dollar", "value": 1.0},
-      "relevance_check": {"type": "always_pass"},
-      "tags": ["query_window", "spend", "180d"]
+      "tolerance": {
+        "type": "dollar",
+        "value": 1.0
+      },
+      "relevance_check": {
+        "type": "always_pass"
+      },
+      "tags": [
+        "query_window",
+        "spend",
+        "180d"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_180d.spend.total"
+      }
     },
     {
-      "id": "qw_month_feb2026_sessions",
+      "id": "qw_prev_month_sessions",
       "surface": "query_window",
       "question": "Total sessions for February 2026 (--month 2026-02)",
-      "window": {"start": "2026-02-01", "end": "2026-02-28"},
-      "window_label": "February 2026 (full month)",
+      "window": {
+        "start": "$month1_start",
+        "end": "$month1_end"
+      },
+      "window_label": "benchmark window",
       "extract_path": "sessions.total",
-      "expected_value": 130668,
-      "tolerance": {"type": "count", "value": 1},
-      "relevance_check": {"type": "always_pass"},
-      "tags": ["query_window", "sessions", "monthly"]
+      "tolerance": {
+        "type": "count",
+        "value": 1
+      },
+      "relevance_check": {
+        "type": "always_pass"
+      },
+      "tags": [
+        "query_window",
+        "sessions",
+        "monthly"
+      ],
+      "expected_ref": {
+        "golden_month_offset": 1,
+        "path": "sessions.total"
+      }
     },
     {
-      "id": "qw_month_jan2026_spend",
+      "id": "qw_prev2_month_spend",
       "surface": "query_window",
       "question": "Total spend for January 2026 (--month 2026-01)",
-      "window": {"start": "2026-01-01", "end": "2026-01-31"},
-      "window_label": "January 2026 (full month)",
+      "window": {
+        "start": "$month2_start",
+        "end": "$month2_end"
+      },
+      "window_label": "benchmark window",
       "extract_path": "spend.total",
-      "expected_value": 39490.1,
-      "tolerance": {"type": "dollar", "value": 1.0},
-      "relevance_check": {"type": "always_pass"},
-      "tags": ["query_window", "spend", "monthly"]
+      "tolerance": {
+        "type": "dollar",
+        "value": 1.0
+      },
+      "relevance_check": {
+        "type": "always_pass"
+      },
+      "tags": [
+        "query_window",
+        "spend",
+        "monthly"
+      ],
+      "expected_ref": {
+        "golden_month_offset": 2,
+        "path": "spend.total"
+      }
     },
     {
       "id": "qw_custom_range_sessions",
       "surface": "query_window",
       "question": "Sessions for custom range 2026-01-01 to 2026-02-28 (--start/--end)",
-      "window": {"start": "2026-01-01", "end": "2026-02-28"},
-      "window_label": "Custom window 2026-01-01 → 2026-02-28",
+      "window": {
+        "start": "$anchor-89d",
+        "end": "$anchor"
+      },
+      "window_label": "benchmark window",
       "extract_path": "sessions.total",
-      "expected_value": 280633,
-      "tolerance": {"type": "count", "value": 1},
-      "relevance_check": {"type": "always_pass"},
-      "tags": ["query_window", "sessions", "custom"]
+      "tolerance": {
+        "type": "count",
+        "value": 1
+      },
+      "relevance_check": {
+        "type": "always_pass"
+      },
+      "tags": [
+        "query_window",
+        "sessions",
+        "custom"
+      ],
+      "expected_ref": {
+        "golden_path": "windowed_90d.sessions.total"
+      }
     }
   ]
 }

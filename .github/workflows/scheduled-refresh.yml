@@ -70,6 +70,9 @@ jobs:
       - name: Validate — no drift, and data must be current to today
         run: python scripts/validate_metrics.py --target duckdb --strict-freshness
 
+      - name: SQRA benchmark gate
+        run: python scripts/run_sqra.py --min-score 95
+
       - name: Commit updated golden_metrics.json (never the CSVs)
         uses: stefanzweifel/git-auto-commit-action@v5
         with:

@@ -63,8 +63,11 @@ def relevance_score(case: dict, retrieval_meta: dict) -> float:
     check = case.get("relevance_check", {})
     check_type = check.get("type", "always_pass")
 
-    if check_type == "adversarial":
-        return 0.0
+    # v2: no label-based zeroing for adversarial cases. v1 returned 0.0 here
+    # because the case was LABELED adversarial, then reported '100% adversarial
+    # detection' from that same label — detection by construction. Adversarial
+    # detection is now precision-based (see aggregate()): the flawed query must
+    # actually diverge from the canonical value (or error) to count as caught.
 
     if check_type == "always_pass":
         return 1.0
@@ -132,7 +135,11 @@ def aggregate(results: list[dict]) -> dict:
     overall = _mean(list(by_surface.values())) if by_surface else 0.0
     pass_rate = sum(1 for r in canonical if r["sqra"] >= 90) / max(len(canonical), 1) * 100
 
-    adv_detected = sum(1 for r in adversarial if r["sqra"] < 10)
+    # Detection on merit: the flawed query's result diverged from the
+    # CANONICAL expected value (precision < 0.5) or failed to execute.
+    # A flawed query that happens to reproduce the right number is honestly
+    # counted as NOT detected.
+    adv_detected = sum(1 for r in adversarial if r["precision"] < 0.5)
     adv_rate = adv_detected / max(len(adversarial), 1) * 100
 
     return {

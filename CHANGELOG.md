@@ -6,6 +6,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: [SemVer](
 ## [Unreleased]
 
 ### Added
+- **SQRA v2 — honest, self-updating benchmark + model-in-the-loop agent
+  comparison**: cases are anchor-relative (date tokens resolved from golden
+  `_meta`) with expected values resolved from the golden artifact — every
+  surface is now a cross-implementation check that survives the daily-growing
+  dataset. The golden surface validates the artifact against an independent
+  recomputation (was: compared to itself). Adversarial detection is on merit
+  (flawed queries must actually diverge from canonical values) instead of by
+  label. New agent benchmark (`--agents`): three architectures — golden-tools
+  / raw-sql / semantic-layer — answer the same NL questions, scored for
+  numeric fidelity + tokens/question (needs ANTHROPIC_API_KEY; harness
+  unit-tested with a scripted fake client). SQRA gate (`--min-score 95`)
+  added to PR CI and the daily refresh; weekly `agent-benchmark.yml` runs the
+  model-in-the-loop comparison when the API-key secret is configured
 - **Connector protocol + real GA4 connector** (`src/fullfunnel/connectors/`):
   a small `Connector` ABC (extract(start, end) → staging-schema DataFrame,
   schema declared in code — CLAUDE.md §7 field mappings now live as code, not
@@ -67,9 +80,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: [SemVer](
   decimal places
 
 ### Known issues
-- SQRA benchmark cases with hardcoded all-time expected values drift as the
-  dataset grows daily; expected values must derive from the golden layer
-  (planned for SQRA v2 — see `docs/STRATEGY.md` Phase 3)
+- (resolved) ~~SQRA cases with hardcoded expected values drifting as the
+  dataset grows~~ — fixed by SQRA v2's golden-derived expectations
 
 ## [0.10.0] - 2026-07-12
 

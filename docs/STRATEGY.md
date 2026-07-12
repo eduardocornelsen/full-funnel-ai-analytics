@@ -252,8 +252,19 @@ pre-merge history, so this deliberately waits for the merge.
 
 ### Phase 3 — The wedge (ongoing)
 
-- [ ] SQRA v2: put a model in the loop (Agent SDK / tool-use loop over the MCP stack), fix the two circular scorings (adversarial auto-zero; `expected_from_golden` tautology), independent expected values.
-- [ ] The three-architecture benchmark: raw text-to-SQL vs semantic-layer MCP vs golden layer, across ≥2 models, scoring numeric fidelity + governance compliance (labels, scope-mixing, funnel integrity) + token cost.
+- [x] **SQRA v2 shipped**: both circular scorings fixed (adversarial detection
+  on merit; golden surface validates the artifact against an independent
+  recomputation); cases are anchor-relative with golden-derived expected
+  values (survives the growing dataset — deterministic surfaces at 100.0,
+  5/5 adversarial caught genuinely); SQRA gate (--min-score 95) in PR CI and
+  the daily refresh.
+- [x] **Three-architecture agent benchmark built** (golden-tools / raw-sql /
+  semantic-layer over the same NL questions; numeric fidelity + tokens per
+  question; harness unit-tested with a fake client; weekly workflow gated on
+  the ANTHROPIC_API_KEY secret). Remaining: the first credentialed runs
+  (owner adds the secret / local key), ≥2 models, publish the leaderboard in
+  tests/benchmark/README.md, add governance-compliance scoring (labels,
+  scope-mixing flags) to the agent rubric.
 - [ ] Publish methodology + leaderboard; nightly CI with `--min-score` gate; score badge in README.
 - [ ] Launch sequence: dbt Slack (#tools-and-integrations) → r/dataengineering war story ("An AI dashboard reported 71.1× ROAS" / "My drift gate was green for 93 days while the data was stale") → Show HN ("an eval harness that catches your AI analyst lying about metrics").
 

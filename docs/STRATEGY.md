@@ -161,13 +161,11 @@ freshness gates.
 #### Phase 1 — remaining (tracked here as the near-term roadmap)
 
 **1. Hosted demo.**
-- **Streamlit Community Cloud** — previous attempts failed because the app
-  expects `data/olist_analytics.duckdb`, which is gitignored and never
-  committed (only the CSVs are). The fix is a startup bootstrap in the app:
-  if the DuckDB file is missing, build it on first boot (load CSVs → dbt run →
-  golden metrics — i.e., what `fullfunnel demo` does), cache it, then serve.
-  Owner action: deploy the repo at share.streamlit.io after the bootstrap
-  lands.
+- **Streamlit Community Cloud** — root cause was the gitignored
+  `data/olist_analytics.duckdb`. FIXED: the app now bootstraps the warehouse
+  on first boot (`streamlit_app/lib/bootstrap.py`). Owner action: deploy the
+  repo at share.streamlit.io (main file: `streamlit_app/app.py`; add
+  `ANTHROPIC_API_KEY` in app secrets to enable the AI analyst).
 - **GitHub Pages** for the five HTML dashboards (today they render as raw
   source when linked from the repo). Owner action: enable Pages in repo
   settings; then a publish workflow can ship `dashboards/` on every refresh.
@@ -228,7 +226,13 @@ pre-merge history, so this deliberately waits for the merge.
   formulas read live from metrics.yml. Commands now direct file-less clients
   (Claude Desktop) to it. Remaining: demote the platform mocks to test
   fixtures once the live-MCP command variant is re-pointed.
-- [ ] Rebuild the Streamlit chat on those tools: full conversation history, metric definitions injected from `metrics.yml` at runtime, "how was this computed" expander, streaming.
+- [x] **Governed chat shipped**: rebuilt on the analytics-server tools (no raw
+  SQL from chat), full conversation history, runtime system prompt from golden
+  `_meta`, "How was this computed" provenance expander. Streaming still open.
+- [x] **Streamlit Cloud bootstrap shipped** (`streamlit_app/lib/bootstrap.py`):
+  first boot builds DuckDB + golden from the committed baseline; a
+  from-nothing bootstrap reproduces the committed artifact identically.
+  Owner action remaining: deploy at share.streamlit.io.
 - [ ] Memory: persist analyses to DuckDB; `recall_analyses(topic, since)` tool.
 - [ ] Real EL: dlt pipelines (verified sources exist for Google Ads, GA4, Facebook Ads, HubSpot, Salesforce); ship one real connector (GA4 Data API — free) behind a small Connector protocol; delete `load_supabase.py`'s silent `except: pass`.
 - [ ] dbt hardening: `packages.yml` (dbt_utils, dbt-expectations, elementary), grain tests on composite-key marts, model contracts on golden-feeding marts, `sources.yml` freshness blocks + `dbt source freshness` in CI, `exposures:` for dashboards and MCP servers, dbt docs to GitHub Pages.

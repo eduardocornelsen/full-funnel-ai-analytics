@@ -6,6 +6,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: [SemVer](
 ## [Unreleased]
 
 ### Added
+- **Governed AI analyst chat** (Streamlit): rebuilt on the governed analytics
+  tools — the model can no longer run raw SQL from the chat. Full conversation
+  history (previously only the last message was sent), runtime-rendered system
+  prompt from golden `_meta` (the old prompt hardcoded a date range that had
+  been stale for months), and a "How was this computed" expander showing each
+  tool call's provenance envelope (value, formula, scope, window, verification)
+- **First-boot warehouse bootstrap** (`streamlit_app/lib/bootstrap.py`):
+  Streamlit Cloud deploys now work — if the (never-committed) DuckDB file or
+  golden artifact is missing, the app builds them once at startup from the
+  committed baseline + deterministic appends. Verified: a from-nothing
+  bootstrap reproduces the committed golden artifact identically (ex-`_meta`)
 - **Governed analytics MCP server** (`mcp_servers/analytics_server.py`,
   renamed from mock_analytics_server): metric-first tools — `list_metrics`,
   `get_metric`, `explain_metric`, `get_funnel` (server-side funnel-ordering
@@ -47,6 +58,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: [SemVer](
 - Workflow concurrency groups so data-writing jobs can't race
 
 ### Fixed
+- Streamlit app crashed at startup with current marts: a module-level query
+  selected columns from a `fct_pipeline` shape that no longer exists
+  (`total_conversions`, `total_touches`, …). Rebuilt as a deal-grain rollup;
+  the full app now executes cleanly (verified via `streamlit.testing.AppTest`,
+  9 tabs, zero exceptions)
 - **Semantic layer YAML had never run and was silently wrong** — first
   MetricFlow execution caught: `payment_type` dimension mapped to a renamed
   column; `blended_roas` defined on `fct_orders` revenue (NULL for all recent

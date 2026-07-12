@@ -7,6 +7,7 @@ from plotly.subplots import make_subplots
 from pathlib import Path
 import duckdb
 from datetime import datetime
+import json
 import os
 from dotenv import load_dotenv
 import anthropic
@@ -45,6 +46,28 @@ components.html("""<script>
 # ── Paths ──────────────────────────────────────────────────────────────────────
 DATA_DIR = Path(__file__).parent.parent / "data"
 DB_PATH = DATA_DIR / "olist_analytics.duckdb"
+
+# ── First-boot bootstrap (Streamlit Cloud / fresh clones) ─────────────────────
+# The DuckDB file is never committed; on a fresh deploy we build it once from
+# the committed baseline + deterministic appends. No-op when already built.
+import sys as _sys  # noqa: E402
+if str(Path(__file__).parent) not in _sys.path:
+    _sys.path.insert(0, str(Path(__file__).parent))
+from lib.bootstrap import ensure_warehouse, needs_bootstrap  # noqa: E402
+
+
+@st.cache_resource(show_spinner=False)
+def _bootstrap_once() -> bool:
+    return ensure_warehouse(progress=lambda msg: None)
+
+
+if needs_bootstrap():
+    with st.status("First run: building the warehouse from the committed baseline…",
+                   expanded=True) as _status:
+        ensure_warehouse(progress=_status.write)
+        _status.update(label="Warehouse ready", state="complete", expanded=False)
+else:
+    _bootstrap_once()
 
 # ── Color palette ──────────────────────────────────────────────────────────────
 PALETTE = ["#60a5fa", "#f87171", "#34d399", "#fbbf24", "#a78bfa", "#fb923c", "#38bdf8"]
@@ -320,7 +343,21 @@ meta_weekly = q(f"""
 
 # Attribution & pipeline
 attribution = q("SELECT * FROM fct_marketing_attribution ORDER BY linear_revenue DESC")
-pipeline_ch = q("SELECT * FROM fct_pipeline ORDER BY total_conversions DESC")
+# Channel-level pipeline rollup. fct_pipeline is deal-grain
+# (deal_id/stage/source/lead_source/amount/close_date) — the columns this
+# query previously selected (total_conversions, total_touches, …) belonged to
+# a mart shape that no longer exists, which crashed the app at startup.
+pipeline_ch = q("""
+    SELECT lead_source                                       AS attribution_channel,
+           COUNT(*)                                          AS total_opportunities,
+           COUNT(*) FILTER (LOWER(stage) LIKE '%closed%won%' OR LOWER(stage) = 'closed_won')
+                                                             AS closed_won,
+           COUNT(*) FILTER (LOWER(stage) NOT LIKE '%closed%') AS open_deals,
+           SUM(amount)                                       AS pipeline_value
+    FROM fct_pipeline
+    GROUP BY 1
+    ORDER BY pipeline_value DESC
+""")
 
 # Products
 top_cats = q(f"""
@@ -865,7 +902,7 @@ with tabs[3]:
     kpi_card(_c[0], "Attributed revenue",   fmt_m(total_attr_rev), sp_rev_xy, "bar", PALETTE[0], hover_fmt="$,.0f")
     kpi_card(_c[1], "Top channel (linear)", top_channel)
     kpi_card(_c[2], "Channels tracked",     str(len(attribution)))
-    kpi_card(_c[3], "Pipeline touchpoints", fmt_k(pipeline_ch["total_touches"].sum() if not pipeline_ch.empty else 0))
+    kpi_card(_c[3], "Pipeline deals (all-time)", fmt_k(pipeline_ch["total_opportunities"].sum() if not pipeline_ch.empty else 0))
 
     with st.container(border=True):
         st.markdown("**Revenue by channel — 4 attribution models**")
@@ -929,7 +966,7 @@ with tabs[3]:
             col_x, col_y = st.columns(2)
             with col_x:
                 fig = px.bar(pipeline_ch, x="attribution_channel",
-                             y=["total_leads","total_opportunities","closed_won"],
+                             y=["total_opportunities", "open_deals", "closed_won"],
                              barmode="group", color_discrete_sequence=PALETTE,
                              labels={"value": "Count", "attribution_channel": "Channel", "variable": "Stage"})
                 fig.update_layout(template=tmpl, paper_bgcolor=BG, plot_bgcolor=BG,
@@ -937,11 +974,11 @@ with tabs[3]:
                                   legend=dict(orientation="h", y=1.1))
                 st.plotly_chart(fig, use_container_width=True)
             with col_y:
-                fig = px.scatter(pipeline_ch, x="total_leads", y="closed_won",
-                                 size="total_touches", color="attribution_channel",
+                fig = px.scatter(pipeline_ch, x="total_opportunities", y="closed_won",
+                                 size="pipeline_value", color="attribution_channel",
                                  color_discrete_sequence=PALETTE,
-                                 labels={"total_leads": "Leads", "closed_won": "Closed won"},
-                                 hover_data=["total_opportunities"])
+                                 labels={"total_opportunities": "Opportunities", "closed_won": "Closed won"},
+                                 hover_data=["pipeline_value"])
                 fig.update_layout(template=tmpl, paper_bgcolor=BG, plot_bgcolor=BG,
                                   margin=dict(l=0, r=0, t=10, b=0), height=280)
                 st.plotly_chart(fig, use_container_width=True)
@@ -1242,6 +1279,12 @@ with tabs[6]:
 # ══════════════════════════════════════════════════════════════════════════════
 with tabs[7]:
     st.subheader("Governed AI analyst")
+    st.caption("Every number comes from the governed analytics tools (golden layer + "
+               "semantic-layer verification) — the model cannot run raw SQL here. "
+               "Expand *How was this computed* under any answer for provenance.")
+
+    from lib.governed_chat import (GOVERNED_TOOLS, build_system_prompt,
+                                   dispatch_tool, summarize_tool_call)
 
     _api_key = os.environ.get("ANTHROPIC_API_KEY", "")
     if not _api_key:
@@ -1250,26 +1293,36 @@ with tabs[7]:
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
+    def _render_trace(trace):
+        if not trace:
+            return
+        with st.expander(f"How was this computed · {len(trace)} governed tool call(s)",
+                         icon=":material/verified:"):
+            for rec in trace:
+                st.markdown(f"**`{rec['tool']}`** `{rec['input']}`")
+                st.json(rec["provenance"], expanded=False)
+
     for msg in st.session_state.messages:
         avatar = ":material/robot:" if msg["role"] == "assistant" else None
         with st.chat_message(msg["role"], avatar=avatar):
             st.markdown(msg["content"])
             if msg.get("dataframe") is not None:
                 st.dataframe(msg["dataframe"], use_container_width=True)
+            _render_trace(msg.get("tool_trace"))
 
     if not st.session_state.messages:
         SUGGESTIONS = {
             "📈 Blended ROAS?":         "What is our blended ROAS across all paid channels?",
             "💰 Top revenue channels?": "Which channels drive the most revenue and how much?",
-            "🎯 Funnel conversion?":    "Show me funnel conversion rates from sessions to orders.",
-            "🤝 Open pipeline value?":  "What is our total open pipeline value in HubSpot and Salesforce?",
+            "🎯 Funnel conversion?":    "Show me the marketing funnel for the last 90 days.",
+            "📆 This month vs last?":   "Compare total spend this month versus last month.",
         }
         selected = st.pills("Quick questions:", list(SUGGESTIONS.keys()), label_visibility="collapsed")
         if selected:
             st.session_state.messages.append({"role": "user", "content": SUGGESTIONS[selected]})
             st.rerun()
 
-    if prompt := st.chat_input("Ask about ROAS, CAC, pipeline, lead trends, products…"):
+    if prompt := st.chat_input("Ask about ROAS, CVR, funnel, spend trends, pipeline…"):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
@@ -1280,38 +1333,22 @@ with tabs[7]:
                 st.markdown(fallback)
                 st.session_state.messages.append({"role": "assistant", "content": fallback})
             else:
-                with st.spinner("Querying the warehouse…"):
-                    schema = get_db_schema()
-                    system_prompt = f"""You are an analytics assistant for a full-funnel marketing platform.
-The DuckDB warehouse covers e-commerce and marketing data from 2024-03-30 to 2026-03-15.
-ALWAYS use the query_database tool to fetch real numbers — never guess or invent data.
-Write clean DuckDB SQL. Limit results to 20 rows unless asked otherwise.
-After fetching data, give a concise business-focused answer (2–4 sentences).
-
-Available tables:
-{schema}"""
-
-                    tools = [{
-                        "name": "query_database",
-                        "description": "Execute a DuckDB SQL query and return results.",
-                        "input_schema": {
-                            "type": "object",
-                            "properties": {"sql": {"type": "string", "description": "Valid DuckDB SQL."}},
-                            "required": ["sql"],
-                        },
-                    }]
-
+                with st.spinner("Consulting the golden layer…"):
                     client = anthropic.Anthropic(api_key=_api_key)
-                    api_messages = [{"role": "user", "content": prompt}]
-                    result_df = None
+                    # Full conversation history — the previous implementation sent
+                    # only the last message, so the chat had no memory at all.
+                    api_messages = [{"role": m["role"], "content": m["content"]}
+                                    for m in st.session_state.messages
+                                    if m.get("content")]
+                    tool_trace = []
                     final_text = ""
 
-                    for _ in range(6):
+                    for _ in range(8):
                         response = client.messages.create(
                             model="claude-haiku-4-5-20251001",
-                            max_tokens=1024,
-                            system=system_prompt,
-                            tools=tools,
+                            max_tokens=2048,
+                            system=build_system_prompt(),   # runtime-rendered; never stale
+                            tools=GOVERNED_TOOLS,
                             messages=api_messages,
                         )
                         if response.stop_reason == "tool_use":
@@ -1319,14 +1356,13 @@ Available tables:
                             tool_results = []
                             for block in response.content:
                                 if block.type == "tool_use":
-                                    df, err = run_sql(block.input["sql"])
-                                    tool_content = f"SQL error: {err}" if err else df.to_string(index=False, max_rows=20)
-                                    if df is not None:
-                                        result_df = df
+                                    output = dispatch_tool(block.name, block.input)
+                                    tool_trace.append(
+                                        summarize_tool_call(block.name, block.input, output))
                                     tool_results.append({
                                         "type": "tool_result",
                                         "tool_use_id": block.id,
-                                        "content": tool_content,
+                                        "content": json.dumps(output, default=str)[:8000],
                                     })
                             api_messages.append({"role": "user", "content": tool_results})
                         else:
@@ -1336,11 +1372,10 @@ Available tables:
                             break
 
                     st.markdown(final_text or "_No response generated._")
-                    if result_df is not None and not result_df.empty:
-                        st.dataframe(result_df, use_container_width=True)
+                    _render_trace(tool_trace)
 
                     st.session_state.messages.append({
-                        "role": "assistant", "content": final_text, "dataframe": result_df,
+                        "role": "assistant", "content": final_text, "tool_trace": tool_trace,
                     })
 
 

@@ -103,6 +103,12 @@ jobs:
       - name: Validate golden layer (no drift)
         run: python scripts/validate_metrics.py --target duckdb
 
+      # SQRA deterministic surfaces: every retrieval path (MCP servers, SQL,
+      # golden reads, query_window) must reproduce the governed values, and
+      # flawed adversarial queries must be caught on merit.
+      - name: SQRA benchmark gate
+        run: python scripts/run_sqra.py --min-score 95
+
   pytest:
     name: pytest suite
     runs-on: ubuntu-latest

@@ -1,0 +1,58 @@
+name: SQRA Agent Benchmark — model in the loop
+
+# Compares three agent architectures (golden-tools / raw-sql / semantic-layer)
+# answering the same NL questions, scored against golden-derived ground truth.
+# Needs the ANTHROPIC_API_KEY repo secret; skips cleanly when absent.
+on:
+  schedule:
+    - cron: "0 7 * * 1"   # weekly, Mondays 07:00 UTC (after the daily refresh)
+  workflow_dispatch:
+    inputs:
+      model:
+        description: "Model id (default claude-haiku-4-5-20251001)"
+        required: false
+        default: ""
+
+jobs:
+  agent-benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Skip when no API key configured
+        id: key
+        run: |
+          if [ -n "${{ secrets.ANTHROPIC_API_KEY }}" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::ANTHROPIC_API_KEY secret not set — agent benchmark skipped."
+          fi
+      - name: Install dependencies
+        if: steps.key.outputs.present == 'true'
+        run: pip install -r requirements.txt anthropic
+      - name: Build warehouse (deterministic)
+        if: steps.key.outputs.present == 'true'
+        run: |
+          cp dbt_project/profiles.yml.example dbt_project/profiles.yml
+          python scripts/daily_synthetic_append.py
+          python scripts/load_duckdb.py
+          cd dbt_project && dbt deps && dbt run --target duckdb && cd ..
+          python scripts/generate_golden_metrics.py
+      - name: Run agent benchmark
+        if: steps.key.outputs.present == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          MODEL="${{ github.event.inputs.model }}"
+          python scripts/run_sqra.py --agents ${MODEL:+--model "$MODEL"} \
+            --output agent_results.json
+      - name: Upload results
+        if: steps.key.outputs.present == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: sqra-agent-results
+          path: agent_results.json

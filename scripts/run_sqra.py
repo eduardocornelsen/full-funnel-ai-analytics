@@ -119,8 +119,38 @@ def main() -> int:
         metavar="N",
         help="Exit code 1 if overall SQRA < N (use for CI gate, e.g. --min-score 90)",
     )
+    parser.add_argument(
+        "--agents",
+        action="store_true",
+        help="Run the model-in-the-loop benchmark: three agent architectures "
+             "(golden-tools / raw-sql / semantic-layer) answer the same NL "
+             "questions; numeric fidelity + token cost. Needs ANTHROPIC_API_KEY.",
+    )
+    parser.add_argument("--model", default=None,
+                        help="Model for --agents (default: claude-haiku-4-5-20251001)")
+    parser.add_argument("--limit", type=int, default=None,
+                        help="Max questions per architecture for --agents")
+    parser.add_argument("--arch", action="append", default=None,
+                        choices=["golden-tools", "raw-sql", "semantic-layer"],
+                        help="Restrict --agents to specific architecture(s); repeatable")
 
     args = parser.parse_args()
+
+    if args.agents:
+        from agent_benchmark import DEFAULT_MODEL, run_agents
+        report = run_agents(model=args.model or DEFAULT_MODEL,
+                            limit=args.limit, architectures=args.arch)
+        print(f"\n══ SQRA Agent Benchmark · {report['model']} · "
+              f"{report['question_count']} questions ══")
+        print(f"{'architecture':<16}{'accuracy':>10}{'mean prec':>11}{'tokens/q':>10}")
+        for name, a in report["architectures"].items():
+            print(f"{name:<16}{a['accuracy_pct']:>9.1f}%{a['mean_precision']:>11.3f}"
+                  f"{a['tokens_per_question']:>10}")
+        out = Path(args.output) if args.output else (
+            PROJECT_ROOT / "tests" / "benchmark" / f"agent_results_{report['model']}.json")
+        out.write_text(json.dumps(report, indent=2))
+        print(f"\nReport written to: {out}")
+        return 0
 
     golden_path = PROJECT_ROOT / "dashboards" / "golden_metrics.json"
     if not golden_path.exists():

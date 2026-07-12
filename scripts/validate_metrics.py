@@ -162,6 +162,69 @@ def check(name: str, golden_val: float, live_val: float,
             "diff": diff_str, "drifted": drifted}
 
 
+def validate_completed_months(target: str = "duckdb") -> int:
+    """Spot-check the COMMITTED golden artifact against the warehouse.
+
+    Regular validation runs after the generator, so it checks a freshly
+    generated artifact — the committed file itself is only validated at the
+    moment the scheduled refresh writes it. This mode closes that gap for PR
+    CI: completed calendar months are anchor-independent (identical no matter
+    which day generated them), so the committed file's full-month sections
+    must match a warehouse rebuilt on any later day. Run BEFORE regenerating
+    golden_metrics.json in the workspace.
+
+    Deliberately skips freshness gates and CRM/all-time values: the committed
+    anchor legitimately trails a CI runner's regenerated frontier, and CRM
+    sections are lifetime-scoped, not month-scoped.
+    """
+    golden = load_golden()
+    months = {k: v for k, v in golden.items()
+              if k.startswith("month_") and "(full month)" in v.get("label", "")}
+    if not months:
+        print("No completed-month sections in golden_metrics.json — nothing to spot-check.")
+        return 0
+
+    con = get_connection(target)
+    checks = []
+    for key, sec in sorted(months.items()):
+        ws, we = sec["window"]["start"], sec["window"]["end"]
+        live = con.execute("""
+            SELECT SUM(total_google_spend), SUM(total_meta_spend), SUM(total_spend),
+                   SUM(total_conversions),  SUM(ga4_total_sessions)
+            FROM fct_marketing_daily
+            WHERE date BETWEEN ? AND ?
+        """, [ws, we]).fetchone()
+        live_rev = con.execute(
+            "SELECT SUM(linear_credit * order_revenue) FROM stg_marketing_attribution"
+            " WHERE touchpoint_date BETWEEN ? AND ?", [ws, we]
+        ).fetchone()[0]
+        live_roas = round(float(live_rev or 0) / float(live[2] or 1), 2)
+        checks += [
+            check(f"{key}.spend.google",          sec["spend"]["google"],            float(live[0] or 0), DOLLAR_TOLERANCE_ABS),
+            check(f"{key}.spend.meta",            sec["spend"]["meta"],              float(live[1] or 0), DOLLAR_TOLERANCE_ABS),
+            check(f"{key}.spend.total",           sec["spend"]["total"],             float(live[2] or 0), DOLLAR_TOLERANCE_ABS),
+            check(f"{key}.conversions.ga4_total", sec["conversions"]["ga4_total"],   float(live[3] or 0), COUNT_TOLERANCE_ABS),
+            check(f"{key}.sessions.total",        sec["sessions"]["total"],          float(live[4] or 0), COUNT_TOLERANCE_ABS),
+            check(f"{key}.blended_roas",          sec["blended_roas"],               live_roas,           RATIO_TOLERANCE_PCT, "pct"),
+        ]
+    con.close()
+
+    drifted = [c for c in checks if c["drifted"]]
+    print(f"Committed-artifact spot check ({len(months)} completed months): "
+          f"{len(checks)} checks, ❌ {len(drifted)} drifted")
+    if drifted:
+        print("\nThe COMMITTED golden_metrics.json disagrees with a warehouse rebuilt "
+              "from this checkout. Either this PR changed metric logic without "
+              "regenerating the artifact (fix: python scripts/generate_golden_metrics.py, "
+              "commit the result in the same PR) or generation is no longer deterministic "
+              "(see tests/test_determinism.py).")
+        for c in drifted:
+            print(f"  ❌ {c['metric']}: golden={c['golden']}  live={c['live']}  diff={c['diff']}")
+        return 1
+    print("✅ Committed golden artifact matches the regenerated warehouse.")
+    return 0
+
+
 def validate(target: str = "duckdb", strict_freshness: bool = False) -> int:
     golden = load_golden()
     meta   = golden["_meta"]
@@ -313,5 +376,11 @@ if __name__ == "__main__":
     parser.add_argument("--strict-freshness", action="store_true",
                         help="Fail (not just warn) when the raw data frontier trails "
                              "today's date — use in the scheduled refresh.")
+    parser.add_argument("--completed-months-only", action="store_true",
+                        help="Spot-check the COMMITTED artifact's completed-month "
+                             "sections (anchor-independent) against the warehouse. "
+                             "Run in CI before regenerating golden_metrics.json.")
     args = parser.parse_args()
+    if args.completed_months_only:
+        sys.exit(validate_completed_months(args.target))
     sys.exit(validate(args.target, strict_freshness=args.strict_freshness))

@@ -6,6 +6,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: [SemVer](
 ## [Unreleased]
 
 ### Added
+- Committed-artifact spot check: `validate_metrics.py --completed-months-only`
+  validates the checked-in `golden_metrics.json` against the warehouse using
+  completed calendar months (anchor-independent), wired into PR CI before the
+  regeneration step — catches metric-logic PRs that forget to regenerate the
+  artifact, and any break in generation determinism
 - **Regenerate-don't-commit data model**: the committed CSVs are a frozen
   Olist-anchored baseline; daily appends are regenerated deterministically
   (seeded per calendar date) on every machine and never committed. The

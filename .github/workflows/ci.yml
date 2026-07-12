@@ -76,6 +76,14 @@ jobs:
         working-directory: dbt_project
         run: dbt test --target duckdb
 
+      # Validate the COMMITTED artifact before regenerating it: completed
+      # calendar months are anchor-independent, so the checked-in golden file
+      # must match a warehouse rebuilt from this checkout. Catches PRs that
+      # change metric logic without committing a regenerated artifact, and
+      # any break in generation determinism.
+      - name: Validate committed golden artifact (completed months)
+        run: python scripts/validate_metrics.py --completed-months-only
+
       - name: Generate golden metrics
         run: python scripts/generate_golden_metrics.py --target duckdb
 

@@ -221,6 +221,76 @@ least-supplied skill in data hiring right now."
 
 ---
 
+## Story 7 — Validation as a system, not a step (and knowing what's redundant)
+
+**Use for:** "How do you test data pipelines?" / "Design a data quality
+strategy." / "What's the difference between testing and validation?"
+
+**The telling.** My validator does three jobs, and being able to name them —
+including where one is deliberately redundant — is the point:
+
+1. **Double-entry bookkeeping.** The metrics generator and the validator carry
+   *independently written* SQL for the same metric definitions. Same warehouse,
+   same moment — but two implementations must agree within tolerance. This
+   caught a real bug class twice: two other code paths had quietly kept an old
+   Meta ROAS formula after the canonical one changed.
+2. **Freshness contracts.** Anchor vs raw-data frontier, cross-table skew
+   (spend advancing while revenue tables freeze — which silently deflates
+   ROAS), and wall-clock lag. The generator can't check these; it has no
+   concept of "should be newer."
+3. **Cross-context parity.** The same validator runs against BigQuery and
+   Snowflake after every deploy, comparing them to the DuckDB-derived
+   committed artifact — same data, same dbt models, different engine must
+   yield the same numbers. That's where dialect bugs (date arithmetic macros,
+   type casts) surface.
+
+Plus a subtle one: CI validates the *committed* artifact using only
+**completed calendar months**, because those are anchor-independent — a June
+total is identical whether it was computed on July 1st or July 30th. That
+property is what makes yesterday's committed artifact comparable against a
+warehouse rebuilt today.
+
+**The senior kicker:** "I can also tell you which of these becomes redundant
+and when: once the semantic layer is the single definition source (my Phase 2),
+the double-entry check proves nothing — both sides would run the same
+definition — so its job collapses into freshness + parity, by design.
+Validation layers should be built knowing which ones you intend to retire."
+
+---
+
+## Story 8 — Data as code (regenerate, don't commit)
+
+**Use for:** "Tell me about a storage/architecture trade-off." / "How would you
+version data?" / reproducibility questions.
+
+**Situation.** Two bots committed ~60MB of synthetic CSVs to git daily. Git
+history grew unboundedly — every clone downloads every day's snapshot forever.
+
+**Action.** I noticed the daily data was already a *pure function of the
+calendar date* (generators seeded per date, baseline seeded with a constant).
+So the rows didn't need storing anywhere — they needed a **reproducibility
+contract**. I froze the one non-regenerable thing (the real-data-anchored
+baseline) in git, made every environment regenerate the daily days locally
+(CI, clones, the daily refresh — all compute byte-identical rows in seconds),
+and reduced the bots' daily commit to the 50KB metrics artifact. Then I
+guarded the contract: numpy pinned, plus a CI test that regenerates a
+reference date and compares against pinned hashes — if a dependency upgrade
+ever changes the random stream, CI fails *before* clones start regenerating
+data that disagrees with the committed metrics.
+
+**Result.** History growth: ~22GB/year → ~18MB/year. Fresh-clone experience
+unchanged (one command materializes everything). And the model proved itself
+the day it shipped: UTC midnight rolled over during verification and the
+pipeline caught the new day up automatically.
+
+**Kicker:** "It's the lockfile principle applied to data: commit the recipe
+and the checksum, not the artifact — but only after you've separated what's
+truly source (the real-data baseline) from what's derivable (everything
+else). And a reproducibility contract without an enforcement test is just a
+hope."
+
+---
+
 ## The 5-minute repo walkthrough (screen-share script)
 
 1. **The one-liner** (30s): governed marketing analytics that AI agents can't
@@ -298,3 +368,6 @@ stakeholder was my own demo instinct; the disagreement was resolved by policy
 - **~17–21%** — frontier-model execution accuracy on Spider 2.0 (why text-to-SQL alone fails)
 - **~18%** — teams using dbt semantic layer (why "governed but easy" is the gap)
 - **5–6** places one formula was defined (the sprawl the roadmap collapses to 1)
+- **3 validation jobs** — double-entry recomputation, freshness contracts, cross-warehouse parity (and which one is designed to be retired)
+- **~22GB/year → ~18MB/year** — git history growth after the regenerate-don't-commit data model
+- **7 pinned generator hashes** — the CI determinism contract that makes "data as code" safe

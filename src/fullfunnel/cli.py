@@ -127,6 +127,65 @@ def cmd_bench(root: Path, args: argparse.Namespace) -> None:
     run(script(root, "run_sqra.py", *extra), root, "SQRA benchmark")
 
 
+def cmd_ingest(root: Path, args: argparse.Namespace) -> None:
+    """Pull data through a Connector into the CSV staging layer."""
+    from datetime import date, timedelta
+
+    import pandas as pd
+
+    from .connectors import ConnectorConfigError, available, get_connector
+
+    if args.list:
+        print("Available connectors:", ", ".join(available()))
+        return
+
+    try:
+        conn = get_connector(args.connector)
+    except KeyError as e:
+        sys.exit(f"fullfunnel: {e}")
+
+    end = date.fromisoformat(args.end) if args.end else date.today()
+    start = (date.fromisoformat(args.start) if args.start
+             else end - timedelta(days=args.last_days - 1))
+
+    print(f"━━ Extract via '{conn.name}' → {conn.target_table} [{start} → {end}] ━━")
+    try:
+        df = conn.extract(start, end)
+    except ConnectorConfigError as e:
+        sys.exit(f"fullfunnel: connector not configured — {e}")
+    print(f"{len(df)} rows extracted")
+    if df.empty:
+        sys.exit("fullfunnel: nothing extracted — check the window and the source property")
+    print(df.head(3).to_string(index=False))
+
+    if args.dry_run:
+        print("\n--dry-run: nothing written.")
+        return
+
+    # Merge into the staging CSV: replace the extracted window, keep the rest.
+    target = root / "data" / "mock_marketing" / f"{conn.target_table}.csv"
+    backup = target.with_suffix(".csv.bak")
+    if target.exists():
+        backup.write_bytes(target.read_bytes())
+        existing = pd.read_csv(target)
+        d = pd.to_datetime(existing[conn.date_column]).dt.date
+        kept = existing[(d < start) | (d > end)]
+        merged = pd.concat([kept[conn.schema], df[conn.schema]], ignore_index=True)
+        merged = merged.sort_values(conn.date_column, kind="stable")
+    else:
+        merged = df[conn.schema]
+    merged.to_csv(target, index=False)
+    print(f"\n✅ Wrote {target.relative_to(root)} "
+          f"(window replaced; backup at {backup.name})")
+    print(
+        "\n⚠️  This table now mixes REAL data (your window) with synthetic rows\n"
+        "   outside it. For a fully real table, ingest the entire dataset range.\n"
+        "   The daily synthetic append will continue the series synthetically\n"
+        "   past your last real day.\n"
+        "\nNext: fullfunnel refresh   (rebuild DuckDB → dbt → golden → validate)"
+    )
+
+
 def _rebuild_and_validate(root: Path, strict: bool = False) -> None:
     ensure_profiles(root)
     dbt_dir = root / "dbt_project"
@@ -164,6 +223,14 @@ def main() -> None:
     p_bench.add_argument("--min-score", type=float, default=None,
                          help="exit non-zero if the overall score is below this")
 
+    p_ing = sub.add_parser("ingest", help="pull data through a Connector (real or mock)")
+    p_ing.add_argument("--connector", default="ga4", help="connector name (see --list)")
+    p_ing.add_argument("--list", action="store_true", help="list available connectors")
+    p_ing.add_argument("--last-days", type=int, default=90, help="window ending today (default 90)")
+    p_ing.add_argument("--start", help="YYYY-MM-DD (overrides --last-days)")
+    p_ing.add_argument("--end", help="YYYY-MM-DD (default today)")
+    p_ing.add_argument("--dry-run", action="store_true", help="extract and preview; write nothing")
+
     args = parser.parse_args()
     root = find_root()
     {
@@ -173,6 +240,7 @@ def main() -> None:
         "refresh":  cmd_refresh,
         "validate": cmd_validate,
         "bench":    cmd_bench,
+        "ingest":   cmd_ingest,
     }[args.command](root, args)
 
 

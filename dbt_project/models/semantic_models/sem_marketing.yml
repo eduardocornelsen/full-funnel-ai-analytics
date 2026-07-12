@@ -53,7 +53,12 @@ semantic_models:
       - name: last_touch_channel
         type: categorical
       - name: payment_type
+        # fct_orders exposes the aggregated column primary_payment_type
+        # (one row per order; an order can have multiple payment rows upstream).
+        # This expr mapping was missing until MetricFlow first ran against the
+        # warehouse — the dimension name predates the column rename.
         type: categorical
+        expr: primary_payment_type
       - name: order_status
         type: categorical
     measures:
@@ -144,6 +149,34 @@ semantic_models:
         description: GA4-tracked conversion events
         agg: sum
         expr: conversions
+
+  - name: attribution_touchpoints
+    # Row-level attribution touchpoints — the revenue source for Blended ROAS.
+    # Windowing is on TOUCHPOINT date (when the marketing exposure happened),
+    # matching generate_golden_metrics.q_attribution_by_channel. This differs
+    # from fct_channel_performance (order-date basis): the same order counts in
+    # different periods under the two bases, so blended_roas must be defined
+    # here, not on the channel mart, to equal the golden layer.
+    description: Marketing attribution touchpoints with fractional revenue credit (touchpoint-date grain)
+    model: ref('stg_marketing_attribution')
+    defaults:
+      agg_time_dimension: touchpoint_date
+    entities:
+      - name: touchpoint
+        type: primary
+        expr: "order_id || '_' || CAST(touchpoint_position AS VARCHAR)"
+    dimensions:
+      - name: touchpoint_date
+        type: time
+        type_params:
+          time_granularity: day
+      - name: channel
+        type: categorical
+    measures:
+      - name: linear_attributed_revenue
+        description: Revenue credited by the linear attribution model (equal split across touchpoints)
+        agg: sum
+        expr: linear_credit * order_revenue
 
   - name: pipeline
     description: CRM pipeline from HubSpot and Salesforce combined

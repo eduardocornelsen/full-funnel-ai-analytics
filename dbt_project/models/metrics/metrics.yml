@@ -109,21 +109,33 @@ metrics:
   # from producing Infinity or NaN values in the result set. Empty periods return
   # NULL rather than 0 — dashboards handle that downstream.
 
+  - name: total_attributed_revenue
+    label: Attributed Revenue (Linear)
+    description: >
+      Revenue credited by the linear attribution model, windowed on TOUCHPOINT
+      date. This is the canonical revenue input to Blended ROAS.
+    type: simple
+    type_params:
+      measure: linear_attributed_revenue
+
   - name: blended_roas
     label: Blended ROAS
     description: >
-      Total attributed revenue divided by total paid media spend (Google Ads + Meta Ads).
+      Linear-attributed revenue divided by total paid media spend (Google Ads + Meta Ads).
       Attribution model: linear (equal credit split across all touchpoints in the path).
-      Attribution window: configurable; default query period is 90 days.
-      Revenue scope: GA4-attributed paid-channel orders only.
-      Formula: total_revenue / total_spend.
+      Windowing basis: TOUCHPOINT date — matches the golden layer exactly.
+      Formula: total_attributed_revenue / total_spend.
+      HISTORY: this metric was previously defined as fct_orders revenue / spend,
+      which silently returned NULL for recent windows (Olist orders end before
+      the synthetic window) and used a different revenue scope than the golden
+      layer. Discovered the first time MetricFlow actually ran (2026-07).
       NOTE: Will differ from platform-reported ROAS (Meta/Google native) which use
       last-click attribution within their own 7-day or 28-day windows.
     type: derived
     type_params:
-      expr: "total_revenue / NULLIF(total_spend, 0)"
+      expr: "total_attributed_revenue / NULLIF(total_spend, 0)"
       metrics:
-        - name: total_revenue
+        - name: total_attributed_revenue
         - name: total_spend
 
   - name: channel_roas
@@ -166,18 +178,29 @@ metrics:
         - name: total_engaged_sessions
         - name: total_sessions
 
+  - name: total_ga4_conversions
+    label: GA4 Conversions
+    description: GA4-tracked conversion events (canonical Session CVR numerator)
+    type: simple
+    type_params:
+      measure: conversions
+
   - name: session_conversion_rate
-    label: Session to Order Conversion Rate
+    label: Session CVR
     description: >
-      CANONICAL CVR DEFINITION for this project.
-      Formula: total_orders / total_sessions (GA4 sessions as denominator).
+      CANONICAL CVR DEFINITION for this project (CLAUDE.md §1 Session CVR).
+      Formula: GA4 conversions / GA4 sessions.
       Use this metric for all cross-channel funnel and campaign analysis.
+      HISTORY: previously defined as total_orders / total_sessions, which mixed
+      Olist order counts with GA4 sessions and returned 0 for recent windows.
+      Redefined to the GA4-native ratio the golden layer has always used,
+      the first time MetricFlow actually ran (2026-07).
       WARNING: Platform-reported CVR (Google Ads, Meta Ads) uses clicks as the
       denominator — values will be 2-4x higher and are NOT comparable to this metric.
       Label as "Session CVR" in UI; label platform CVR as "Click CVR".
     type: derived
     type_params:
-      expr: "total_orders / NULLIF(total_sessions, 0)"
+      expr: "total_ga4_conversions / NULLIF(total_sessions, 0)"
       metrics:
-        - name: total_orders
+        - name: total_ga4_conversions
         - name: total_sessions

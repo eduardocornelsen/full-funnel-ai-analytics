@@ -22,7 +22,11 @@ Date anchoring:
 """
 
 import argparse
+import csv
+import shutil
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 import json
 from datetime import date, timedelta, datetime, timezone
@@ -38,8 +42,10 @@ OUTPUT_PATH  = PROJECT_ROOT / "dashboards" / "golden_metrics.json"
 # ── Canonical Date Anchoring ───────────────────────────────────────────────────
 WINDOW_DAYS  = 90
 
-# ── AOV for Google ROAS (mirrors CLAUDE.md §8 + metrics.js) ───────────────────
-GOOGLE_AOV = 100.0
+# Canonical Python formulas — single definition in src/fullfunnel/metrics.py.
+# The src-path insert makes the import work without a pip install.
+sys.path.insert(0, str(PROJECT_ROOT / "src"))
+from fullfunnel.metrics import GOOGLE_AOV, google_roas, session_cvr  # noqa: E402
 
 
 def get_connection(target: str = "duckdb"):
@@ -56,16 +62,6 @@ def connect():
 
 def fd(d: date) -> str:
     return d.strftime("%Y-%m-%d")
-
-
-def google_roas(conversions: float, cost: float) -> float:
-    """Canonical Google ROAS: conversions × $100 / cost."""
-    return round((conversions * GOOGLE_AOV) / cost, 2) if cost else 0.0
-
-
-def session_cvr(conversions: float, sessions: float) -> float:
-    """Canonical Session CVR %."""
-    return round(conversions / sessions * 100, 2) if sessions else 0.0
 
 
 # ── Query Functions ─────────────────────────────────────────────────────────────
@@ -331,6 +327,68 @@ def q_salesforce_pipeline(con) -> dict:
     }
 
 
+# ── Semantic-layer cross-check ─────────────────────────────────────────────────
+
+def semantic_layer_crosscheck(section: dict, start: date, end: date) -> str:
+    """Verify this generator's headline numbers against MetricFlow.
+
+    The dbt semantic layer (metrics.yml) is the declared single source of
+    metric truth; this generator still carries SQL for presentation-shaped
+    sections. This check makes the YAML load-bearing: at every generation, the
+    governed metrics computed by MetricFlow must equal the SQL-computed values
+    within tolerance, or generation FAILS. Delete or break metrics.yml and the
+    pipeline goes red — the definition of "not decorative."
+
+    (The first time this ran it caught two broken YAML definitions:
+    blended_roas referencing fct_orders revenue that is empty for recent
+    windows, and an orders-based CVR diverging from the canonical GA4 one.)
+
+    Returns a status string recorded in _meta. Exits non-zero on mismatch.
+    """
+    if shutil.which("mf") is None:
+        print("⚠️  MetricFlow (mf) not installed — semantic cross-check skipped. "
+              "CI runs it; install with: pip install dbt-metricflow")
+        return "skipped (mf not installed)"
+
+    metrics = "total_spend,total_sessions,total_ga4_conversions,session_conversion_rate,blended_roas"
+    with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as tmp:
+        out_csv = tmp.name
+    result = subprocess.run(
+        ["mf", "query", "--metrics", metrics,
+         "--start-time", fd(start), "--end-time", fd(end), "--csv", out_csv],
+        cwd=PROJECT_ROOT / "dbt_project", capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        sys.exit(f"❌ Semantic-layer cross-check: mf query failed:\n{result.stdout}\n{result.stderr}")
+
+    with open(out_csv) as f:
+        row = next(csv.DictReader(f))
+    mf_vals = {k: float(v) for k, v in row.items()}
+
+    checks = [
+        # (name, mf value, golden value, absolute tolerance)
+        ("total_spend",             mf_vals["total_spend"],                      section["spend"]["total"],                    1.0),
+        ("total_sessions",          mf_vals["total_sessions"],                   section["sessions"]["total"],                 1.0),
+        ("total_ga4_conversions",   mf_vals["total_ga4_conversions"],            section["conversions"]["ga4_total"],          1.0),
+        ("session_conversion_rate", mf_vals["session_conversion_rate"] * 100.0,  section["conversions"]["session_cvr_pct"],    0.01),
+        ("blended_roas",            mf_vals["blended_roas"],                     section["blended_roas"],                      0.01),
+    ]
+    mismatches = []
+    for name, mf_v, golden_v, tol in checks:
+        if abs(mf_v - golden_v) > tol:
+            mismatches.append(f"  ❌ {name}: metricflow={mf_v:.4f}  golden={golden_v:.4f}  "
+                              f"diff={abs(mf_v - golden_v):.4f}")
+    if mismatches:
+        sys.exit(
+            "❌ Semantic-layer cross-check FAILED — metrics.yml and the golden "
+            "generator disagree on canonical metrics:\n" + "\n".join(mismatches) +
+            "\nOne of the two definitions changed without the other. metrics.yml "
+            "is the source of truth — align the generator (or fix the YAML) in the same PR."
+        )
+    print(f"Semantic-layer cross-check: {len(checks)} governed metrics match MetricFlow ✅")
+    return f"passed ({len(checks)} metrics vs MetricFlow)"
+
+
 # ── Section Builder ─────────────────────────────────────────────────────────────
 
 def build_section(con, start: date, end: date, label: str) -> dict:
@@ -389,6 +447,8 @@ def main():
                         help="Fix the anchor date instead of auto-detecting from DB. "
                              "Useful for reproducible CI snapshots. "
                              "Default: auto-detect MAX(date) from fct_marketing_daily.")
+    parser.add_argument("--skip-semantic-check", action="store_true",
+                        help="Skip the MetricFlow cross-check (escape hatch; CI never skips).")
     args = parser.parse_args()
 
     if args.target == "duckdb":
@@ -466,6 +526,14 @@ def main():
 
     con.close()
 
+    # ── Semantic-layer cross-check (canonical 90d window) ─────────────────────
+    # Only on DuckDB: mf reads the default dbt profile target. Warehouse targets
+    # are covered by cross-warehouse parity validation instead.
+    if args.target == "duckdb" and not args.skip_semantic_check:
+        semantic_status = semantic_layer_crosscheck(sections["windowed_90d"], window_start, window_end)
+    else:
+        semantic_status = "skipped (--skip-semantic-check or non-duckdb target)"
+
     # ── Canonical window metadata (for AI agent reference) ────────────────────
     available_windows = (
         {k: sections[k]["window"] for k in sections}
@@ -484,8 +552,9 @@ def main():
             "window_end":        fd(window_end),
             "dbt_source":        str(DB_PATH) if args.target == "duckdb" else args.target,
             "dbt_target":        args.target,
-            "schema_version":    "2.2",
+            "schema_version":    "2.3",
             "google_aov":        GOOGLE_AOV,
+            "semantic_layer_crosscheck": semantic_status,
             "available_windows": available_windows,
             "note": (
                 "SINGLE SOURCE OF TRUTH for all dashboard numbers. "

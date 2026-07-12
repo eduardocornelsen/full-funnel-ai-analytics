@@ -161,13 +161,11 @@ freshness gates.
 #### Phase 1 — remaining (tracked here as the near-term roadmap)
 
 **1. Hosted demo.**
-- **Streamlit Community Cloud** — previous attempts failed because the app
-  expects `data/olist_analytics.duckdb`, which is gitignored and never
-  committed (only the CSVs are). The fix is a startup bootstrap in the app:
-  if the DuckDB file is missing, build it on first boot (load CSVs → dbt run →
-  golden metrics — i.e., what `fullfunnel demo` does), cache it, then serve.
-  Owner action: deploy the repo at share.streamlit.io after the bootstrap
-  lands.
+- **Streamlit Community Cloud** — root cause was the gitignored
+  `data/olist_analytics.duckdb`. FIXED: the app now bootstraps the warehouse
+  on first boot (`streamlit_app/lib/bootstrap.py`). Owner action: deploy the
+  repo at share.streamlit.io (main file: `streamlit_app/app.py`; add
+  `ANTHROPIC_API_KEY` in app secrets to enable the AI analyst).
 - **GitHub Pages** for the five HTML dashboards (today they render as raw
   source when linked from the repo). Owner action: enable Pages in repo
   settings; then a publish workflow can ship `dashboards/` on every refresh.
@@ -209,12 +207,47 @@ pre-merge history, so this deliberately waits for the merge.
 
 ### Phase 2 — Make the architecture real (3–4 weeks)
 
-- [ ] MetricFlow on the query path: `generate_golden_metrics.py` calls `mf query`; delete duplicated SQL in `query_window.py` / `validate_metrics.py`; `mf validate-configs` in CI. One metric definition, everywhere.
-- [ ] A single governed **analytics MCP server** as the product: `list_metrics`, `get_metric(metric, window, grain)`, `explain_metric`, `get_funnel` (server-side ordering validation), `compare_windows` — every response carrying `{value, metric_id, formula, scope, window, attribution_model, source}`. Guardrails as tool contract, not prompt. Platform mocks demoted to test fixtures.
-- [ ] Rebuild the Streamlit chat on those tools: full conversation history, metric definitions injected from `metrics.yml` at runtime, "how was this computed" expander, streaming.
+- [x] **Semantic layer made load-bearing** (first half of "MetricFlow on the query path"):
+  `mf validate-configs` in CI + scheduled refresh; `generate_golden_metrics.py`
+  cross-checks 5 governed metrics against `mf query` at every generation and
+  fails on divergence (negative-tested with the 71.1× value). First real run
+  caught three latent YAML defects: a dimension mapped to a renamed column,
+  `blended_roas` defined on empty-for-recent-windows fct_orders revenue, and an
+  orders-based CVR diverging from the canonical GA4 one — all fixed; a new
+  `attribution_touchpoints` semantic model encodes the touchpoint-date
+  windowing basis. Python formula duplication collapsed into
+  `src/fullfunnel/metrics.py`.
+- [ ] MetricFlow as the only computation path: replace the generator's and `query_window.py`'s section SQL with `mf query` calls (the remaining half — presentation-shaped sections like campaign tables and CRM stages need per-dimension queries).
+- [x] **Governed analytics MCP server shipped** (`mcp_servers/analytics_server.py`):
+  `list_metrics` / `get_metric` / `explain_metric` / `get_funnel` (server-side
+  ordering validation; CRM lifetime excluded by contract) / `compare_windows`
+  (month-to-date warnings) — every response carries the governance envelope
+  `{value, formula, scope_label, window, attribution_model, source}` with
+  formulas read live from metrics.yml. Commands now direct file-less clients
+  (Claude Desktop) to it. Remaining: demote the platform mocks to test
+  fixtures once the live-MCP command variant is re-pointed.
+- [x] **Governed chat shipped**: rebuilt on the analytics-server tools (no raw
+  SQL from chat), full conversation history, runtime system prompt from golden
+  `_meta`, "How was this computed" provenance expander. Streaming still open.
+- [x] **Streamlit Cloud bootstrap shipped** (`streamlit_app/lib/bootstrap.py`):
+  first boot builds DuckDB + golden from the committed baseline; a
+  from-nothing bootstrap reproduces the committed artifact identically.
+  Owner action remaining: deploy at share.streamlit.io.
 - [ ] Memory: persist analyses to DuckDB; `recall_analyses(topic, since)` tool.
-- [ ] Real EL: dlt pipelines (verified sources exist for Google Ads, GA4, Facebook Ads, HubSpot, Salesforce); ship one real connector (GA4 Data API — free) behind a small Connector protocol; delete `load_supabase.py`'s silent `except: pass`.
-- [ ] dbt hardening: `packages.yml` (dbt_utils, dbt-expectations, elementary), grain tests on composite-key marts, model contracts on golden-feeding marts, `sources.yml` freshness blocks + `dbt source freshness` in CI, `exposures:` for dashboards and MCP servers, dbt docs to GitHub Pages.
+- [x] **Connector protocol + real GA4 connector shipped**: `Connector` ABC +
+  registry, 3 CSV mock reference implementations, real GA4 Data API connector
+  (pure-function response mapping, unit-tested without credentials),
+  `fullfunnel ingest` CLI with dry-run and windowed CSV merge;
+  `load_supabase.py` silent error swallowing removed. Remaining from this
+  item: dlt adoption for the multi-source EL matrix (Google Ads, Meta,
+  HubSpot, Salesforce) — the protocol seam is now the integration point.
+- [x] **dbt hardening shipped**: dbt_utils (git-pinned; hub blocked by network
+  policy), enforced contract on `fct_marketing_daily`, grain tests on both
+  composite-key marts, source freshness on all 7 time-series sources in CI +
+  daily refresh, exposures for all four consumers. Deferred: dbt-expectations
+  (hub-dependent transitive deps; range checks covered by pytest + validators),
+  elementary (same), dbt docs to GitHub Pages (needs Pages enabled — owner
+  action, grouped with the hosted-demo item).
 - [ ] JSON Schema + pydantic contract for `golden_metrics.json`; dashboards `fetch()` it at load instead of baking constants; retire or golden-route `generate_dashboards.py`.
 
 ### Phase 3 — The wedge (ongoing)

@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "generated_at": "2026-07-12T00:22:26.648165+00:00",
+    "generated_at": "2026-07-12T02:29:53.379445+00:00",
     "anchor_date": "2026-07-12",
     "dataset_start": "2024-07-16",
     "dataset_end": "2026-07-12",
@@ -9,8 +9,9 @@
     "window_end": "2026-07-12",
     "dbt_source": "/home/user/full-funnel-ai-analytics/data/olist_analytics.duckdb",
     "dbt_target": "duckdb",
-    "schema_version": "2.2",
+    "schema_version": "2.3",
     "google_aov": 100.0,
+    "semantic_layer_crosscheck": "passed (5 metrics vs MetricFlow)",
     "available_windows": {
       "windowed_7d": {
         "start": "2026-07-06",

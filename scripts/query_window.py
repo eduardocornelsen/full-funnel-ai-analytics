@@ -54,7 +54,10 @@ import duckdb
 PROJECT_ROOT = Path(__file__).parent.parent
 DATA_DIR     = PROJECT_ROOT / "data" / "mock_marketing"
 
-GOOGLE_AOV  = 100.0
+# Canonical Python formulas — single definition in src/fullfunnel/metrics.py.
+import sys as _sys
+_sys.path.insert(0, str(PROJECT_ROOT / "src"))
+from fullfunnel.metrics import google_roas as _google_roas, session_cvr as _session_cvr  # noqa: E402
 
 
 def _latest_csv_date() -> date:
@@ -203,18 +206,12 @@ def parse_window(args) -> tuple[date, date, str]:
 
 # ── Query section builder ─────────────────────────────────────────────────────
 # These mirror the q_*() functions in generate_golden_metrics.py but use the
-# CSV-backed connection from build_csv_connection(). Kept in sync manually.
+# CSV-backed connection from build_csv_connection(). The SQL shapes are kept in
+# sync manually (until both route through MetricFlow); the metric FORMULAS are
+# imported from fullfunnel.metrics — never redefine them here.
 
 def _fd(d: date) -> str:
     return d.strftime("%Y-%m-%d")
-
-
-def _google_roas(conv: float, cost: float) -> float:
-    return round((conv * GOOGLE_AOV) / cost, 2) if cost else 0.0
-
-
-def _session_cvr(conv: float, sessions: float) -> float:
-    return round(conv / sessions * 100, 2) if sessions else 0.0
 
 
 def build_window_section(con: duckdb.DuckDBPyConnection,

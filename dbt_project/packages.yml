@@ -1,0 +1,11 @@
+# Data-quality toolkit.
+#
+# Pinned via git rather than hub.getdbt.com — package hub access is blocked in
+# some CI/network policies, github.com is not. Pin to release tags only.
+#
+# dbt_expectations deliberately omitted: its transitive deps resolve via the
+# hub, and its range-style checks are already covered by tests/ (pytest
+# plausibility suite) and scripts/validate_metrics.py.
+packages:
+  - git: "https://github.com/dbt-labs/dbt-utils.git"
+    revision: "1.3.0"

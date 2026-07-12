@@ -18,20 +18,56 @@ models:
           - not_null
 
   - name: fct_marketing_daily
-    description: Daily spend, conversions, and session KPIs per channel
+    description: >
+      Daily spend, conversions, and session KPIs — the mart the golden layer
+      reads. Model contract ENFORCED: the golden generator, MetricFlow
+      semantic models, and the drift validator all depend on these exact
+      columns and types; a silent column change here breaks all three.
+    config:
+      contract:
+        enforced: true
     columns:
       - name: date
+        data_type: date
         tests:
           - not_null
+          - unique   # one row per calendar day — the grain of this mart
+      - name: total_google_spend
+        data_type: double
+        tests: [not_null]
+      - name: total_meta_spend
+        data_type: double
+        tests: [not_null]
       - name: total_spend
-        tests:
-          - not_null
+        data_type: double
+        tests: [not_null]
+      - name: total_ad_conversions
+        data_type: hugeint
+        tests: [not_null]
+      - name: total_conversions
+        data_type: hugeint
+        tests: [not_null]
+      - name: ga4_total_sessions
+        data_type: hugeint
+        tests: [not_null]
+      - name: ga4_engaged_sessions
+        data_type: hugeint
+        tests: [not_null]
+      - name: blended_cac
+        data_type: double
+      - name: cost_per_session
+        data_type: double
 
   - name: fct_channel_performance
     description: >
       Aggregated spend, revenue, orders, ROAS, and CAC per (date × channel).
       Grain is daily × channel after the time-dimension refactor — channel
       alone is not unique.
+    tests:
+      # Grain test: exactly one row per (date, channel). Documented since the
+      # refactor but never enforced until dbt_utils was installed.
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [date, channel]
     columns:
       - name: date
         tests:
@@ -50,6 +86,9 @@ models:
     description: >
       Revenue credited to each channel under four attribution models.
       Grain is (order_date × channel) — channel alone is not unique.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [order_date, channel]
     columns:
       - name: order_date
         tests:

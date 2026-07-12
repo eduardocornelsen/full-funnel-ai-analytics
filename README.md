@@ -277,6 +277,7 @@ See the [Data Import Guide](docs/guides/data_import_guide.md) for all three impo
 
 | Server                 | What it exposes                   | Key tools                                                                     |
 | ---------------------- | --------------------------------- | ----------------------------------------------------------------------------- |
+| **Analytics (governed)** | Golden-layer metrics with governance envelopes — the primary agent interface | `list_metrics`, `get_metric`, `explain_metric`, `get_funnel`, `compare_windows`, `query_metrics` |
 | **BigQuery**           | Warehouse queries                 | `execute_query`, `list_tables`, `get_schema`                                  |
 | **dbt Semantic Layer** | Governed metrics + SQL generation | `text_to_sql`, `get_metrics`, `get_dimensions` (60+ tools)                    |
 | **Google Ads**         | Campaign performance, keywords    | `get_campaign_performance`, `get_keyword_performance`, `list_campaigns`       |
@@ -471,7 +472,7 @@ full-funnel-ai-analytics/
 │   ├── mock_ga4_server.py
 │   ├── mock_hubspot_server.py
 │   ├── mock_salesforce_server.py
-│   ├── mock_analytics_server.py          #   Serves golden_metrics.json windows to agents
+│   ├── analytics_server.py               #   GOVERNED metrics server (golden layer + envelopes)
 │   └── claude_desktop_config.example.json
 │
 ├── scripts/
@@ -574,6 +575,22 @@ The `dashboards/golden_metrics.json` file is pre-computed from the dbt warehouse
 ---
 
 ## Swapping to Real Platform Data
+
+**The supported seam is the Connector protocol** (`src/fullfunnel/connectors/`).
+The first real connector (GA4 Data API, free tier) ships today:
+
+```bash
+pip install -e ".[ga4]"
+export GA4_PROPERTY_ID=123456789
+export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
+fullfunnel ingest --connector ga4 --last-days 90 --dry-run   # preview
+fullfunnel ingest --connector ga4 --last-days 90             # write + merge
+fullfunnel refresh                                            # rebuild everything
+```
+
+Writing a new connector = one class: declare the staging schema, implement
+`extract(start, end)`, register it. The CSV mocks (`ga4-mock`,
+`google-ads-mock`, `meta-ads-mock`) are the reference implementations.
 
 | Mock Server                 | Production Replacement      | Setup                                  |
 | --------------------------- | --------------------------- | -------------------------------------- |

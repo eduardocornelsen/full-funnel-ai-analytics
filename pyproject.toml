@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "full-funnel-ai-analytics"
-version = "0.9.0"
+version = "0.10.0"
 description = "Governed marketing analytics for AI agents — dbt golden layer + MCP servers + drift/staleness gates"
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -31,6 +31,7 @@ dependencies = [
     "duckdb>=0.9.0",
     "dbt-core>=1.9.0,<2.0",
     "dbt-duckdb>=1.9.0",
+    "dbt-metricflow>=0.8.0",
     "fastmcp>=0.1.0",
     "mcp>=1.0.0",
     "pydantic>=2.5.0",
@@ -61,6 +62,7 @@ app = [
     "openpyxl>=3.1.0",
 ]
 olist = ["kaggle>=1.5.0"]
+ga4 = ["google-analytics-data>=0.18.0"]
 dev = [
     "pytest>=8.0.0",
     "pytest-httpx>=0.30.0",

@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: full-funnel-ai-analytics
-Version: 0.9.0
+Version: 0.10.0
 Summary: Governed marketing analytics for AI agents — dbt golden layer + MCP servers + drift/staleness gates
 License: MIT License
         
@@ -36,24 +36,25 @@ Requires-Python: >=3.10
 Description-Content-Type: text/markdown
 License-File: LICENSE
 Requires-Dist: pandas>=2.1.0
-Requires-Dist: numpy>=1.26.0
+Requires-Dist: numpy<3.0,>=1.26.0
 Requires-Dist: pyarrow>=14.0.0
 Requires-Dist: duckdb>=0.9.0
-Requires-Dist: dbt-core>=1.7.0
-Requires-Dist: dbt-duckdb>=1.7.0
+Requires-Dist: dbt-core<2.0,>=1.9.0
+Requires-Dist: dbt-duckdb>=1.9.0
+Requires-Dist: dbt-metricflow>=0.8.0
 Requires-Dist: fastmcp>=0.1.0
 Requires-Dist: mcp>=1.0.0
 Requires-Dist: pydantic>=2.5.0
 Requires-Dist: python-dotenv>=1.0.0
 Requires-Dist: tqdm>=4.66.0
 Provides-Extra: bigquery
-Requires-Dist: dbt-bigquery>=1.7.0; extra == "bigquery"
+Requires-Dist: dbt-bigquery>=1.9.0; extra == "bigquery"
 Requires-Dist: google-cloud-bigquery>=3.13.0; extra == "bigquery"
 Requires-Dist: google-cloud-bigquery-storage>=2.22.0; extra == "bigquery"
 Provides-Extra: snowflake
 Requires-Dist: snowflake-connector-python>=3.6.0; extra == "snowflake"
 Provides-Extra: postgres
-Requires-Dist: dbt-postgres>=1.7.0; extra == "postgres"
+Requires-Dist: dbt-postgres>=1.9.0; extra == "postgres"
 Requires-Dist: supabase>=2.0.0; extra == "postgres"
 Provides-Extra: ml
 Requires-Dist: scikit-learn>=1.3.0; extra == "ml"
@@ -69,6 +70,8 @@ Requires-Dist: anthropic>=0.40.0; extra == "app"
 Requires-Dist: openpyxl>=3.1.0; extra == "app"
 Provides-Extra: olist
 Requires-Dist: kaggle>=1.5.0; extra == "olist"
+Provides-Extra: ga4
+Requires-Dist: google-analytics-data>=0.18.0; extra == "ga4"
 Provides-Extra: dev
 Requires-Dist: pytest>=8.0.0; extra == "dev"
 Requires-Dist: pytest-httpx>=0.30.0; extra == "dev"
@@ -237,9 +240,8 @@ The project ships with four GitHub Actions workflows that enforce zero metric dr
 | Workflow | Trigger | What it does |
 | -------- | ------- | ------------ |
 | [`ci.yml`](.github/workflows/ci.yml) | Every pull request | dbt compile + test on DuckDB → generate golden metrics → validate drift → pytest. No cloud creds needed. |
-| [`warehouse-deploy.yml`](.github/workflows/warehouse-deploy.yml) | Push to `main` | Deploys dbt to BigQuery **and** Snowflake in parallel → regenerates `golden_metrics.json` → commits it back to the repo. |
-| [`scheduled-refresh.yml`](.github/workflows/scheduled-refresh.yml) | Daily 06:00 UTC | Appends synthetic data → dbt run/test → regenerates golden metrics with `--live` flag → validates. |
-| [`daily-synthetic-data.yml`](.github/workflows/daily-synthetic-data.yml) | Daily 05:00 UTC | Adds one new day of realistic synthetic data to mock CSVs. Can be manually triggered with a custom `--days` count. |
+| [`warehouse-deploy.yml`](.github/workflows/warehouse-deploy.yml) | Push to `main` | Deploys dbt to BigQuery **and** Snowflake in parallel → validates cross-warehouse parity against the committed golden layer. |
+| [`scheduled-refresh.yml`](.github/workflows/scheduled-refresh.yml) | Daily 06:00 UTC | Regenerates synthetic appends up to today (in the runner — never committed) → dbt run/test → regenerates golden metrics → validates drift + freshness → commits **only** `golden_metrics.json`. |
 
 ### The Zero-Drift Guarantee
 
@@ -278,21 +280,40 @@ See the [Production Readiness Guide](docs/guides/production_readiness_guide.md) 
 
 | Layer | Location | In git? | How it's created |
 |-------|----------|---------|-----------------|
-| Olist raw dataset | `data/olist/*.csv` | ❌ Never (400MB) | `python scripts/download_olist_data.py` |
-| Mock marketing CSVs | `data/mock_marketing/*.csv` | ✅ Yes (~60MB, grows daily) | Generated once; appended daily by CI; recreated without Olist via `--standalone` |
-| DuckDB warehouse | `data/olist_analytics.duckdb` | ❌ Never | `load_duckdb.py` + `dbt run` locally |
-| Golden metrics snapshot | `dashboards/golden_metrics.json` | ✅ Yes (~50KB) | CI commits it after every deploy |
+| Olist raw dataset | `data/olist/*.csv` | ❌ Never (400MB) | `python scripts/download_olist_data.py` (optional, Kaggle) |
+| Mock marketing CSVs | `data/mock_marketing/*.csv` | ✅ Frozen baseline (~60MB, one-time) | Olist-anchored baseline committed once; **daily days are regenerated locally, never committed** |
+| Synthetic daily appends | rows appended to the CSVs above | ❌ Regenerated | `fullfunnel append` — deterministic (seeded per calendar date), so every machine computes identical rows |
+| DuckDB warehouse | `data/olist_analytics.duckdb` | ❌ Never | Built locally by `fullfunnel demo` / `refresh` |
+| Golden metrics snapshot | `dashboards/golden_metrics.json` | ✅ Yes (~50KB) | Committed daily by the scheduled refresh — the artifact of record |
 
-**To update your local DuckDB after a `git pull`:**
+**Why this design:** the daily data is *code, not state*. Generators are
+seeded by calendar date (`tests/test_determinism.py` guards this in CI), so
+committing the rows would only bloat git history — any clone regenerates them
+byte-identically in seconds. The one thing that must be shared is the golden
+metrics artifact, and that is the only thing the bots commit.
+
+### Keeping your local data current (daily routine)
+
+One command — run it whenever you want your local dataset, warehouse, and
+golden metrics brought up to today:
 
 ```bash
-git pull                                                   # get new CSVs + golden_metrics.json
-python scripts/load_duckdb.py                             # load CSVs into DuckDB
-cd dbt_project && dbt run --target duckdb && cd ..        # rebuild mart tables
+fullfunnel refresh    # catch data up to today → rebuild DuckDB → dbt run/test → golden metrics → strict validation
 ```
 
-Claude dashboards update after `git pull` alone (they read `golden_metrics.json`).
-Streamlit and DuckDB queries need all three steps above.
+That's it. Notes:
+
+- **Missed a few days?** Still one command — catch-up backfills every table
+  from its own last date to today, and a same-day re-run is a no-op.
+- **Your local CSVs will show as modified in git** — expected: you regenerated
+  days on top of the frozen baseline. Don't commit them. To reset to the
+  committed baseline: `git checkout -- data/mock_marketing/`
+- **After `git pull`:** Claude dashboards update immediately (they read the
+  committed `golden_metrics.json`). For Streamlit/DuckDB, run
+  `fullfunnel refresh` once.
+- **Olist raw data** stays local and is only needed if you want to regenerate
+  the *baseline* from scratch (`python scripts/generate_mock_marketing_data.py`);
+  day-to-day refreshes never touch it.
 
 See [Data Import Guide](docs/guides/data_import_guide.md) for the full explanation including how this maps to a real production pipeline (Fivetran → BigQuery → dbt Cloud).
 
@@ -337,6 +358,7 @@ See the [Data Import Guide](docs/guides/data_import_guide.md) for all three impo
 
 | Server                 | What it exposes                   | Key tools                                                                     |
 | ---------------------- | --------------------------------- | ----------------------------------------------------------------------------- |
+| **Analytics (governed)** | Golden-layer metrics with governance envelopes — the primary agent interface | `list_metrics`, `get_metric`, `explain_metric`, `get_funnel`, `compare_windows`, `query_metrics` |
 | **BigQuery**           | Warehouse queries                 | `execute_query`, `list_tables`, `get_schema`                                  |
 | **dbt Semantic Layer** | Governed metrics + SQL generation | `text_to_sql`, `get_metrics`, `get_dimensions` (60+ tools)                    |
 | **Google Ads**         | Campaign performance, keywords    | `get_campaign_performance`, `get_keyword_performance`, `list_campaigns`       |
@@ -440,51 +462,67 @@ Enterprise warehouse demos use free trials: Snowflake (30-day, ~$400 credits) an
 
 ## Quick Start
 
-See the [Step-by-Step Setup Guide](docs/guides/setup_guide.md) for full instructions.
+**Default path — zero credentials, under 5 minutes.** The repo ships with the
+synthetic dataset committed, so the pipeline runs end-to-end with nothing but
+Python:
 
 ```bash
-# 1. Clone
-git clone https://github.com/YOUR_USERNAME/full-funnel-ai-analytics.git
+git clone https://github.com/eduardocornelsen/full-funnel-ai-analytics.git
 cd full-funnel-ai-analytics
+pip install -e .
+fullfunnel demo            # data → DuckDB → dbt → golden metrics → validation
+fullfunnel demo --serve    # same, then launches the Streamlit app
+```
 
-# 2. Setup
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env  # Fill in your credentials
+Or with Docker:
 
-# 3. Download and generate data
+```bash
+docker compose up          # Streamlit at :8501, scoring API at :8000
+```
+
+Then ask an AI client:
+
+```bash
+# Claude Code: works as-is — the repo's .mcp.json uses relative paths.
+#   Open Claude Code in the repo and type /marketing
+# Claude Desktop: copy mcp_servers/claude_desktop_config.example.json into your
+#   Desktop config and replace /ABSOLUTE/PATH/TO/ with your clone location
+```
+
+Everyday commands:
+
+```bash
+fullfunnel append      # advance synthetic data to today (the daily cron does this)
+fullfunnel refresh     # append + rebuild + strict validation
+fullfunnel validate    # metric drift + staleness gates (must exit 0)
+fullfunnel bench       # SQRA retrieval-accuracy benchmark
+```
+
+<details>
+<summary><b>Optional paths: Olist real data, ML scoring API, cloud warehouses</b></summary>
+
+```bash
+# Realistic e-commerce base data (requires a free Kaggle API key)
+pip install -e ".[olist]"
 python scripts/download_olist_data.py
 python scripts/generate_mock_marketing_data.py
+fullfunnel refresh
 
-# 4. Load into warehouses
-python scripts/load_bigquery.py
-python scripts/load_duckdb.py
-
-# 5. Build dbt models
-cd dbt_project && dbt build --target duckdb && cd ..
-
-# 6. Generate the golden metrics snapshot (used by all dashboards and Claude skills)
-python scripts/generate_golden_metrics.py
-python scripts/validate_metrics.py   # confirms 0 drift — must exit 0
-
-# 7. Start ML tracking and train model
+# ML lead scoring + API
+pip install -e ".[ml]"
 bash scripts/run_mlflow_server.sh &
 python ml/src/train.py
-
-# 8. Start scoring API
 cd api && uvicorn main:app --port 8000 &
 
-# 9. Configure MCP for your preferred client
-# Claude Code: works as-is — the repo's .mcp.json uses relative paths
-# Claude Desktop: copy mcp_servers/claude_desktop_config.example.json
-#                 to ~/Library/Application Support/Claude/claude_desktop_config.json
-#                 and replace /ABSOLUTE/PATH/TO/ with your clone location
-# Gemini CLI: gemini --mcp-server "bigquery=uvx mcp-server-bigquery --project YOUR_PROJECT"
-
-# 10. Query in natural language from any client:
-# "Show me blended ROAS across Google and Meta for Q1 2025,
-#  with attribution model comparison and lead quality breakdown."
+# Cloud warehouses
+pip install -e ".[bigquery]"       # or [snowflake], [postgres]
+python scripts/load_bigquery.py
+cd dbt_project && dbt build --target bigquery && cd ..
 ```
+
+See the [Step-by-Step Setup Guide](docs/guides/setup_guide.md) for full instructions.
+
+</details>
 
 ---
 
@@ -496,8 +534,7 @@ full-funnel-ai-analytics/
 │   └── workflows/
 │       ├── ci.yml                        # PR gate (DuckDB — no cloud creds needed)
 │       ├── warehouse-deploy.yml          # Deploy to BigQuery + Snowflake on push to main
-│       ├── scheduled-refresh.yml         # Daily dbt run + golden metrics refresh (06:00 UTC)
-│       └── daily-synthetic-data.yml      # Daily synthetic data append (05:00 UTC)
+│       └── scheduled-refresh.yml         # Daily data catch-up + dbt + golden refresh (06:00 UTC)
 │
 ├── dbt_project/                          # Semantic layer + transformations
 │   ├── models/
@@ -516,7 +553,7 @@ full-funnel-ai-analytics/
 │   ├── mock_ga4_server.py
 │   ├── mock_hubspot_server.py
 │   ├── mock_salesforce_server.py
-│   ├── mock_analytics_server.py          #   Serves golden_metrics.json windows to agents
+│   ├── analytics_server.py               #   GOVERNED metrics server (golden layer + envelopes)
 │   └── claude_desktop_config.example.json
 │
 ├── scripts/

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "full-funnel-ai-analytics"
-version = "0.9.0"
+version = "0.10.0"
 description = "Governed marketing analytics for AI agents — dbt golden layer + MCP servers + drift/staleness gates"
 readme = "README.md"
 license = { file = "LICENSE" }

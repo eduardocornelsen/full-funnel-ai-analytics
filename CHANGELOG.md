@@ -39,6 +39,29 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: [SemVer](
   its governed metrics against `mf query` and fails on divergence, recording
   the result in `_meta.semantic_layer_crosscheck`. New `attribution_touchpoints`
   semantic model. Python metric formulas collapsed into `src/fullfunnel/metrics.py`
+
+### Fixed
+- Streamlit app crashed at startup with current marts: a module-level query
+  selected columns from a `fct_pipeline` shape that no longer exists
+  (`total_conversions`, `total_touches`, …). Rebuilt as a deal-grain rollup;
+  the full app now executes cleanly (verified via `streamlit.testing.AppTest`,
+  9 tabs, zero exceptions)
+- **Semantic layer YAML had never run and was silently wrong** — first
+  MetricFlow execution caught: `payment_type` dimension mapped to a renamed
+  column; `blended_roas` defined on `fct_orders` revenue (NULL for all recent
+  windows, different scope than the golden layer); `session_conversion_rate`
+  defined orders-based (returned 0) instead of the canonical GA4 ratio. All
+  redefined to match CLAUDE.md §1 and verified equal to the golden layer to 4
+  decimal places
+
+### Known issues
+- SQRA benchmark cases with hardcoded all-time expected values drift as the
+  dataset grows daily; expected values must derive from the golden layer
+  (planned for SQRA v2 — see `docs/STRATEGY.md` Phase 3)
+
+## [0.10.0] - 2026-07-12
+
+### Added
 - Committed-artifact spot check: `validate_metrics.py --completed-months-only`
   validates the checked-in `golden_metrics.json` against the warehouse using
   completed calendar months (anchor-independent), wired into PR CI before the
@@ -67,18 +90,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: [SemVer](
 - Workflow concurrency groups so data-writing jobs can't race
 
 ### Fixed
-- Streamlit app crashed at startup with current marts: a module-level query
-  selected columns from a `fct_pipeline` shape that no longer exists
-  (`total_conversions`, `total_touches`, …). Rebuilt as a deal-grain rollup;
-  the full app now executes cleanly (verified via `streamlit.testing.AppTest`,
-  9 tabs, zero exceptions)
-- **Semantic layer YAML had never run and was silently wrong** — first
-  MetricFlow execution caught: `payment_type` dimension mapped to a renamed
-  column; `blended_roas` defined on `fct_orders` revenue (NULL for all recent
-  windows, different scope than the golden layer); `session_conversion_rate`
-  defined orders-based (returned 0) instead of the canonical GA4 ratio. All
-  redefined to match CLAUDE.md §1 and verified equal to the golden layer to 4
-  decimal places
 - **Golden layer silently stale for 93 days**: `fct_marketing_daily` was capped
   by a literal-date var fallback and the scheduled refresh passed no `--vars`;
   the mart now derives bounds from source data and cannot freeze
@@ -96,7 +107,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: [SemVer](
 ### Removed
 - `mcp_servers/weather_server.py` (unrelated demo)
 
-### Known issues
-- SQRA benchmark cases with hardcoded all-time expected values drift as the
-  dataset grows daily; expected values must derive from the golden layer
-  (planned for SQRA v2 — see `docs/STRATEGY.md` Phase 3)
+## [0.9.x and earlier]
+
+Pre-changelog history: initial platform build (dbt project, MCP servers,
+dashboards, ML scoring, multi-warehouse deploys) — see git log and GitHub
+releases v0.9.0 / v0.9.1.

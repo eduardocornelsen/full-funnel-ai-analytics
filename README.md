@@ -576,6 +576,22 @@ The `dashboards/golden_metrics.json` file is pre-computed from the dbt warehouse
 
 ## Swapping to Real Platform Data
 
+**The supported seam is the Connector protocol** (`src/fullfunnel/connectors/`).
+The first real connector (GA4 Data API, free tier) ships today:
+
+```bash
+pip install -e ".[ga4]"
+export GA4_PROPERTY_ID=123456789
+export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
+fullfunnel ingest --connector ga4 --last-days 90 --dry-run   # preview
+fullfunnel ingest --connector ga4 --last-days 90             # write + merge
+fullfunnel refresh                                            # rebuild everything
+```
+
+Writing a new connector = one class: declare the staging schema, implement
+`extract(start, end)`, register it. The CSV mocks (`ga4-mock`,
+`google-ads-mock`, `meta-ads-mock`) are the reference implementations.
+
 | Mock Server                 | Production Replacement      | Setup                                  |
 | --------------------------- | --------------------------- | -------------------------------------- |
 | `mock_google_ads_server.py` | `cohnen/mcp-google-ads`     | Google Ads API developer token + OAuth |

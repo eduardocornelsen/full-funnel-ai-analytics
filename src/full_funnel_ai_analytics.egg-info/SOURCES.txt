@@ -9,5 +9,14 @@ src/full_funnel_ai_analytics.egg-info/requires.txt
 src/full_funnel_ai_analytics.egg-info/top_level.txt
 src/fullfunnel/__init__.py
 src/fullfunnel/cli.py
+src/fullfunnel/metrics.py
+src/fullfunnel/connectors/__init__.py
+src/fullfunnel/connectors/base.py
+src/fullfunnel/connectors/csv_mock.py
+src/fullfunnel/connectors/ga4.py
+tests/test_analytics_server.py
 tests/test_api.py
+tests/test_connectors.py
+tests/test_determinism.py
 tests/test_golden_metrics.py
+tests/test_governed_chat.py

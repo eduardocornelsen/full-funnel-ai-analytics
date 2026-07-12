@@ -6,6 +6,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: [SemVer](
 ## [Unreleased]
 
 ### Added
+- **Connector protocol + real GA4 connector** (`src/fullfunnel/connectors/`):
+  a small `Connector` ABC (extract(start, end) → staging-schema DataFrame,
+  schema declared in code — CLAUDE.md §7 field mappings now live as code, not
+  prose) with a registry; three CSV mock reference implementations; and the
+  first REAL platform connector against the GA4 Data API v1 (free tier),
+  with the API→staging mapping as a pure unit-tested function. New CLI:
+  `fullfunnel ingest --connector ga4 --last-days 90 [--dry-run]` merges the
+  extracted window into the staging CSV (with backup) — "swap in your real
+  data" is now a seam, not an aspiration. `pip install -e ".[ga4]"`
 - **dbt hardening**: `packages.yml` with dbt_utils (git-pinned — package hub
   blocked in some network policies); model contract ENFORCED on
   `fct_marketing_daily` (the golden-feeding mart) with full column typing;
@@ -41,6 +50,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: [SemVer](
   semantic model. Python metric formulas collapsed into `src/fullfunnel/metrics.py`
 
 ### Fixed
+- `scripts/load_supabase.py` swallowed every load error (`except: pass` ×3,
+  print-and-continue ×1) — partial warehouse loads now fail loudly with the
+  failing table and batch offset
 - Streamlit app crashed at startup with current marts: a module-level query
   selected columns from a `fct_pipeline` shape that no longer exists
   (`total_conversions`, `total_touches`, …). Rebuilt as a deal-grain rollup;

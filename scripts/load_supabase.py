@@ -101,7 +101,9 @@ def main():
             try:
                 client.table("orders").upsert(batch).execute()
             except Exception as e:
-                print(f"  Error at row {i}: {e}")
+                # No partial loads: a skipped batch leaves the warehouse
+                # inconsistent and every downstream metric quietly wrong.
+                raise RuntimeError(f"Supabase load failed for orders batch at row {i}: {e}") from e
     else:
         print("  SKIP: olist_orders_dataset.csv not found")
 
@@ -116,7 +118,9 @@ def main():
             try:
                 client.table("customers").upsert(batch).execute()
             except Exception as e:
-                pass
+                # No partial loads: a skipped batch leaves the warehouse
+                # inconsistent and every downstream metric quietly wrong.
+                raise RuntimeError(f"Supabase load failed for customers batch at row {i}: {e}") from e
     else:
         print("  SKIP: olist_customers_dataset.csv not found")
 
@@ -132,7 +136,9 @@ def main():
             try:
                 client.table("hubspot_contacts").upsert(batch).execute()
             except Exception as e:
-                pass
+                # No partial loads: a skipped batch leaves the warehouse
+                # inconsistent and every downstream metric quietly wrong.
+                raise RuntimeError(f"Supabase load failed for hubspot_contacts batch at row {i}: {e}") from e
     else:
         print("  SKIP: hubspot_contacts.csv not found")
 
@@ -148,7 +154,9 @@ def main():
             try:
                 client.table("marketing_attribution").insert(batch).execute()
             except Exception as e:
-                pass
+                # No partial loads: a skipped batch leaves the warehouse
+                # inconsistent and every downstream metric quietly wrong.
+                raise RuntimeError(f"Supabase load failed for marketing_attribution batch at row {i}: {e}") from e
     else:
         print("  SKIP: marketing_attribution.csv not found")
 

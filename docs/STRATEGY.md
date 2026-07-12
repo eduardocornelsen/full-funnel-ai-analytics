@@ -234,7 +234,13 @@ pre-merge history, so this deliberately waits for the merge.
   from-nothing bootstrap reproduces the committed artifact identically.
   Owner action remaining: deploy at share.streamlit.io.
 - [ ] Memory: persist analyses to DuckDB; `recall_analyses(topic, since)` tool.
-- [ ] Real EL: dlt pipelines (verified sources exist for Google Ads, GA4, Facebook Ads, HubSpot, Salesforce); ship one real connector (GA4 Data API — free) behind a small Connector protocol; delete `load_supabase.py`'s silent `except: pass`.
+- [x] **Connector protocol + real GA4 connector shipped**: `Connector` ABC +
+  registry, 3 CSV mock reference implementations, real GA4 Data API connector
+  (pure-function response mapping, unit-tested without credentials),
+  `fullfunnel ingest` CLI with dry-run and windowed CSV merge;
+  `load_supabase.py` silent error swallowing removed. Remaining from this
+  item: dlt adoption for the multi-source EL matrix (Google Ads, Meta,
+  HubSpot, Salesforce) — the protocol seam is now the integration point.
 - [x] **dbt hardening shipped**: dbt_utils (git-pinned; hub blocked by network
   policy), enforced contract on `fct_marketing_daily`, grain tests on both
   composite-key marts, source freshness on all 7 time-series sources in CI +

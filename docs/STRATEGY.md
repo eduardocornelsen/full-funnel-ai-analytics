@@ -172,7 +172,7 @@ freshness gates.
   source when linked from the repo). Owner action: enable Pages in repo
   settings; then a publish workflow can ship `dashboards/` on every refresh.
 
-**2. Data out of git** — stop committing ~60MB of CSVs daily. Decision matrix:
+**2. Data out of git — DECIDED & DONE (hybrid of A):** the Olist-anchored baseline stays committed (frozen, one-time); daily appends are regenerated deterministically on every machine and never committed; the scheduled refresh commits only `golden_metrics.json` (~50KB/day). numpy is pinned and `tests/test_determinism.py` gates reproducibility in CI. Git history was left as-is (no rewrite). Original decision matrix kept for the record:
 
 | Option | How | Pros | Cons |
 |--------|-----|------|------|
@@ -199,7 +199,7 @@ pre-merge history, so this deliberately waits for the merge.
 - [x] CLI: `init` (writes configs), `demo` (synthetic data → DuckDB → golden → Streamlit, zero credentials, <5 min), `validate`, `bench`
 - [x] `docker-compose.yml` (streamlit + api + mlflow, seeded data)
 - [x] Make `--standalone` synthetic the default path; Kaggle/Olist becomes opt-in
-- [ ] Stop committing daily CSVs to git — see the decision matrix in the remainder above
+- [x] Stop committing daily CSVs to git — frozen baseline + deterministic regeneration (see remainder above)
 - [x] Fix `warehouse-deploy.yml`: deploy from committed data, never regenerate; add `concurrency:` groups; never let it overwrite the DuckDB-derived golden artifact
 - [x] CHANGELOG; CONTRIBUTING with dev setup + good-first-issues; issue templates; ruff in CI
 - [ ] Tag `v0.9.0` (after merge to main — see remainder above); mypy in CI

@@ -6,6 +6,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: [SemVer](
 ## [Unreleased]
 
 ### Added
+- **Regenerate-don't-commit data model**: the committed CSVs are a frozen
+  Olist-anchored baseline; daily appends are regenerated deterministically
+  (seeded per calendar date) on every machine and never committed. The
+  scheduled refresh commits only `golden_metrics.json`; the separate daily
+  append workflow was removed. numpy is pinned and `tests/test_determinism.py`
+  gates generator reproducibility in CI
 - `fullfunnel` CLI (`pip install -e .`): `init`, `demo` (zero-credential path),
   `append`, `refresh`, `validate`, `bench`
 - `pyproject.toml` packaging with extras: `[bigquery]`, `[snowflake]`,

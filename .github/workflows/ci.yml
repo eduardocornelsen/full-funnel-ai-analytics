@@ -56,6 +56,11 @@ jobs:
             python scripts/generate_mock_marketing_data.py --standalone
           fi
 
+      # Deterministic catch-up: regenerates the same rows on every machine,
+      # proving the regenerate-don't-commit data model works from a fresh clone.
+      - name: Regenerate synthetic appends up to today
+        run: python scripts/daily_synthetic_append.py
+
       - name: Load DuckDB
         run: python scripts/load_duckdb.py
 

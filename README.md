@@ -159,9 +159,8 @@ The project ships with four GitHub Actions workflows that enforce zero metric dr
 | Workflow | Trigger | What it does |
 | -------- | ------- | ------------ |
 | [`ci.yml`](.github/workflows/ci.yml) | Every pull request | dbt compile + test on DuckDB → generate golden metrics → validate drift → pytest. No cloud creds needed. |
-| [`warehouse-deploy.yml`](.github/workflows/warehouse-deploy.yml) | Push to `main` | Deploys dbt to BigQuery **and** Snowflake in parallel → regenerates `golden_metrics.json` → commits it back to the repo. |
-| [`scheduled-refresh.yml`](.github/workflows/scheduled-refresh.yml) | Daily 06:00 UTC | Appends synthetic data → dbt run/test → regenerates golden metrics with `--live` flag → validates. |
-| [`daily-synthetic-data.yml`](.github/workflows/daily-synthetic-data.yml) | Daily 05:00 UTC | Catches synthetic data up to today (all 7 tables, self-healing) — realistic synthetic data to mock CSVs. Can be manually triggered with a custom `--days` count. |
+| [`warehouse-deploy.yml`](.github/workflows/warehouse-deploy.yml) | Push to `main` | Deploys dbt to BigQuery **and** Snowflake in parallel → validates cross-warehouse parity against the committed golden layer. |
+| [`scheduled-refresh.yml`](.github/workflows/scheduled-refresh.yml) | Daily 06:00 UTC | Regenerates synthetic appends up to today (in the runner — never committed) → dbt run/test → regenerates golden metrics → validates drift + freshness → commits **only** `golden_metrics.json`. |
 
 ### The Zero-Drift Guarantee
 
@@ -200,21 +199,40 @@ See the [Production Readiness Guide](docs/guides/production_readiness_guide.md) 
 
 | Layer | Location | In git? | How it's created |
 |-------|----------|---------|-----------------|
-| Olist raw dataset | `data/olist/*.csv` | ❌ Never (400MB) | `python scripts/download_olist_data.py` |
-| Mock marketing CSVs | `data/mock_marketing/*.csv` | ✅ Yes (~60MB, grows daily) | Generated once; appended daily by CI; recreated without Olist via `--standalone` |
-| DuckDB warehouse | `data/olist_analytics.duckdb` | ❌ Never | `load_duckdb.py` + `dbt run` locally |
-| Golden metrics snapshot | `dashboards/golden_metrics.json` | ✅ Yes (~50KB) | CI commits it after every deploy |
+| Olist raw dataset | `data/olist/*.csv` | ❌ Never (400MB) | `python scripts/download_olist_data.py` (optional, Kaggle) |
+| Mock marketing CSVs | `data/mock_marketing/*.csv` | ✅ Frozen baseline (~60MB, one-time) | Olist-anchored baseline committed once; **daily days are regenerated locally, never committed** |
+| Synthetic daily appends | rows appended to the CSVs above | ❌ Regenerated | `fullfunnel append` — deterministic (seeded per calendar date), so every machine computes identical rows |
+| DuckDB warehouse | `data/olist_analytics.duckdb` | ❌ Never | Built locally by `fullfunnel demo` / `refresh` |
+| Golden metrics snapshot | `dashboards/golden_metrics.json` | ✅ Yes (~50KB) | Committed daily by the scheduled refresh — the artifact of record |
 
-**To update your local DuckDB after a `git pull`:**
+**Why this design:** the daily data is *code, not state*. Generators are
+seeded by calendar date (`tests/test_determinism.py` guards this in CI), so
+committing the rows would only bloat git history — any clone regenerates them
+byte-identically in seconds. The one thing that must be shared is the golden
+metrics artifact, and that is the only thing the bots commit.
+
+### Keeping your local data current (daily routine)
+
+One command — run it whenever you want your local dataset, warehouse, and
+golden metrics brought up to today:
 
 ```bash
-git pull                                                   # get new CSVs + golden_metrics.json
-python scripts/load_duckdb.py                             # load CSVs into DuckDB
-cd dbt_project && dbt run --target duckdb && cd ..        # rebuild mart tables
+fullfunnel refresh    # catch data up to today → rebuild DuckDB → dbt run/test → golden metrics → strict validation
 ```
 
-Claude dashboards update after `git pull` alone (they read `golden_metrics.json`).
-Streamlit and DuckDB queries need all three steps above.
+That's it. Notes:
+
+- **Missed a few days?** Still one command — catch-up backfills every table
+  from its own last date to today, and a same-day re-run is a no-op.
+- **Your local CSVs will show as modified in git** — expected: you regenerated
+  days on top of the frozen baseline. Don't commit them. To reset to the
+  committed baseline: `git checkout -- data/mock_marketing/`
+- **After `git pull`:** Claude dashboards update immediately (they read the
+  committed `golden_metrics.json`). For Streamlit/DuckDB, run
+  `fullfunnel refresh` once.
+- **Olist raw data** stays local and is only needed if you want to regenerate
+  the *baseline* from scratch (`python scripts/generate_mock_marketing_data.py`);
+  day-to-day refreshes never touch it.
 
 See [Data Import Guide](docs/guides/data_import_guide.md) for the full explanation including how this maps to a real production pipeline (Fivetran → BigQuery → dbt Cloud).
 
@@ -434,8 +452,7 @@ full-funnel-ai-analytics/
 │   └── workflows/
 │       ├── ci.yml                        # PR gate (DuckDB — no cloud creds needed)
 │       ├── warehouse-deploy.yml          # Deploy to BigQuery + Snowflake on push to main
-│       ├── scheduled-refresh.yml         # Daily dbt run + golden metrics refresh (06:00 UTC)
-│       └── daily-synthetic-data.yml      # Daily synthetic data append (05:00 UTC)
+│       └── scheduled-refresh.yml         # Daily data catch-up + dbt + golden refresh (06:00 UTC)
 │
 ├── dbt_project/                          # Semantic layer + transformations
 │   ├── models/

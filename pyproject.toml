@@ -21,8 +21,12 @@ classifiers = [
 # Warehouse drivers, ML, and the Streamlit app are opt-in extras so a user
 # who wants only the demo doesn't install BigQuery/Snowflake/XGBoost.
 dependencies = [
+    # numpy upper-bounded: synthetic data is regenerated (not committed) and
+    # must be byte-identical everywhere — tests/test_determinism.py guards the
+    # random-stream stability this depends on. Raise the bound only with that
+    # test green on the new version.
     "pandas>=2.1.0",
-    "numpy>=1.26.0",
+    "numpy>=1.26.0,<3.0",
     "pyarrow>=14.0.0",
     "duckdb>=0.9.0",
     "dbt-core>=1.7.0",

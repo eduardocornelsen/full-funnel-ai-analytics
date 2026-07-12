@@ -13,8 +13,7 @@ Before flipping the GitHub release tag from `v0.9.0` pre-release to `v1.0.0`, wa
 
 - [ ] `ci.yml` — last run on `main` exits 0 (validates real Olist-anchored data after PR #5)
 - [ ] `warehouse-deploy.yml` — both BigQuery and Snowflake jobs pass, OR the Snowflake job is intentionally marked `continue-on-error: true` if you don't have credits
-- [ ] `scheduled-refresh.yml` — at least one successful daily run in the Actions tab
-- [ ] `daily-synthetic-data.yml` — at least one successful daily run; check that the auto-commit lands on `main`
+- [ ] `scheduled-refresh.yml` — at least one successful daily run; check the golden_metrics.json auto-commit lands on `main` (CSVs are never committed — appends regenerate deterministically)
 
 ### 2. Required GitHub secrets are configured
 
@@ -86,8 +85,7 @@ These three points are now enforced in the codebase as of PR #5.
 |-----------|---------|---------|
 | PR gate | `.github/workflows/ci.yml` | Compile + test every pull request on DuckDB (fast, no cloud creds) |
 | Warehouse deploy | `.github/workflows/warehouse-deploy.yml` | Deploy to BigQuery **and** Snowflake on every push to `main` |
-| Scheduled refresh | `.github/workflows/scheduled-refresh.yml` | Daily 6 AM UTC — re-run dbt, regenerate golden metrics |
-| Daily synthetic data | `.github/workflows/daily-synthetic-data.yml` | Daily 5 AM UTC — catch the mock dataset up to today (self-healing) |
+| Scheduled refresh | `.github/workflows/scheduled-refresh.yml` | Daily 6 AM UTC — regenerate appends up to today (in the runner), re-run dbt, regenerate + commit golden metrics |
 | Warehouse adapters | `scripts/_warehouse_adapters.py` | Uniform connection layer for DuckDB / BigQuery / Snowflake |
 | Multi-target generate | `scripts/generate_golden_metrics.py` | `--target` and `--live` flags added; default (DuckDB) unchanged |
 | Multi-target validate | `scripts/validate_metrics.py` | `--target` flag; compares warehouse mart tables to golden JSON |
@@ -184,10 +182,9 @@ append today's synthetic data → load DuckDB → dbt run → dbt test
 → generate golden metrics (--live) → validate → commit golden_metrics.json
 ```
 
-#### `daily-synthetic-data.yml` — runs daily at 05:00 UTC (before the refresh)
+#### Synthetic appends are regenerated, never committed
 
-Catches all mock marketing CSVs up to today's date (each table backfills from its own last date; missed runs self-heal).
-Can be triggered manually with a custom `--days` count via `workflow_dispatch`.
+The refresh regenerates all mock marketing CSVs up to today's date inside the runner (each table backfills from its own last date; missed runs self-heal). Because generation is seeded per calendar date, every machine computes identical rows — so only `golden_metrics.json` is committed. `tests/test_determinism.py` guards this reproducibility in CI.
 
 ---
 
@@ -240,7 +237,7 @@ catches the dataset up to today on each run so it grows continuously and stays a
 feel like a live production system.
 
 ```bash
-# Append 1 day (next day after the latest date in the CSV)
+# Catch every table up to today (default; missed days self-heal, same-day re-run is a no-op)
 python scripts/daily_synthetic_append.py
 
 # Backfill 30 days at once

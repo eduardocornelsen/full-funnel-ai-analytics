@@ -1,40 +1,40 @@
 {
   "_meta": {
-    "generated_at": "2026-08-02T08:07:13.952047+00:00",
-    "anchor_date": "2026-08-02",
+    "generated_at": "2026-08-04T08:21:40.916106+00:00",
+    "anchor_date": "2026-08-04",
     "dataset_start": "2024-07-16",
-    "dataset_end": "2026-08-02",
+    "dataset_end": "2026-08-04",
     "window_days": 90,
-    "window_start": "2026-05-05",
-    "window_end": "2026-08-02",
+    "window_start": "2026-05-07",
+    "window_end": "2026-08-04",
     "dbt_source": "/home/runner/work/full-funnel-ai-analytics/full-funnel-ai-analytics/data/olist_analytics.duckdb",
     "dbt_target": "duckdb",
     "schema_version": "2.2",
     "google_aov": 100.0,
     "available_windows": {
       "windowed_7d": {
-        "start": "2026-07-27",
-        "end": "2026-08-02"
+        "start": "2026-07-29",
+        "end": "2026-08-04"
       },
       "windowed_30d": {
-        "start": "2026-07-04",
-        "end": "2026-08-02"
+        "start": "2026-07-06",
+        "end": "2026-08-04"
       },
       "windowed_60d": {
-        "start": "2026-06-04",
-        "end": "2026-08-02"
+        "start": "2026-06-06",
+        "end": "2026-08-04"
       },
       "windowed_90d": {
-        "start": "2026-05-05",
-        "end": "2026-08-02"
+        "start": "2026-05-07",
+        "end": "2026-08-04"
       },
       "windowed_180d": {
-        "start": "2026-02-04",
-        "end": "2026-08-02"
+        "start": "2026-02-06",
+        "end": "2026-08-04"
       },
       "month_2026_08": {
         "start": "2026-08-01",
-        "end": "2026-08-02"
+        "end": "2026-08-04"
       },
       "month_2026_07": {
         "start": "2026-07-01",
@@ -46,7 +46,7 @@
       },
       "all_time": {
         "start": "2024-07-16",
-        "end": "2026-08-02"
+        "end": "2026-08-04"
       }
     },
     "note": "SINGLE SOURCE OF TRUTH for all dashboard numbers. AI agent must read and copy values — never recalculate independently. For windows not listed in available_windows, use query_window.py. Regenerate after dbt run: python scripts/generate_golden_metrics.py"
@@ -55,62 +55,62 @@
     "label": "All-time (dataset full range)",
     "window": {
       "start": "2024-07-16",
-      "end": "2026-08-02"
+      "end": "2026-08-04"
     },
     "spend": {
-      "google": 430597.6000000002,
-      "meta": 478467.4199999998,
-      "total": 909065.02
+      "google": 431555.57000000024,
+      "meta": 479782.4599999998,
+      "total": 911338.03
     },
     "sessions": {
-      "total": 3657110,
-      "engaged": 2106196,
+      "total": 3666564,
+      "engaged": 2111682,
       "engagement_rate_pct": 57.59
     },
     "conversions": {
-      "ga4_total": 92410,
-      "ad_platform": 53032,
+      "ga4_total": 92658,
+      "ad_platform": 53169,
       "session_cvr_pct": 2.53
     },
-    "blended_roas": 18.95,
+    "blended_roas": 18.93,
     "channel_performance": [
       {
         "channel": "google_ads",
-        "total_spend": 430597.6,
-        "attributed_revenue": 6583853.5,
-        "total_orders": 70432.0,
-        "cac": 6.11,
-        "roas": 15.29
+        "total_spend": 431555.57,
+        "attributed_revenue": 6593508.97,
+        "total_orders": 70509.0,
+        "cac": 6.12,
+        "roas": 15.28
       },
       {
         "channel": "meta_ads",
-        "total_spend": 478467.42,
-        "attributed_revenue": 4891641.57,
-        "total_orders": 56852.0,
-        "cac": 8.42,
-        "roas": 10.22
+        "total_spend": 479782.46,
+        "attributed_revenue": 4898871.09,
+        "total_orders": 56915.0,
+        "cac": 8.43,
+        "roas": 10.21
       },
       {
         "channel": "organic_search",
         "total_spend": 0.0,
-        "attributed_revenue": 2615887.04,
-        "total_orders": 34621.0,
+        "attributed_revenue": 2619642.07,
+        "total_orders": 34660.0,
         "cac": 0.0,
         "roas": 0.0
       },
       {
         "channel": "direct",
         "total_spend": 0.0,
-        "attributed_revenue": 1645482.89,
-        "total_orders": 22640.0,
+        "attributed_revenue": 1647878.03,
+        "total_orders": 22672.0,
         "cac": 0.0,
         "roas": 0.0
       },
       {
         "channel": "email_marketing",
         "total_spend": 0.0,
-        "attributed_revenue": 1489122.92,
-        "total_orders": 20170.0,
+        "attributed_revenue": 1490750.73,
+        "total_orders": 20193.0,
         "cac": 0.0,
         "roas": 0.0
       }
@@ -118,116 +118,116 @@
     "attribution_by_channel": [
       {
         "channel": "google_ads_search",
-        "first_touch_revenue": 4182256.63,
-        "last_touch_revenue": 3662396.31,
-        "linear_revenue": 3929939.85,
-        "total_orders": 50511.0
+        "first_touch_revenue": 4187922.67,
+        "last_touch_revenue": 3668846.49,
+        "linear_revenue": 3936081.27,
+        "total_orders": 50572.0
       },
       {
         "channel": "meta_prospecting",
-        "first_touch_revenue": 3124244.56,
-        "last_touch_revenue": 2985641.87,
-        "linear_revenue": 3065560.82,
-        "total_orders": 40027.0
+        "first_touch_revenue": 3129798.88,
+        "last_touch_revenue": 2988507.42,
+        "linear_revenue": 3069709.11,
+        "total_orders": 40069.0
       },
       {
         "channel": "google_ads_shopping",
-        "first_touch_revenue": 2635495.93,
-        "last_touch_revenue": 2681262.3,
-        "linear_revenue": 2653913.65,
-        "total_orders": 34974.0
+        "first_touch_revenue": 2639970.21,
+        "last_touch_revenue": 2685240.06,
+        "linear_revenue": 2657427.7,
+        "total_orders": 35011.0
       },
       {
         "channel": "organic_search",
-        "first_touch_revenue": 2625365.9,
-        "last_touch_revenue": 2604115.94,
-        "linear_revenue": 2615887.04,
-        "total_orders": 34621.0
+        "first_touch_revenue": 2627884.69,
+        "last_touch_revenue": 2608343.12,
+        "linear_revenue": 2619642.07,
+        "total_orders": 34660.0
       },
       {
         "channel": "meta_retargeting",
-        "first_touch_revenue": 1712014.73,
-        "last_touch_revenue": 1950659.31,
-        "linear_revenue": 1826080.75,
-        "total_orders": 24814.0
+        "first_touch_revenue": 1714255.26,
+        "last_touch_revenue": 1954120.87,
+        "linear_revenue": 1829161.98,
+        "total_orders": 24843.0
       },
       {
         "channel": "direct",
-        "first_touch_revenue": 1549501.16,
-        "last_touch_revenue": 1742721.94,
-        "linear_revenue": 1645482.89,
-        "total_orders": 22640.0
+        "first_touch_revenue": 1552021.91,
+        "last_touch_revenue": 1744994.19,
+        "linear_revenue": 1647878.03,
+        "total_orders": 22672.0
       },
       {
         "channel": "email_marketing",
-        "first_touch_revenue": 1397801.51,
-        "last_touch_revenue": 1598822.51,
-        "linear_revenue": 1489122.92,
-        "total_orders": 20170.0
+        "first_touch_revenue": 1399490.61,
+        "last_touch_revenue": 1600231.84,
+        "linear_revenue": 1490750.73,
+        "total_orders": 20193.0
       }
     ],
     "ga4_by_channel": [
       {
         "channel": "organic_search",
-        "sessions": 914071,
-        "engaged_sessions": 501653,
-        "conversions": 21691,
+        "sessions": 916334,
+        "engaged_sessions": 502956,
+        "conversions": 21741,
         "session_cvr_pct": 2.37,
-        "engagement_rate_pct": 54.88,
+        "engagement_rate_pct": 54.89,
         "session_share_pct": 25.0
       },
       {
         "channel": "paid_search",
-        "sessions": 733695,
-        "engaged_sessions": 455197,
-        "conversions": 22489,
+        "sessions": 735738,
+        "engaged_sessions": 456482,
+        "conversions": 22557,
         "session_cvr_pct": 3.07,
         "engagement_rate_pct": 62.04,
         "session_share_pct": 20.1
       },
       {
         "channel": "paid_social",
-        "sessions": 656173,
-        "engaged_sessions": 293478,
-        "conversions": 10642,
+        "sessions": 657911,
+        "engaged_sessions": 294186,
+        "conversions": 10671,
         "session_cvr_pct": 1.62,
-        "engagement_rate_pct": 44.73,
+        "engagement_rate_pct": 44.72,
         "session_share_pct": 17.9
       },
       {
         "channel": "direct",
-        "sessions": 552709,
-        "engaged_sessions": 386004,
-        "conversions": 18322,
-        "session_cvr_pct": 3.31,
+        "sessions": 554197,
+        "engaged_sessions": 387054,
+        "conversions": 18375,
+        "session_cvr_pct": 3.32,
         "engagement_rate_pct": 69.84,
         "session_share_pct": 15.1
       },
       {
         "channel": "email",
-        "sessions": 362771,
-        "engaged_sessions": 271296,
-        "conversions": 14170,
+        "sessions": 363596,
+        "engaged_sessions": 271914,
+        "conversions": 14207,
         "session_cvr_pct": 3.91,
         "engagement_rate_pct": 74.78,
         "session_share_pct": 9.9
       },
       {
         "channel": "referral",
-        "sessions": 256068,
-        "engaged_sessions": 127035,
-        "conversions": 3904,
+        "sessions": 256633,
+        "engaged_sessions": 127329,
+        "conversions": 3911,
         "session_cvr_pct": 1.52,
-        "engagement_rate_pct": 49.61,
+        "engagement_rate_pct": 49.62,
         "session_share_pct": 7.0
       },
       {
         "channel": "organic_social",
-        "sessions": 181623,
-        "engaged_sessions": 71533,
-        "conversions": 1192,
+        "sessions": 182155,
+        "engaged_sessions": 71761,
+        "conversions": 1196,
         "session_cvr_pct": 0.66,
-        "engagement_rate_pct": 39.39,
+        "engagement_rate_pct": 39.4,
         "session_share_pct": 5.0
       }
     ],
@@ -236,10 +236,10 @@
         {
           "campaign_name": "Generic - Electronics",
           "campaign_type": "SEARCH",
-          "impressions": 3714699,
-          "clicks": 129687,
-          "cost": 118032.9,
-          "conversions": 3491,
+          "impressions": 3725946,
+          "clicks": 130041,
+          "cost": 118282.32,
+          "conversions": 3501,
           "ctr_pct": 3.49,
           "click_cvr_pct": 2.69,
           "roas": 2.96
@@ -247,32 +247,32 @@
         {
           "campaign_name": "Generic - Home & Garden",
           "campaign_type": "SEARCH",
-          "impressions": 3723202,
-          "clicks": 129884,
-          "cost": 113388.35,
-          "conversions": 3419,
+          "impressions": 3731804,
+          "clicks": 130133,
+          "cost": 113616.3,
+          "conversions": 3424,
           "ctr_pct": 3.49,
           "click_cvr_pct": 2.63,
-          "roas": 3.02
+          "roas": 3.01
         },
         {
           "campaign_name": "Brand - Olist",
           "campaign_type": "SEARCH",
-          "impressions": 3721442,
-          "clicks": 129917,
-          "cost": 95302.44,
-          "conversions": 3449,
+          "impressions": 3730884,
+          "clicks": 130217,
+          "cost": 95546.67,
+          "conversions": 3458,
           "ctr_pct": 3.49,
-          "click_cvr_pct": 2.65,
+          "click_cvr_pct": 2.66,
           "roas": 3.62
         },
         {
           "campaign_name": "Shopping - All Products",
           "campaign_type": "SHOPPING",
-          "impressions": 5937241,
-          "clicks": 118689,
-          "cost": 60895.58,
-          "conversions": 2355,
+          "impressions": 5951275,
+          "clicks": 118934,
+          "cost": 61004.92,
+          "conversions": 2358,
           "ctr_pct": 2.0,
           "click_cvr_pct": 1.98,
           "roas": 3.87
@@ -280,9 +280,9 @@
         {
           "campaign_name": "YouTube - Brand Awareness",
           "campaign_type": "VIDEO",
-          "impressions": 11096647,
-          "clicks": 131538,
-          "cost": 22225.3,
+          "impressions": 11126154,
+          "clicks": 131945,
+          "cost": 22304.46,
           "conversions": 35,
           "ctr_pct": 1.19,
           "click_cvr_pct": 0.03,
@@ -291,277 +291,277 @@
         {
           "campaign_name": "Display - Retargeting",
           "campaign_type": "DISPLAY",
-          "impressions": 14677882,
-          "clicks": 72588,
-          "cost": 20753.03,
-          "conversions": 195,
+          "impressions": 14719556,
+          "clicks": 72788,
+          "cost": 20800.9,
+          "conversions": 197,
           "ctr_pct": 0.49,
           "click_cvr_pct": 0.27,
-          "roas": 0.94
+          "roas": 0.95
         }
       ],
       "meta": [
         {
           "campaign_name": "Catalog Sales - Dynamic",
           "objective": "CATALOG_SALES",
-          "impressions": 14528927,
-          "link_clicks": 237036,
-          "spend": 113199.46,
-          "purchases": 7878,
-          "cpm": 7.79,
+          "impressions": 14564407,
+          "link_clicks": 237469,
+          "spend": 113530.7,
+          "purchases": 7891,
+          "cpm": 7.8,
           "click_cvr_pct": 3.32,
-          "roas": 9.93
+          "roas": 9.92
         },
         {
           "campaign_name": "Prospecting - Lookalike Purchasers",
           "objective": "CONVERSIONS",
-          "impressions": 14688388,
-          "link_clicks": 243332,
-          "spend": 110746.02,
-          "purchases": 8145,
+          "impressions": 14724066,
+          "link_clicks": 243979,
+          "spend": 111040.75,
+          "purchases": 8179,
           "cpm": 7.54,
           "click_cvr_pct": 3.35,
-          "roas": 10.83
+          "roas": 10.86
         },
         {
           "campaign_name": "Instagram Stories - Flash Sales",
           "objective": "CONVERSIONS",
-          "impressions": 14954258,
-          "link_clicks": 241995,
-          "spend": 102060.13,
-          "purchases": 8167,
-          "cpm": 6.82,
+          "impressions": 15005992,
+          "link_clicks": 243245,
+          "spend": 102418.91,
+          "purchases": 8203,
+          "cpm": 6.83,
           "click_cvr_pct": 3.37,
           "roas": 11.49
         },
         {
           "campaign_name": "Retargeting - Add to Cart",
           "objective": "CONVERSIONS",
-          "impressions": 14886266,
-          "link_clicks": 242735,
-          "spend": 87465.06,
-          "purchases": 8159,
-          "cpm": 5.88,
+          "impressions": 14911860,
+          "link_clicks": 243136,
+          "spend": 87598.47,
+          "purchases": 8172,
+          "cpm": 5.87,
           "click_cvr_pct": 3.36,
           "roas": 13.65
         },
         {
           "campaign_name": "Brand Awareness - Video",
           "objective": "AWARENESS",
-          "impressions": 14596654,
-          "link_clicks": 236659,
-          "spend": 64996.75,
-          "purchases": 7739,
+          "impressions": 14640258,
+          "link_clicks": 237345,
+          "spend": 65193.63,
+          "purchases": 7751,
           "cpm": 4.45,
           "click_cvr_pct": 3.27,
-          "roas": 17.24
+          "roas": 17.22
         }
       ]
     },
     "crm": {
       "hubspot": {
-        "total_contacts": 110590,
-        "total_pipeline_value": 25468351.47,
+        "total_contacts": 110818,
+        "total_pipeline_value": 25513808.09,
         "pipeline_by_stage": [
           {
             "stage": "closed_won",
-            "deal_count": 108598,
-            "total_value": 17665143.87
+            "deal_count": 108770,
+            "total_value": 17696177.75
           },
           {
             "stage": "prospecting",
-            "deal_count": 19569,
-            "total_value": 1814893.13
+            "deal_count": 19590,
+            "total_value": 1819289.81
           },
           {
             "stage": "qualified",
-            "deal_count": 13055,
-            "total_value": 1762179.35
+            "deal_count": 13072,
+            "total_value": 1765583.3
           },
           {
             "stage": "presentation_scheduled",
-            "deal_count": 8661,
-            "total_value": 1418497.66
+            "deal_count": 8673,
+            "total_value": 1420617.52
           },
           {
             "stage": "proposal_sent",
-            "deal_count": 6524,
-            "total_value": 1250147.69
+            "deal_count": 6529,
+            "total_value": 1251269.51
           },
           {
             "stage": "negotiation",
-            "deal_count": 4349,
-            "total_value": 970093.89
+            "deal_count": 4357,
+            "total_value": 971559.25
           },
           {
             "stage": "closed_lost",
-            "deal_count": 5478,
-            "total_value": 587395.88
+            "deal_count": 5487,
+            "total_value": 589310.95
           }
         ]
       },
       "salesforce": {
-        "closed_won_revenue": 12584508.46,
+        "closed_won_revenue": 12605297.89,
         "pipeline_by_stage": [
           {
             "stage": "Closed Won",
-            "opp_count": 74354,
-            "total_value": 12584508.46,
-            "expected_revenue": 125845.08
+            "opp_count": 74462,
+            "total_value": 12605297.89,
+            "expected_revenue": 126052.98
           },
           {
             "stage": "Prospecting",
-            "opp_count": 11141,
-            "total_value": 1746060.98,
-            "expected_revenue": 1746.06
+            "opp_count": 11163,
+            "total_value": 1750773.48,
+            "expected_revenue": 1750.77
           },
           {
             "stage": "Qualification",
-            "opp_count": 7415,
-            "total_value": 1172138.79,
-            "expected_revenue": 2344.28
+            "opp_count": 7433,
+            "total_value": 1175132.48,
+            "expected_revenue": 2350.26
           },
           {
             "stage": "Needs Analysis",
-            "opp_count": 5251,
-            "total_value": 823053.73,
-            "expected_revenue": 2469.16
+            "opp_count": 5256,
+            "total_value": 823812.9,
+            "expected_revenue": 2471.44
           },
           {
             "stage": "Value Proposition",
-            "opp_count": 3718,
-            "total_value": 584303.68,
-            "expected_revenue": 2921.52
+            "opp_count": 3724,
+            "total_value": 585390.1,
+            "expected_revenue": 2926.95
           },
           {
             "stage": "Closed Lost",
-            "opp_count": 2935,
-            "total_value": 470078.04,
+            "opp_count": 2939,
+            "total_value": 470680.22,
             "expected_revenue": 0.0
           },
           {
             "stage": "Proposal/Price Quote",
-            "opp_count": 2960,
-            "total_value": 463398.53,
-            "expected_revenue": 3012.09
+            "opp_count": 2969,
+            "total_value": 465153.78,
+            "expected_revenue": 3023.5
           },
           {
             "stage": "Negotiation/Review",
-            "opp_count": 2233,
-            "total_value": 342843.63,
-            "expected_revenue": 2742.75
+            "opp_count": 2236,
+            "total_value": 343390.89,
+            "expected_revenue": 2747.13
           }
         ],
         "closed_won_by_source": [
           {
             "lead_source": "Web",
-            "revenue": 2541408.87,
-            "won_count": 15190
+            "revenue": 2542870.72,
+            "won_count": 15198
           },
           {
             "lead_source": "Paid Search",
-            "revenue": 2110306.81,
-            "won_count": 12622
+            "revenue": 2112737.51,
+            "won_count": 12635
           },
           {
             "lead_source": "Social Media",
-            "revenue": 1928823.45,
-            "won_count": 11706
+            "revenue": 1931241.16,
+            "won_count": 11717
           },
           {
             "lead_source": "Email",
-            "revenue": 1703263.09,
-            "won_count": 10280
+            "revenue": 1704965.98,
+            "won_count": 10288
           },
           {
             "lead_source": "Referral",
-            "revenue": 1448493.19,
-            "won_count": 8702
+            "revenue": 1450338.89,
+            "won_count": 8713
           },
           {
             "lead_source": "Direct",
-            "revenue": 1301356.49,
-            "won_count": 7753
+            "revenue": 1303828.23,
+            "won_count": 7767
           },
           {
             "lead_source": "Other",
-            "revenue": 522598.56,
-            "won_count": 2741
+            "revenue": 525699.95,
+            "won_count": 2756
           },
           {
             "lead_source": "Phone",
-            "revenue": 521705.2,
-            "won_count": 2710
+            "revenue": 524329.22,
+            "won_count": 2723
           },
           {
             "lead_source": "Partner",
-            "revenue": 506552.8,
-            "won_count": 2650
+            "revenue": 509286.23,
+            "won_count": 2665
           }
         ]
       }
     }
   },
   "windowed_7d": {
-    "label": "7-day window (2026-07-27 → 2026-08-02)",
+    "label": "7-day window (2026-07-29 → 2026-08-04)",
     "window": {
-      "start": "2026-07-27",
-      "end": "2026-08-02"
+      "start": "2026-07-29",
+      "end": "2026-08-04"
     },
     "spend": {
-      "google": 3512.94,
-      "meta": 4012.77,
-      "total": 7525.710000000002
+      "google": 3303.7,
+      "meta": 3985.75,
+      "total": 7289.450000000001
     },
     "sessions": {
-      "total": 33043,
-      "engaged": 18912,
-      "engagement_rate_pct": 57.23
+      "total": 32392,
+      "engaged": 18721,
+      "engagement_rate_pct": 57.8
     },
     "conversions": {
       "ga4_total": 818,
-      "ad_platform": 510,
-      "session_cvr_pct": 2.48
+      "ad_platform": 491,
+      "session_cvr_pct": 2.53
     },
-    "blended_roas": 7.86,
+    "blended_roas": 8.31,
     "channel_performance": [
       {
         "channel": "google_ads",
-        "total_spend": 3512.94,
-        "attributed_revenue": 20446.52,
-        "total_orders": 224.0,
-        "cac": 15.68,
-        "roas": 5.82
+        "total_spend": 3303.7,
+        "attributed_revenue": 21692.45,
+        "total_orders": 217.0,
+        "cac": 15.22,
+        "roas": 6.57
       },
       {
         "channel": "meta_ads",
-        "total_spend": 4012.77,
-        "attributed_revenue": 16246.73,
-        "total_orders": 194.0,
-        "cac": 20.68,
-        "roas": 4.05
+        "total_spend": 3985.75,
+        "attributed_revenue": 17405.68,
+        "total_orders": 180.0,
+        "cac": 22.14,
+        "roas": 4.37
       },
       {
         "channel": "organic_search",
         "total_spend": 0.0,
-        "attributed_revenue": 9336.94,
-        "total_orders": 102.0,
+        "attributed_revenue": 10117.51,
+        "total_orders": 106.0,
         "cac": 0.0,
         "roas": 0.0
       },
       {
         "channel": "direct",
         "total_spend": 0.0,
-        "attributed_revenue": 7542.89,
-        "total_orders": 85.0,
+        "attributed_revenue": 6083.86,
+        "total_orders": 75.0,
         "cac": 0.0,
         "roas": 0.0
       },
       {
         "channel": "email_marketing",
         "total_spend": 0.0,
-        "attributed_revenue": 5560.32,
-        "total_orders": 71.0,
+        "attributed_revenue": 5271.88,
+        "total_orders": 67.0,
         "cac": 0.0,
         "roas": 0.0
       }
@@ -569,117 +569,117 @@
     "attribution_by_channel": [
       {
         "channel": "google_ads_search",
-        "first_touch_revenue": 5253.5,
-        "last_touch_revenue": 17344.04,
-        "linear_revenue": 10923.15,
-        "total_orders": 133.0
+        "first_touch_revenue": 8513.03,
+        "last_touch_revenue": 17495.77,
+        "linear_revenue": 12700.17,
+        "total_orders": 137.0
       },
       {
         "channel": "meta_prospecting",
-        "first_touch_revenue": 5170.39,
-        "last_touch_revenue": 14379.92,
-        "linear_revenue": 9992.65,
-        "total_orders": 131.0
-      },
-      {
-        "channel": "google_ads_shopping",
-        "first_touch_revenue": 6084.47,
-        "last_touch_revenue": 13458.44,
-        "linear_revenue": 9523.36,
-        "total_orders": 117.0
+        "first_touch_revenue": 7294.62,
+        "last_touch_revenue": 13500.69,
+        "linear_revenue": 10456.84,
+        "total_orders": 118.0
       },
       {
         "channel": "organic_search",
-        "first_touch_revenue": 4965.64,
-        "last_touch_revenue": 14414.83,
-        "linear_revenue": 9336.94,
-        "total_orders": 102.0
+        "first_touch_revenue": 5049.39,
+        "last_touch_revenue": 15124.22,
+        "linear_revenue": 10117.51,
+        "total_orders": 106.0
       },
       {
-        "channel": "direct",
-        "first_touch_revenue": 5804.74,
-        "last_touch_revenue": 9691.11,
-        "linear_revenue": 7542.89,
-        "total_orders": 85.0
+        "channel": "google_ads_shopping",
+        "first_touch_revenue": 6241.95,
+        "last_touch_revenue": 14287.38,
+        "linear_revenue": 8992.28,
+        "total_orders": 105.0
       },
       {
         "channel": "meta_retargeting",
-        "first_touch_revenue": 4080.8,
-        "last_touch_revenue": 9183.59,
-        "linear_revenue": 6254.09,
-        "total_orders": 74.0
+        "first_touch_revenue": 4351.79,
+        "last_touch_revenue": 10197.81,
+        "linear_revenue": 6948.84,
+        "total_orders": 71.0
+      },
+      {
+        "channel": "direct",
+        "first_touch_revenue": 3883.55,
+        "last_touch_revenue": 8865.47,
+        "linear_revenue": 6083.86,
+        "total_orders": 75.0
       },
       {
         "channel": "email_marketing",
-        "first_touch_revenue": 2195.96,
-        "last_touch_revenue": 9301.82,
-        "linear_revenue": 5560.32,
-        "total_orders": 71.0
+        "first_touch_revenue": 2902.27,
+        "last_touch_revenue": 8099.1,
+        "linear_revenue": 5271.88,
+        "total_orders": 67.0
       }
     ],
     "ga4_by_channel": [
       {
         "channel": "organic_search",
-        "sessions": 8102,
-        "engaged_sessions": 4471,
-        "conversions": 191,
-        "session_cvr_pct": 2.36,
-        "engagement_rate_pct": 55.18,
-        "session_share_pct": 24.5
+        "sessions": 8109,
+        "engaged_sessions": 4532,
+        "conversions": 190,
+        "session_cvr_pct": 2.34,
+        "engagement_rate_pct": 55.89,
+        "session_share_pct": 25.0
       },
       {
         "channel": "paid_search",
-        "sessions": 6701,
-        "engaged_sessions": 4053,
-        "conversions": 194,
-        "session_cvr_pct": 2.9,
-        "engagement_rate_pct": 60.48,
+        "sessions": 6561,
+        "engaged_sessions": 4051,
+        "conversions": 191,
+        "session_cvr_pct": 2.91,
+        "engagement_rate_pct": 61.74,
         "session_share_pct": 20.3
       },
       {
         "channel": "paid_social",
-        "sessions": 5874,
-        "engaged_sessions": 2524,
-        "conversions": 99,
-        "session_cvr_pct": 1.69,
-        "engagement_rate_pct": 42.97,
-        "session_share_pct": 17.8
+        "sessions": 5644,
+        "engaged_sessions": 2415,
+        "conversions": 94,
+        "session_cvr_pct": 1.67,
+        "engagement_rate_pct": 42.79,
+        "session_share_pct": 17.4
       },
       {
         "channel": "direct",
-        "sessions": 5117,
-        "engaged_sessions": 3578,
-        "conversions": 177,
-        "session_cvr_pct": 3.46,
-        "engagement_rate_pct": 69.92,
-        "session_share_pct": 15.5
+        "sessions": 5075,
+        "engaged_sessions": 3551,
+        "conversions": 182,
+        "session_cvr_pct": 3.59,
+        "engagement_rate_pct": 69.97,
+        "session_share_pct": 15.7
       },
       {
         "channel": "email",
-        "sessions": 3311,
-        "engaged_sessions": 2507,
-        "conversions": 110,
-        "session_cvr_pct": 3.32,
-        "engagement_rate_pct": 75.72,
-        "session_share_pct": 10.0
+        "sessions": 3171,
+        "engaged_sessions": 2395,
+        "conversions": 118,
+        "session_cvr_pct": 3.72,
+        "engagement_rate_pct": 75.53,
+        "session_share_pct": 9.8
       },
       {
         "channel": "referral",
-        "sessions": 2163,
-        "engaged_sessions": 1053,
-        "conversions": 32,
-        "session_cvr_pct": 1.48,
-        "engagement_rate_pct": 48.68,
-        "session_share_pct": 6.5
+        "sessions": 2063,
+        "engaged_sessions": 1036,
+        "conversions": 29,
+        "session_cvr_pct": 1.41,
+        "engagement_rate_pct": 50.22,
+        "session_share_pct": 6.4
       },
       {
         "channel": "organic_social",
-        "sessions": 1775,
-        "engaged_sessions": 726,
-        "conversions": 15,
-        "session_cvr_pct": 0.85,
-        "engagement_rate_pct": 40.9,
-        "session_share_pct": 5.4
+        "sessions": 1769,
+        "engaged_sessions": 741,
+        "conversions": 14,
+        "session_cvr_pct": 0.79,
+        "engagement_rate_pct": 41.89,
+        "session_share_pct": 5.5
       }
     ],
     "campaigns": {
@@ -687,332 +687,332 @@
         {
           "campaign_name": "Generic - Electronics",
           "campaign_type": "SEARCH",
-          "impressions": 32533,
-          "clicks": 1168,
-          "cost": 1046.7,
-          "conversions": 35,
-          "ctr_pct": 3.59,
-          "click_cvr_pct": 3.0,
-          "roas": 3.34
+          "impressions": 32643,
+          "clicks": 1156,
+          "cost": 950.43,
+          "conversions": 33,
+          "ctr_pct": 3.54,
+          "click_cvr_pct": 2.85,
+          "roas": 3.47
         },
         {
           "campaign_name": "Generic - Home & Garden",
           "campaign_type": "SEARCH",
-          "impressions": 36092,
-          "clicks": 1274,
-          "cost": 877.83,
-          "conversions": 37,
-          "ctr_pct": 3.53,
-          "click_cvr_pct": 2.9,
-          "roas": 4.21
+          "impressions": 32882,
+          "clicks": 1068,
+          "cost": 811.93,
+          "conversions": 27,
+          "ctr_pct": 3.25,
+          "click_cvr_pct": 2.53,
+          "roas": 3.33
         },
         {
           "campaign_name": "Brand - Olist",
           "campaign_type": "SEARCH",
-          "impressions": 31942,
-          "clicks": 1072,
-          "cost": 773.3,
-          "conversions": 34,
-          "ctr_pct": 3.36,
-          "click_cvr_pct": 3.17,
-          "roas": 4.4
+          "impressions": 32107,
+          "clicks": 1058,
+          "cost": 766.54,
+          "conversions": 36,
+          "ctr_pct": 3.3,
+          "click_cvr_pct": 3.4,
+          "roas": 4.7
         },
         {
           "campaign_name": "Shopping - All Products",
           "campaign_type": "SHOPPING",
-          "impressions": 49812,
-          "clicks": 1004,
-          "cost": 463.87,
-          "conversions": 22,
-          "ctr_pct": 2.02,
-          "click_cvr_pct": 2.19,
-          "roas": 4.74
+          "impressions": 47694,
+          "clicks": 931,
+          "cost": 416.62,
+          "conversions": 16,
+          "ctr_pct": 1.95,
+          "click_cvr_pct": 1.72,
+          "roas": 3.84
         },
         {
           "campaign_name": "YouTube - Brand Awareness",
           "campaign_type": "VIDEO",
-          "impressions": 103619,
-          "clicks": 1205,
-          "cost": 202.52,
-          "conversions": 1,
-          "ctr_pct": 1.16,
-          "click_cvr_pct": 0.08,
-          "roas": 0.49
+          "impressions": 97221,
+          "clicks": 1181,
+          "cost": 208.11,
+          "conversions": 0,
+          "ctr_pct": 1.21,
+          "click_cvr_pct": 0.0,
+          "roas": 0.0
         },
         {
           "campaign_name": "Display - Retargeting",
           "campaign_type": "DISPLAY",
-          "impressions": 117944,
-          "clicks": 568,
-          "cost": 148.72,
-          "conversions": 2,
-          "ctr_pct": 0.48,
-          "click_cvr_pct": 0.35,
-          "roas": 1.34
+          "impressions": 122378,
+          "clicks": 596,
+          "cost": 150.07,
+          "conversions": 3,
+          "ctr_pct": 0.49,
+          "click_cvr_pct": 0.5,
+          "roas": 2.0
         }
       ],
       "meta": [
         {
           "campaign_name": "Instagram Stories - Flash Sales",
           "objective": "CONVERSIONS",
-          "impressions": 132043,
-          "link_clicks": 2387,
-          "spend": 983.2,
-          "purchases": 119,
-          "cpm": 7.45,
-          "click_cvr_pct": 4.99,
-          "roas": 19.92
+          "impressions": 138219,
+          "link_clicks": 2786,
+          "spend": 960.45,
+          "purchases": 114,
+          "cpm": 6.95,
+          "click_cvr_pct": 4.09,
+          "roas": 17.36
         },
         {
           "campaign_name": "Prospecting - Lookalike Purchasers",
           "objective": "CONVERSIONS",
-          "impressions": 119070,
-          "link_clicks": 2354,
-          "spend": 843.64,
-          "purchases": 69,
-          "cpm": 7.09,
-          "click_cvr_pct": 2.93,
-          "roas": 11.47
+          "impressions": 122047,
+          "link_clicks": 2543,
+          "spend": 906.16,
+          "purchases": 94,
+          "cpm": 7.42,
+          "click_cvr_pct": 3.7,
+          "roas": 15.73
         },
         {
           "campaign_name": "Catalog Sales - Dynamic",
           "objective": "CATALOG_SALES",
-          "impressions": 127131,
-          "link_clicks": 1909,
-          "spend": 811.22,
-          "purchases": 68,
-          "cpm": 6.38,
-          "click_cvr_pct": 3.56,
-          "roas": 13.93
+          "impressions": 119238,
+          "link_clicks": 1747,
+          "spend": 786.22,
+          "purchases": 60,
+          "cpm": 6.59,
+          "click_cvr_pct": 3.43,
+          "roas": 12.72
         },
         {
           "campaign_name": "Retargeting - Add to Cart",
           "objective": "CONVERSIONS",
-          "impressions": 138771,
-          "link_clicks": 1765,
-          "spend": 762.67,
-          "purchases": 77,
-          "cpm": 5.5,
-          "click_cvr_pct": 4.36,
-          "roas": 14.87
+          "impressions": 132766,
+          "link_clicks": 1575,
+          "spend": 691.98,
+          "purchases": 61,
+          "cpm": 5.21,
+          "click_cvr_pct": 3.87,
+          "roas": 10.8
         },
         {
           "campaign_name": "Brand Awareness - Video",
           "objective": "AWARENESS",
-          "impressions": 87714,
-          "link_clicks": 1349,
-          "spend": 612.04,
-          "purchases": 46,
-          "cpm": 6.98,
-          "click_cvr_pct": 3.41,
-          "roas": 12.11
+          "impressions": 112037,
+          "link_clicks": 1703,
+          "spend": 640.94,
+          "purchases": 47,
+          "cpm": 5.72,
+          "click_cvr_pct": 2.76,
+          "roas": 11.28
         }
       ]
     },
     "crm": {
       "hubspot": {
-        "total_contacts": 110590,
-        "total_pipeline_value": 25468351.47,
+        "total_contacts": 110818,
+        "total_pipeline_value": 25513808.09,
         "pipeline_by_stage": [
           {
             "stage": "closed_won",
-            "deal_count": 108598,
-            "total_value": 17665143.87
+            "deal_count": 108770,
+            "total_value": 17696177.75
           },
           {
             "stage": "prospecting",
-            "deal_count": 19569,
-            "total_value": 1814893.13
+            "deal_count": 19590,
+            "total_value": 1819289.81
           },
           {
             "stage": "qualified",
-            "deal_count": 13055,
-            "total_value": 1762179.35
+            "deal_count": 13072,
+            "total_value": 1765583.3
           },
           {
             "stage": "presentation_scheduled",
-            "deal_count": 8661,
-            "total_value": 1418497.66
+            "deal_count": 8673,
+            "total_value": 1420617.52
           },
           {
             "stage": "proposal_sent",
-            "deal_count": 6524,
-            "total_value": 1250147.69
+            "deal_count": 6529,
+            "total_value": 1251269.51
           },
           {
             "stage": "negotiation",
-            "deal_count": 4349,
-            "total_value": 970093.89
+            "deal_count": 4357,
+            "total_value": 971559.25
           },
           {
             "stage": "closed_lost",
-            "deal_count": 5478,
-            "total_value": 587395.88
+            "deal_count": 5487,
+            "total_value": 589310.95
           }
         ]
       },
       "salesforce": {
-        "closed_won_revenue": 12584508.46,
+        "closed_won_revenue": 12605297.89,
         "pipeline_by_stage": [
           {
             "stage": "Closed Won",
-            "opp_count": 74354,
-            "total_value": 12584508.46,
-            "expected_revenue": 125845.08
+            "opp_count": 74462,
+            "total_value": 12605297.89,
+            "expected_revenue": 126052.98
           },
           {
             "stage": "Prospecting",
-            "opp_count": 11141,
-            "total_value": 1746060.98,
-            "expected_revenue": 1746.06
+            "opp_count": 11163,
+            "total_value": 1750773.48,
+            "expected_revenue": 1750.77
           },
           {
             "stage": "Qualification",
-            "opp_count": 7415,
-            "total_value": 1172138.79,
-            "expected_revenue": 2344.28
+            "opp_count": 7433,
+            "total_value": 1175132.48,
+            "expected_revenue": 2350.26
           },
           {
             "stage": "Needs Analysis",
-            "opp_count": 5251,
-            "total_value": 823053.73,
-            "expected_revenue": 2469.16
+            "opp_count": 5256,
+            "total_value": 823812.9,
+            "expected_revenue": 2471.44
           },
           {
             "stage": "Value Proposition",
-            "opp_count": 3718,
-            "total_value": 584303.68,
-            "expected_revenue": 2921.52
+            "opp_count": 3724,
+            "total_value": 585390.1,
+            "expected_revenue": 2926.95
           },
           {
             "stage": "Closed Lost",
-            "opp_count": 2935,
-            "total_value": 470078.04,
+            "opp_count": 2939,
+            "total_value": 470680.22,
             "expected_revenue": 0.0
           },
           {
             "stage": "Proposal/Price Quote",
-            "opp_count": 2960,
-            "total_value": 463398.53,
-            "expected_revenue": 3012.09
+            "opp_count": 2969,
+            "total_value": 465153.78,
+            "expected_revenue": 3023.5
           },
           {
             "stage": "Negotiation/Review",
-            "opp_count": 2233,
-            "total_value": 342843.63,
-            "expected_revenue": 2742.75
+            "opp_count": 2236,
+            "total_value": 343390.89,
+            "expected_revenue": 2747.13
           }
         ],
         "closed_won_by_source": [
           {
             "lead_source": "Web",
-            "revenue": 2541408.87,
-            "won_count": 15190
+            "revenue": 2542870.72,
+            "won_count": 15198
           },
           {
             "lead_source": "Paid Search",
-            "revenue": 2110306.81,
-            "won_count": 12622
+            "revenue": 2112737.51,
+            "won_count": 12635
           },
           {
             "lead_source": "Social Media",
-            "revenue": 1928823.45,
-            "won_count": 11706
+            "revenue": 1931241.16,
+            "won_count": 11717
           },
           {
             "lead_source": "Email",
-            "revenue": 1703263.09,
-            "won_count": 10280
+            "revenue": 1704965.98,
+            "won_count": 10288
           },
           {
             "lead_source": "Referral",
-            "revenue": 1448493.19,
-            "won_count": 8702
+            "revenue": 1450338.89,
+            "won_count": 8713
           },
           {
             "lead_source": "Direct",
-            "revenue": 1301356.49,
-            "won_count": 7753
+            "revenue": 1303828.23,
+            "won_count": 7767
           },
           {
             "lead_source": "Other",
-            "revenue": 522598.56,
-            "won_count": 2741
+            "revenue": 525699.95,
+            "won_count": 2756
           },
           {
             "lead_source": "Phone",
-            "revenue": 521705.2,
-            "won_count": 2710
+            "revenue": 524329.22,
+            "won_count": 2723
           },
           {
             "lead_source": "Partner",
-            "revenue": 506552.8,
-            "won_count": 2650
+            "revenue": 509286.23,
+            "won_count": 2665
           }
         ]
       }
     }
   },
   "windowed_30d": {
-    "label": "30-day window (2026-07-04 → 2026-08-02)",
+    "label": "30-day window (2026-07-06 → 2026-08-04)",
     "window": {
-      "start": "2026-07-04",
-      "end": "2026-08-02"
+      "start": "2026-07-06",
+      "end": "2026-08-04"
     },
     "spend": {
-      "google": 15597.32,
-      "meta": 17873.720000000005,
-      "total": 33471.04
+      "google": 15818.010000000002,
+      "meta": 18076.8,
+      "total": 33894.81
     },
     "sessions": {
-      "total": 140461,
-      "engaged": 80716,
-      "engagement_rate_pct": 57.47
+      "total": 141308,
+      "engaged": 81221,
+      "engagement_rate_pct": 57.48
     },
     "conversions": {
-      "ga4_total": 3545,
-      "ad_platform": 2019,
-      "session_cvr_pct": 2.52
+      "ga4_total": 3585,
+      "ad_platform": 2041,
+      "session_cvr_pct": 2.54
     },
-    "blended_roas": 10.36,
+    "blended_roas": 10.24,
     "channel_performance": [
       {
         "channel": "google_ads",
-        "total_spend": 15597.32,
-        "attributed_revenue": 129772.11,
-        "total_orders": 1248.0,
-        "cac": 12.5,
-        "roas": 8.32
+        "total_spend": 15818.01,
+        "attributed_revenue": 128777.47,
+        "total_orders": 1225.0,
+        "cac": 12.91,
+        "roas": 8.14
       },
       {
         "channel": "meta_ads",
-        "total_spend": 17873.72,
-        "attributed_revenue": 96965.75,
-        "total_orders": 1017.0,
-        "cac": 17.57,
-        "roas": 5.43
+        "total_spend": 18076.8,
+        "attributed_revenue": 98435.17,
+        "total_orders": 1022.0,
+        "cac": 17.69,
+        "roas": 5.45
       },
       {
         "channel": "organic_search",
         "total_spend": 0.0,
-        "attributed_revenue": 53560.77,
-        "total_orders": 605.0,
+        "attributed_revenue": 54574.7,
+        "total_orders": 606.0,
         "cac": 0.0,
         "roas": 0.0
       },
       {
         "channel": "direct",
         "total_spend": 0.0,
-        "attributed_revenue": 34847.21,
-        "total_orders": 415.0,
+        "attributed_revenue": 34172.5,
+        "total_orders": 419.0,
         "cac": 0.0,
         "roas": 0.0
       },
       {
         "channel": "email_marketing",
         "total_spend": 0.0,
-        "attributed_revenue": 31589.27,
-        "total_orders": 376.0,
+        "attributed_revenue": 31213.39,
+        "total_orders": 371.0,
         "cac": 0.0,
         "roas": 0.0
       }
@@ -1020,117 +1020,117 @@
     "attribution_by_channel": [
       {
         "channel": "google_ads_search",
-        "first_touch_revenue": 73399.87,
-        "last_touch_revenue": 84445.17,
-        "linear_revenue": 78247.5,
-        "total_orders": 848.0
+        "first_touch_revenue": 73495.67,
+        "last_touch_revenue": 84195.29,
+        "linear_revenue": 77980.78,
+        "total_orders": 834.0
       },
       {
         "channel": "meta_prospecting",
-        "first_touch_revenue": 54908.56,
-        "last_touch_revenue": 65231.63,
-        "linear_revenue": 60167.9,
-        "total_orders": 703.0
+        "first_touch_revenue": 55674.63,
+        "last_touch_revenue": 65142.06,
+        "linear_revenue": 60447.74,
+        "total_orders": 702.0
       },
       {
         "channel": "organic_search",
-        "first_touch_revenue": 52358.02,
-        "last_touch_revenue": 53574.17,
-        "linear_revenue": 53560.77,
-        "total_orders": 605.0
+        "first_touch_revenue": 51354.04,
+        "last_touch_revenue": 55369.93,
+        "linear_revenue": 54574.7,
+        "total_orders": 606.0
       },
       {
         "channel": "google_ads_shopping",
-        "first_touch_revenue": 48165.45,
-        "last_touch_revenue": 56996.28,
-        "linear_revenue": 51524.61,
-        "total_orders": 639.0
+        "first_touch_revenue": 47324.87,
+        "last_touch_revenue": 56431.31,
+        "linear_revenue": 50796.69,
+        "total_orders": 623.0
       },
       {
         "channel": "meta_retargeting",
-        "first_touch_revenue": 32483.87,
-        "last_touch_revenue": 39584.18,
-        "linear_revenue": 36797.85,
-        "total_orders": 445.0
+        "first_touch_revenue": 32646.89,
+        "last_touch_revenue": 41634.77,
+        "linear_revenue": 37987.43,
+        "total_orders": 449.0
       },
       {
         "channel": "direct",
-        "first_touch_revenue": 36035.81,
-        "last_touch_revenue": 34319.46,
-        "linear_revenue": 34847.21,
-        "total_orders": 415.0
+        "first_touch_revenue": 35938.01,
+        "last_touch_revenue": 33660.08,
+        "linear_revenue": 34172.5,
+        "total_orders": 419.0
       },
       {
         "channel": "email_marketing",
-        "first_touch_revenue": 27253.06,
-        "last_touch_revenue": 37766.8,
-        "linear_revenue": 31589.27,
-        "total_orders": 376.0
+        "first_touch_revenue": 26667.62,
+        "last_touch_revenue": 37669.34,
+        "linear_revenue": 31213.39,
+        "total_orders": 371.0
       }
     ],
     "ga4_by_channel": [
       {
         "channel": "organic_search",
-        "sessions": 35032,
-        "engaged_sessions": 18952,
-        "conversions": 846,
+        "sessions": 35100,
+        "engaged_sessions": 19092,
+        "conversions": 847,
         "session_cvr_pct": 2.41,
-        "engagement_rate_pct": 54.1,
-        "session_share_pct": 24.9
+        "engagement_rate_pct": 54.39,
+        "session_share_pct": 24.8
       },
       {
         "channel": "paid_search",
-        "sessions": 28254,
-        "engaged_sessions": 17625,
-        "conversions": 854,
-        "session_cvr_pct": 3.02,
-        "engagement_rate_pct": 62.38,
+        "sessions": 28457,
+        "engaged_sessions": 17714,
+        "conversions": 865,
+        "session_cvr_pct": 3.04,
+        "engagement_rate_pct": 62.25,
         "session_share_pct": 20.1
       },
       {
         "channel": "paid_social",
-        "sessions": 25633,
-        "engaged_sessions": 11482,
-        "conversions": 414,
-        "session_cvr_pct": 1.62,
-        "engagement_rate_pct": 44.79,
-        "session_share_pct": 18.2
+        "sessions": 25840,
+        "engaged_sessions": 11506,
+        "conversions": 420,
+        "session_cvr_pct": 1.63,
+        "engagement_rate_pct": 44.53,
+        "session_share_pct": 18.3
       },
       {
         "channel": "direct",
-        "sessions": 21245,
-        "engaged_sessions": 14778,
-        "conversions": 707,
-        "session_cvr_pct": 3.33,
-        "engagement_rate_pct": 69.56,
-        "session_share_pct": 15.1
+        "sessions": 21449,
+        "engaged_sessions": 14934,
+        "conversions": 723,
+        "session_cvr_pct": 3.37,
+        "engagement_rate_pct": 69.63,
+        "session_share_pct": 15.2
       },
       {
         "channel": "email",
-        "sessions": 13644,
-        "engaged_sessions": 10230,
-        "conversions": 533,
-        "session_cvr_pct": 3.91,
-        "engagement_rate_pct": 74.98,
+        "sessions": 13677,
+        "engaged_sessions": 10259,
+        "conversions": 538,
+        "session_cvr_pct": 3.93,
+        "engagement_rate_pct": 75.01,
         "session_share_pct": 9.7
       },
       {
         "channel": "referral",
-        "sessions": 9542,
-        "engaged_sessions": 4804,
-        "conversions": 140,
-        "session_cvr_pct": 1.47,
-        "engagement_rate_pct": 50.35,
-        "session_share_pct": 6.8
+        "sessions": 9497,
+        "engaged_sessions": 4795,
+        "conversions": 138,
+        "session_cvr_pct": 1.45,
+        "engagement_rate_pct": 50.49,
+        "session_share_pct": 6.7
       },
       {
         "channel": "organic_social",
-        "sessions": 7111,
-        "engaged_sessions": 2845,
-        "conversions": 51,
-        "session_cvr_pct": 0.72,
-        "engagement_rate_pct": 40.01,
-        "session_share_pct": 5.1
+        "sessions": 7288,
+        "engaged_sessions": 2921,
+        "conversions": 54,
+        "session_cvr_pct": 0.74,
+        "engagement_rate_pct": 40.08,
+        "session_share_pct": 5.2
       }
     ],
     "campaigns": {
@@ -1138,783 +1138,332 @@
         {
           "campaign_name": "Generic - Electronics",
           "campaign_type": "SEARCH",
-          "impressions": 149126,
-          "clicks": 5334,
-          "cost": 4524.3,
-          "conversions": 149,
-          "ctr_pct": 3.58,
-          "click_cvr_pct": 2.79,
-          "roas": 3.29
+          "impressions": 153019,
+          "clicks": 5438,
+          "cost": 4582.03,
+          "conversions": 153,
+          "ctr_pct": 3.55,
+          "click_cvr_pct": 2.81,
+          "roas": 3.34
         },
         {
           "campaign_name": "Generic - Home & Garden",
           "campaign_type": "SEARCH",
-          "impressions": 140314,
-          "clicks": 4956,
-          "cost": 3942.8,
-          "conversions": 136,
-          "ctr_pct": 3.53,
-          "click_cvr_pct": 2.74,
-          "roas": 3.45
+          "impressions": 141516,
+          "clicks": 4950,
+          "cost": 3973.26,
+          "conversions": 134,
+          "ctr_pct": 3.5,
+          "click_cvr_pct": 2.71,
+          "roas": 3.37
         },
         {
           "campaign_name": "Brand - Olist",
           "campaign_type": "SEARCH",
-          "impressions": 138635,
-          "clicks": 5007,
-          "cost": 3734.65,
-          "conversions": 142,
-          "ctr_pct": 3.61,
-          "click_cvr_pct": 2.84,
-          "roas": 3.8
+          "impressions": 138478,
+          "clicks": 4948,
+          "cost": 3740.95,
+          "conversions": 141,
+          "ctr_pct": 3.57,
+          "click_cvr_pct": 2.85,
+          "roas": 3.77
         },
         {
           "campaign_name": "Shopping - All Products",
           "campaign_type": "SHOPPING",
-          "impressions": 222124,
-          "clicks": 4305,
-          "cost": 1896.08,
-          "conversions": 76,
-          "ctr_pct": 1.94,
-          "click_cvr_pct": 1.77,
-          "roas": 4.01
+          "impressions": 226443,
+          "clicks": 4368,
+          "cost": 1947.31,
+          "conversions": 77,
+          "ctr_pct": 1.93,
+          "click_cvr_pct": 1.76,
+          "roas": 3.95
         },
         {
           "campaign_name": "YouTube - Brand Awareness",
           "campaign_type": "VIDEO",
-          "impressions": 437699,
-          "clicks": 5010,
-          "cost": 789.57,
+          "impressions": 444682,
+          "clicks": 5159,
+          "cost": 843.1,
           "conversions": 1,
-          "ctr_pct": 1.14,
-          "click_cvr_pct": 0.02,
-          "roas": 0.13
-        },
-        {
-          "campaign_name": "Display - Retargeting",
-          "campaign_type": "DISPLAY",
-          "impressions": 554280,
-          "clicks": 2684,
-          "cost": 709.92,
-          "conversions": 9,
-          "ctr_pct": 0.48,
-          "click_cvr_pct": 0.34,
-          "roas": 1.27
-        }
-      ],
-      "meta": [
-        {
-          "campaign_name": "Catalog Sales - Dynamic",
-          "objective": "CATALOG_SALES",
-          "impressions": 559724,
-          "link_clicks": 8659,
-          "spend": 3964.31,
-          "purchases": 340,
-          "cpm": 7.08,
-          "click_cvr_pct": 3.93,
-          "roas": 12.34
-        },
-        {
-          "campaign_name": "Prospecting - Lookalike Purchasers",
-          "objective": "CONVERSIONS",
-          "impressions": 523476,
-          "link_clicks": 9171,
-          "spend": 3905.81,
-          "purchases": 284,
-          "cpm": 7.46,
-          "click_cvr_pct": 3.1,
-          "roas": 11.54
-        },
-        {
-          "campaign_name": "Instagram Stories - Flash Sales",
-          "objective": "CONVERSIONS",
-          "impressions": 522919,
-          "link_clicks": 9175,
-          "spend": 3780.53,
-          "purchases": 346,
-          "cpm": 7.23,
-          "click_cvr_pct": 3.77,
-          "roas": 13.89
-        },
-        {
-          "campaign_name": "Retargeting - Add to Cart",
-          "objective": "CONVERSIONS",
-          "impressions": 570544,
-          "link_clicks": 9126,
-          "spend": 3603.99,
-          "purchases": 309,
-          "cpm": 6.32,
-          "click_cvr_pct": 3.39,
-          "roas": 12.68
-        },
-        {
-          "campaign_name": "Brand Awareness - Video",
-          "objective": "AWARENESS",
-          "impressions": 481255,
-          "link_clicks": 7900,
-          "spend": 2619.08,
-          "purchases": 227,
-          "cpm": 5.44,
-          "click_cvr_pct": 2.87,
-          "roas": 12.78
-        }
-      ]
-    },
-    "crm": {
-      "hubspot": {
-        "total_contacts": 110590,
-        "total_pipeline_value": 25468351.47,
-        "pipeline_by_stage": [
-          {
-            "stage": "closed_won",
-            "deal_count": 108598,
-            "total_value": 17665143.87
-          },
-          {
-            "stage": "prospecting",
-            "deal_count": 19569,
-            "total_value": 1814893.13
-          },
-          {
-            "stage": "qualified",
-            "deal_count": 13055,
-            "total_value": 1762179.35
-          },
-          {
-            "stage": "presentation_scheduled",
-            "deal_count": 8661,
-            "total_value": 1418497.66
-          },
-          {
-            "stage": "proposal_sent",
-            "deal_count": 6524,
-            "total_value": 1250147.69
-          },
-          {
-            "stage": "negotiation",
-            "deal_count": 4349,
-            "total_value": 970093.89
-          },
-          {
-            "stage": "closed_lost",
-            "deal_count": 5478,
-            "total_value": 587395.88
-          }
-        ]
-      },
-      "salesforce": {
-        "closed_won_revenue": 12584508.46,
-        "pipeline_by_stage": [
-          {
-            "stage": "Closed Won",
-            "opp_count": 74354,
-            "total_value": 12584508.46,
-            "expected_revenue": 125845.08
-          },
-          {
-            "stage": "Prospecting",
-            "opp_count": 11141,
-            "total_value": 1746060.98,
-            "expected_revenue": 1746.06
-          },
-          {
-            "stage": "Qualification",
-            "opp_count": 7415,
-            "total_value": 1172138.79,
-            "expected_revenue": 2344.28
-          },
-          {
-            "stage": "Needs Analysis",
-            "opp_count": 5251,
-            "total_value": 823053.73,
-            "expected_revenue": 2469.16
-          },
-          {
-            "stage": "Value Proposition",
-            "opp_count": 3718,
-            "total_value": 584303.68,
-            "expected_revenue": 2921.52
-          },
-          {
-            "stage": "Closed Lost",
-            "opp_count": 2935,
-            "total_value": 470078.04,
-            "expected_revenue": 0.0
-          },
-          {
-            "stage": "Proposal/Price Quote",
-            "opp_count": 2960,
-            "total_value": 463398.53,
-            "expected_revenue": 3012.09
-          },
-          {
-            "stage": "Negotiation/Review",
-            "opp_count": 2233,
-            "total_value": 342843.63,
-            "expected_revenue": 2742.75
-          }
-        ],
-        "closed_won_by_source": [
-          {
-            "lead_source": "Web",
-            "revenue": 2541408.87,
-            "won_count": 15190
-          },
-          {
-            "lead_source": "Paid Search",
-            "revenue": 2110306.81,
-            "won_count": 12622
-          },
-          {
-            "lead_source": "Social Media",
-            "revenue": 1928823.45,
-            "won_count": 11706
-          },
-          {
-            "lead_source": "Email",
-            "revenue": 1703263.09,
-            "won_count": 10280
-          },
-          {
-            "lead_source": "Referral",
-            "revenue": 1448493.19,
-            "won_count": 8702
-          },
-          {
-            "lead_source": "Direct",
-            "revenue": 1301356.49,
-            "won_count": 7753
-          },
-          {
-            "lead_source": "Other",
-            "revenue": 522598.56,
-            "won_count": 2741
-          },
-          {
-            "lead_source": "Phone",
-            "revenue": 521705.2,
-            "won_count": 2710
-          },
-          {
-            "lead_source": "Partner",
-            "revenue": 506552.8,
-            "won_count": 2650
-          }
-        ]
-      }
-    }
-  },
-  "windowed_60d": {
-    "label": "60-day window (2026-06-04 → 2026-08-02)",
-    "window": {
-      "start": "2026-06-04",
-      "end": "2026-08-02"
-    },
-    "spend": {
-      "google": 33694.030000000006,
-      "meta": 37690.909999999996,
-      "total": 71384.93999999999
-    },
-    "sessions": {
-      "total": 294692,
-      "engaged": 169515,
-      "engagement_rate_pct": 57.52
-    },
-    "conversions": {
-      "ga4_total": 7474,
-      "ad_platform": 4148,
-      "session_cvr_pct": 2.54
-    },
-    "blended_roas": 10.64,
-    "channel_performance": [
-      {
-        "channel": "google_ads",
-        "total_spend": 33694.03,
-        "attributed_revenue": 285122.86,
-        "total_orders": 2660.0,
-        "cac": 12.67,
-        "roas": 8.46
-      },
-      {
-        "channel": "meta_ads",
-        "total_spend": 37690.91,
-        "attributed_revenue": 215274.76,
-        "total_orders": 2229.0,
-        "cac": 16.91,
-        "roas": 5.71
-      },
-      {
-        "channel": "organic_search",
-        "total_spend": 0.0,
-        "attributed_revenue": 116572.2,
-        "total_orders": 1318.0,
-        "cac": 0.0,
-        "roas": 0.0
-      },
-      {
-        "channel": "direct",
-        "total_spend": 0.0,
-        "attributed_revenue": 74601.66,
-        "total_orders": 896.0,
-        "cac": 0.0,
-        "roas": 0.0
-      },
-      {
-        "channel": "email_marketing",
-        "total_spend": 0.0,
-        "attributed_revenue": 67941.4,
-        "total_orders": 828.0,
-        "cac": 0.0,
-        "roas": 0.0
-      }
-    ],
-    "attribution_by_channel": [
-      {
-        "channel": "google_ads_search",
-        "first_touch_revenue": 165471.82,
-        "last_touch_revenue": 173570.76,
-        "linear_revenue": 168748.28,
-        "total_orders": 1818.0
-      },
-      {
-        "channel": "meta_prospecting",
-        "first_touch_revenue": 126305.35,
-        "last_touch_revenue": 140006.82,
-        "linear_revenue": 133691.73,
-        "total_orders": 1534.0
-      },
-      {
-        "channel": "organic_search",
-        "first_touch_revenue": 112478.09,
-        "last_touch_revenue": 115446.12,
-        "linear_revenue": 116572.2,
-        "total_orders": 1318.0
-      },
-      {
-        "channel": "google_ads_shopping",
-        "first_touch_revenue": 113820.15,
-        "last_touch_revenue": 124205.55,
-        "linear_revenue": 116374.58,
-        "total_orders": 1376.0
-      },
-      {
-        "channel": "meta_retargeting",
-        "first_touch_revenue": 78204.56,
-        "last_touch_revenue": 87700.28,
-        "linear_revenue": 81583.03,
-        "total_orders": 998.0
-      },
-      {
-        "channel": "direct",
-        "first_touch_revenue": 72612.87,
-        "last_touch_revenue": 75275.14,
-        "linear_revenue": 74601.66,
-        "total_orders": 896.0
-      },
-      {
-        "channel": "email_marketing",
-        "first_touch_revenue": 64044.16,
-        "last_touch_revenue": 73530.12,
-        "linear_revenue": 67941.4,
-        "total_orders": 828.0
-      }
-    ],
-    "ga4_by_channel": [
-      {
-        "channel": "organic_search",
-        "sessions": 72776,
-        "engaged_sessions": 39539,
-        "conversions": 1734,
-        "session_cvr_pct": 2.38,
-        "engagement_rate_pct": 54.33,
-        "session_share_pct": 24.7
-      },
-      {
-        "channel": "paid_search",
-        "sessions": 59749,
-        "engaged_sessions": 37474,
-        "conversions": 1828,
-        "session_cvr_pct": 3.06,
-        "engagement_rate_pct": 62.72,
-        "session_share_pct": 20.3
-      },
-      {
-        "channel": "paid_social",
-        "sessions": 53373,
-        "engaged_sessions": 23796,
-        "conversions": 871,
-        "session_cvr_pct": 1.63,
-        "engagement_rate_pct": 44.58,
-        "session_share_pct": 18.1
-      },
-      {
-        "channel": "direct",
-        "sessions": 44314,
-        "engaged_sessions": 30788,
-        "conversions": 1498,
-        "session_cvr_pct": 3.38,
-        "engagement_rate_pct": 69.48,
-        "session_share_pct": 15.0
-      },
-      {
-        "channel": "email",
-        "sessions": 29103,
-        "engaged_sessions": 21795,
-        "conversions": 1121,
-        "session_cvr_pct": 3.85,
-        "engagement_rate_pct": 74.89,
-        "session_share_pct": 9.9
-      },
-      {
-        "channel": "referral",
-        "sessions": 20636,
-        "engaged_sessions": 10303,
-        "conversions": 317,
-        "session_cvr_pct": 1.54,
-        "engagement_rate_pct": 49.93,
-        "session_share_pct": 7.0
-      },
-      {
-        "channel": "organic_social",
-        "sessions": 14741,
-        "engaged_sessions": 5820,
-        "conversions": 105,
-        "session_cvr_pct": 0.71,
-        "engagement_rate_pct": 39.48,
-        "session_share_pct": 5.0
-      }
-    ],
-    "campaigns": {
-      "google": [
-        {
-          "campaign_name": "Generic - Electronics",
-          "campaign_type": "SEARCH",
-          "impressions": 312458,
-          "clicks": 10765,
-          "cost": 9666.39,
-          "conversions": 291,
-          "ctr_pct": 3.45,
-          "click_cvr_pct": 2.7,
-          "roas": 3.01
-        },
-        {
-          "campaign_name": "Generic - Home & Garden",
-          "campaign_type": "SEARCH",
-          "impressions": 294433,
-          "clicks": 10216,
-          "cost": 8610.79,
-          "conversions": 267,
-          "ctr_pct": 3.47,
-          "click_cvr_pct": 2.61,
-          "roas": 3.1
-        },
-        {
-          "campaign_name": "Brand - Olist",
-          "campaign_type": "SEARCH",
-          "impressions": 293907,
-          "clicks": 10516,
-          "cost": 7802.5,
-          "conversions": 297,
-          "ctr_pct": 3.58,
-          "click_cvr_pct": 2.82,
-          "roas": 3.81
-        },
-        {
-          "campaign_name": "Shopping - All Products",
-          "campaign_type": "SHOPPING",
-          "impressions": 469837,
-          "clicks": 9418,
-          "cost": 4329.99,
-          "conversions": 165,
-          "ctr_pct": 2.0,
-          "click_cvr_pct": 1.75,
-          "roas": 3.81
-        },
-        {
-          "campaign_name": "YouTube - Brand Awareness",
-          "campaign_type": "VIDEO",
-          "impressions": 911641,
-          "clicks": 10748,
-          "cost": 1721.49,
-          "conversions": 2,
-          "ctr_pct": 1.18,
+          "ctr_pct": 1.16,
           "click_cvr_pct": 0.02,
           "roas": 0.12
         },
         {
           "campaign_name": "Display - Retargeting",
           "campaign_type": "DISPLAY",
-          "impressions": 1203883,
-          "clicks": 5895,
-          "cost": 1562.87,
-          "conversions": 21,
-          "ctr_pct": 0.49,
+          "impressions": 566409,
+          "clicks": 2743,
+          "cost": 731.36,
+          "conversions": 10,
+          "ctr_pct": 0.48,
           "click_cvr_pct": 0.36,
-          "roas": 1.34
+          "roas": 1.37
         }
       ],
       "meta": [
         {
           "campaign_name": "Catalog Sales - Dynamic",
           "objective": "CATALOG_SALES",
-          "impressions": 1171698,
-          "link_clicks": 19006,
-          "spend": 8933.6,
-          "purchases": 661,
-          "cpm": 7.62,
-          "click_cvr_pct": 3.48,
-          "roas": 10.99
-        },
-        {
-          "campaign_name": "Instagram Stories - Flash Sales",
-          "objective": "CONVERSIONS",
-          "impressions": 1132589,
-          "link_clicks": 19232,
-          "spend": 8310.24,
-          "purchases": 681,
-          "cpm": 7.34,
-          "click_cvr_pct": 3.54,
-          "roas": 11.97
+          "impressions": 553379,
+          "link_clicks": 8482,
+          "spend": 4005.37,
+          "purchases": 337,
+          "cpm": 7.24,
+          "click_cvr_pct": 3.97,
+          "roas": 12.35
         },
         {
           "campaign_name": "Prospecting - Lookalike Purchasers",
           "objective": "CONVERSIONS",
-          "impressions": 1115624,
-          "link_clicks": 19579,
-          "spend": 8223.52,
-          "purchases": 605,
-          "cpm": 7.37,
-          "click_cvr_pct": 3.09,
-          "roas": 11.56
+          "impressions": 517018,
+          "link_clicks": 9086,
+          "spend": 3959.11,
+          "purchases": 292,
+          "cpm": 7.66,
+          "click_cvr_pct": 3.21,
+          "roas": 12.08
+        },
+        {
+          "campaign_name": "Instagram Stories - Flash Sales",
+          "objective": "CONVERSIONS",
+          "impressions": 535739,
+          "link_clicks": 9986,
+          "spend": 3905.84,
+          "purchases": 365,
+          "cpm": 7.29,
+          "click_cvr_pct": 3.66,
+          "roas": 13.94
         },
         {
           "campaign_name": "Retargeting - Add to Cart",
           "objective": "CONVERSIONS",
-          "impressions": 1082215,
-          "link_clicks": 16992,
-          "spend": 7039.72,
-          "purchases": 574,
-          "cpm": 6.5,
-          "click_cvr_pct": 3.38,
-          "roas": 11.66
+          "impressions": 569379,
+          "link_clicks": 8899,
+          "spend": 3579.09,
+          "purchases": 302,
+          "cpm": 6.29,
+          "click_cvr_pct": 3.39,
+          "roas": 12.25
         },
         {
           "campaign_name": "Brand Awareness - Video",
           "objective": "AWARENESS",
-          "impressions": 1052262,
-          "link_clicks": 17296,
-          "spend": 5183.83,
-          "purchases": 584,
-          "cpm": 4.93,
-          "click_cvr_pct": 3.38,
-          "roas": 16.51
+          "impressions": 488416,
+          "link_clicks": 8237,
+          "spend": 2627.39,
+          "purchases": 229,
+          "cpm": 5.38,
+          "click_cvr_pct": 2.78,
+          "roas": 12.87
         }
       ]
     },
     "crm": {
       "hubspot": {
-        "total_contacts": 110590,
-        "total_pipeline_value": 25468351.47,
+        "total_contacts": 110818,
+        "total_pipeline_value": 25513808.09,
         "pipeline_by_stage": [
           {
             "stage": "closed_won",
-            "deal_count": 108598,
-            "total_value": 17665143.87
+            "deal_count": 108770,
+            "total_value": 17696177.75
           },
           {
             "stage": "prospecting",
-            "deal_count": 19569,
-            "total_value": 1814893.13
+            "deal_count": 19590,
+            "total_value": 1819289.81
           },
           {
             "stage": "qualified",
-            "deal_count": 13055,
-            "total_value": 1762179.35
+            "deal_count": 13072,
+            "total_value": 1765583.3
           },
           {
             "stage": "presentation_scheduled",
-            "deal_count": 8661,
-            "total_value": 1418497.66
+            "deal_count": 8673,
+            "total_value": 1420617.52
           },
           {
             "stage": "proposal_sent",
-            "deal_count": 6524,
-            "total_value": 1250147.69
+            "deal_count": 6529,
+            "total_value": 1251269.51
           },
           {
             "stage": "negotiation",
-            "deal_count": 4349,
-            "total_value": 970093.89
+            "deal_count": 4357,
+            "total_value": 971559.25
           },
           {
             "stage": "closed_lost",
-            "deal_count": 5478,
-            "total_value": 587395.88
+            "deal_count": 5487,
+            "total_value": 589310.95
           }
         ]
       },
       "salesforce": {
-        "closed_won_revenue": 12584508.46,
+        "closed_won_revenue": 12605297.89,
         "pipeline_by_stage": [
           {
             "stage": "Closed Won",
-            "opp_count": 74354,
-            "total_value": 12584508.46,
-            "expected_revenue": 125845.08
+            "opp_count": 74462,
+            "total_value": 12605297.89,
+            "expected_revenue": 126052.98
           },
           {
             "stage": "Prospecting",
-            "opp_count": 11141,
-            "total_value": 1746060.98,
-            "expected_revenue": 1746.06
+            "opp_count": 11163,
+            "total_value": 1750773.48,
+            "expected_revenue": 1750.77
           },
           {
             "stage": "Qualification",
-            "opp_count": 7415,
-            "total_value": 1172138.79,
-            "expected_revenue": 2344.28
+            "opp_count": 7433,
+            "total_value": 1175132.48,
+            "expected_revenue": 2350.26
           },
           {
             "stage": "Needs Analysis",
-            "opp_count": 5251,
-            "total_value": 823053.73,
-            "expected_revenue": 2469.16
+            "opp_count": 5256,
+            "total_value": 823812.9,
+            "expected_revenue": 2471.44
           },
           {
             "stage": "Value Proposition",
-            "opp_count": 3718,
-            "total_value": 584303.68,
-            "expected_revenue": 2921.52
+            "opp_count": 3724,
+            "total_value": 585390.1,
+            "expected_revenue": 2926.95
           },
           {
             "stage": "Closed Lost",
-            "opp_count": 2935,
-            "total_value": 470078.04,
+            "opp_count": 2939,
+            "total_value": 470680.22,
             "expected_revenue": 0.0
           },
           {
             "stage": "Proposal/Price Quote",
-            "opp_count": 2960,
-            "total_value": 463398.53,
-            "expected_revenue": 3012.09
+            "opp_count": 2969,
+            "total_value": 465153.78,
+            "expected_revenue": 3023.5
           },
           {
             "stage": "Negotiation/Review",
-            "opp_count": 2233,
-            "total_value": 342843.63,
-            "expected_revenue": 2742.75
+            "opp_count": 2236,
+            "total_value": 343390.89,
+            "expected_revenue": 2747.13
           }
         ],
         "closed_won_by_source": [
           {
             "lead_source": "Web",
-            "revenue": 2541408.87,
-            "won_count": 15190
+            "revenue": 2542870.72,
+            "won_count": 15198
           },
           {
             "lead_source": "Paid Search",
-            "revenue": 2110306.81,
-            "won_count": 12622
+            "revenue": 2112737.51,
+            "won_count": 12635
           },
           {
             "lead_source": "Social Media",
-            "revenue": 1928823.45,
-            "won_count": 11706
+            "revenue": 1931241.16,
+            "won_count": 11717
           },
           {
             "lead_source": "Email",
-            "revenue": 1703263.09,
-            "won_count": 10280
+            "revenue": 1704965.98,
+            "won_count": 10288
           },
           {
             "lead_source": "Referral",
-            "revenue": 1448493.19,
-            "won_count": 8702
+            "revenue": 1450338.89,
+            "won_count": 8713
           },
           {
             "lead_source": "Direct",
-            "revenue": 1301356.49,
-            "won_count": 7753
+            "revenue": 1303828.23,
+            "won_count": 7767
           },
           {
             "lead_source": "Other",
-            "revenue": 522598.56,
-            "won_count": 2741
+            "revenue": 525699.95,
+            "won_count": 2756
           },
           {
             "lead_source": "Phone",
-            "revenue": 521705.2,
-            "won_count": 2710
+            "revenue": 524329.22,
+            "won_count": 2723
           },
           {
             "lead_source": "Partner",
-            "revenue": 506552.8,
-            "won_count": 2650
+            "revenue": 509286.23,
+            "won_count": 2665
           }
         ]
       }
     }
   },
-  "windowed_90d": {
-    "label": "90-day window (2026-05-05 → 2026-08-02)",
+  "windowed_60d": {
+    "label": "60-day window (2026-06-06 → 2026-08-04)",
     "window": {
-      "start": "2026-05-05",
-      "end": "2026-08-02"
+      "start": "2026-06-06",
+      "end": "2026-08-04"
     },
     "spend": {
-      "google": 52633.78999999997,
-      "meta": 57558.26,
-      "total": 110192.04999999996
+      "google": 33271.020000000004,
+      "meta": 37411.35,
+      "total": 70682.36999999997
     },
     "sessions": {
-      "total": 451432,
-      "engaged": 259687,
-      "engagement_rate_pct": 57.53
+      "total": 292935,
+      "engaged": 168591,
+      "engagement_rate_pct": 57.55
     },
     "conversions": {
-      "ga4_total": 11504,
-      "ad_platform": 6299,
-      "session_cvr_pct": 2.55
+      "ga4_total": 7408,
+      "ad_platform": 4140,
+      "session_cvr_pct": 2.53
     },
-    "blended_roas": 10.67,
+    "blended_roas": 10.68,
     "channel_performance": [
       {
         "channel": "google_ads",
-        "total_spend": 52633.79,
-        "attributed_revenue": 443277.68,
-        "total_orders": 4105.0,
-        "cac": 12.82,
-        "roas": 8.42
+        "total_spend": 33271.02,
+        "attributed_revenue": 282517.11,
+        "total_orders": 2627.0,
+        "cac": 12.67,
+        "roas": 8.49
       },
       {
         "channel": "meta_ads",
-        "total_spend": 57558.26,
-        "attributed_revenue": 329470.25,
-        "total_orders": 3414.0,
+        "total_spend": 37411.35,
+        "attributed_revenue": 215052.01,
+        "total_orders": 2219.0,
         "cac": 16.86,
-        "roas": 5.72
+        "roas": 5.75
       },
       {
         "channel": "organic_search",
         "total_spend": 0.0,
-        "attributed_revenue": 179463.23,
-        "total_orders": 2043.0,
+        "attributed_revenue": 116395.51,
+        "total_orders": 1311.0,
         "cac": 0.0,
         "roas": 0.0
       },
       {
         "channel": "direct",
         "total_spend": 0.0,
-        "attributed_revenue": 116436.26,
-        "total_orders": 1410.0,
+        "attributed_revenue": 74394.17,
+        "total_orders": 902.0,
         "cac": 0.0,
         "roas": 0.0
       },
       {
         "channel": "email_marketing",
         "total_spend": 0.0,
-        "attributed_revenue": 106817.28,
-        "total_orders": 1284.0,
+        "attributed_revenue": 66411.38,
+        "total_orders": 813.0,
         "cac": 0.0,
         "roas": 0.0
       }
@@ -1922,116 +1471,116 @@
     "attribution_by_channel": [
       {
         "channel": "google_ads_search",
-        "first_touch_revenue": 258677.0,
-        "last_touch_revenue": 262205.64,
-        "linear_revenue": 260870.46,
-        "total_orders": 2822.0
+        "first_touch_revenue": 164011.46,
+        "last_touch_revenue": 173770.76,
+        "linear_revenue": 168164.25,
+        "total_orders": 1811.0
       },
       {
         "channel": "meta_prospecting",
-        "first_touch_revenue": 197332.08,
-        "last_touch_revenue": 212113.59,
-        "linear_revenue": 204807.71,
-        "total_orders": 2364.0
-      },
-      {
-        "channel": "google_ads_shopping",
-        "first_touch_revenue": 181793.12,
-        "last_touch_revenue": 188818.39,
-        "linear_revenue": 182407.22,
-        "total_orders": 2132.0
-      },
-      {
-        "channel": "organic_search",
-        "first_touch_revenue": 173572.09,
-        "last_touch_revenue": 178157.3,
-        "linear_revenue": 179463.23,
-        "total_orders": 2043.0
-      },
-      {
-        "channel": "meta_retargeting",
-        "first_touch_revenue": 121950.41,
-        "last_touch_revenue": 130839.95,
-        "linear_revenue": 124662.54,
+        "first_touch_revenue": 128463.23,
+        "last_touch_revenue": 137743.42,
+        "linear_revenue": 133627.89,
         "total_orders": 1528.0
       },
       {
+        "channel": "organic_search",
+        "first_touch_revenue": 110606.46,
+        "last_touch_revenue": 114999.37,
+        "linear_revenue": 116395.51,
+        "total_orders": 1311.0
+      },
+      {
+        "channel": "google_ads_shopping",
+        "first_touch_revenue": 114043.22,
+        "last_touch_revenue": 120890.67,
+        "linear_revenue": 114352.86,
+        "total_orders": 1352.0
+      },
+      {
+        "channel": "meta_retargeting",
+        "first_touch_revenue": 77245.81,
+        "last_touch_revenue": 86930.42,
+        "linear_revenue": 81424.11,
+        "total_orders": 989.0
+      },
+      {
         "channel": "direct",
-        "first_touch_revenue": 111544.02,
-        "last_touch_revenue": 120716.86,
-        "linear_revenue": 116436.26,
-        "total_orders": 1410.0
+        "first_touch_revenue": 73010.92,
+        "last_touch_revenue": 74440.11,
+        "linear_revenue": 74394.17,
+        "total_orders": 902.0
       },
       {
         "channel": "email_marketing",
-        "first_touch_revenue": 104378.65,
-        "last_touch_revenue": 113663.99,
-        "linear_revenue": 106817.28,
-        "total_orders": 1284.0
+        "first_touch_revenue": 63396.4,
+        "last_touch_revenue": 71330.82,
+        "linear_revenue": 66411.38,
+        "total_orders": 813.0
       }
     ],
     "ga4_by_channel": [
       {
         "channel": "organic_search",
-        "sessions": 111795,
-        "engaged_sessions": 60987,
-        "conversions": 2708,
-        "session_cvr_pct": 2.42,
-        "engagement_rate_pct": 54.55,
-        "session_share_pct": 24.8
+        "sessions": 72214,
+        "engaged_sessions": 39313,
+        "conversions": 1709,
+        "session_cvr_pct": 2.37,
+        "engagement_rate_pct": 54.44,
+        "session_share_pct": 24.7
       },
       {
         "channel": "paid_search",
-        "sessions": 90487,
-        "engaged_sessions": 56594,
-        "conversions": 2745,
-        "session_cvr_pct": 3.03,
-        "engagement_rate_pct": 62.54,
-        "session_share_pct": 20.0
+        "sessions": 59416,
+        "engaged_sessions": 37212,
+        "conversions": 1817,
+        "session_cvr_pct": 3.06,
+        "engagement_rate_pct": 62.63,
+        "session_share_pct": 20.3
       },
       {
         "channel": "paid_social",
-        "sessions": 81834,
-        "engaged_sessions": 36315,
-        "conversions": 1346,
-        "session_cvr_pct": 1.64,
-        "engagement_rate_pct": 44.38,
-        "session_share_pct": 18.1
+        "sessions": 53179,
+        "engaged_sessions": 23687,
+        "conversions": 865,
+        "session_cvr_pct": 1.63,
+        "engagement_rate_pct": 44.54,
+        "session_share_pct": 18.2
       },
       {
         "channel": "direct",
-        "sessions": 68546,
-        "engaged_sessions": 47732,
-        "conversions": 2327,
-        "session_cvr_pct": 3.39,
-        "engagement_rate_pct": 69.63,
-        "session_share_pct": 15.2
+        "sessions": 44078,
+        "engaged_sessions": 30678,
+        "conversions": 1488,
+        "session_cvr_pct": 3.38,
+        "engagement_rate_pct": 69.6,
+        "session_share_pct": 15.0
       },
       {
         "channel": "email",
-        "sessions": 44626,
-        "engaged_sessions": 33423,
-        "conversions": 1737,
-        "session_cvr_pct": 3.89,
-        "engagement_rate_pct": 74.9,
-        "session_share_pct": 9.9
+        "sessions": 28850,
+        "engaged_sessions": 21615,
+        "conversions": 1113,
+        "session_cvr_pct": 3.86,
+        "engagement_rate_pct": 74.92,
+        "session_share_pct": 9.8
       },
       {
         "channel": "referral",
-        "sessions": 31610,
-        "engaged_sessions": 15742,
-        "conversions": 482,
+        "sessions": 20435,
+        "engaged_sessions": 10232,
+        "conversions": 310,
         "session_cvr_pct": 1.52,
-        "engagement_rate_pct": 49.8,
+        "engagement_rate_pct": 50.07,
         "session_share_pct": 7.0
       },
       {
         "channel": "organic_social",
-        "sessions": 22534,
-        "engaged_sessions": 8894,
-        "conversions": 159,
-        "session_cvr_pct": 0.71,
-        "engagement_rate_pct": 39.47,
+        "sessions": 14763,
+        "engaged_sessions": 5854,
+        "conversions": 106,
+        "session_cvr_pct": 0.72,
+        "engagement_rate_pct": 39.65,
         "session_share_pct": 5.0
       }
     ],
@@ -2040,53 +1589,504 @@
         {
           "campaign_name": "Generic - Electronics",
           "campaign_type": "SEARCH",
-          "impressions": 469913,
-          "clicks": 16267,
-          "cost": 15013.42,
-          "conversions": 441,
-          "ctr_pct": 3.46,
-          "click_cvr_pct": 2.71,
-          "roas": 2.94
+          "impressions": 311794,
+          "clicks": 10709,
+          "cost": 9487.06,
+          "conversions": 291,
+          "ctr_pct": 3.43,
+          "click_cvr_pct": 2.72,
+          "roas": 3.07
         },
         {
           "campaign_name": "Generic - Home & Garden",
           "campaign_type": "SEARCH",
-          "impressions": 457500,
-          "clicks": 15911,
-          "cost": 13902.09,
-          "conversions": 426,
-          "ctr_pct": 3.48,
-          "click_cvr_pct": 2.68,
-          "roas": 3.06
+          "impressions": 291255,
+          "clicks": 10059,
+          "cost": 8417.27,
+          "conversions": 262,
+          "ctr_pct": 3.45,
+          "click_cvr_pct": 2.6,
+          "roas": 3.11
         },
         {
           "campaign_name": "Brand - Olist",
           "campaign_type": "SEARCH",
-          "impressions": 449740,
-          "clicks": 15829,
-          "cost": 11987.52,
-          "conversions": 440,
-          "ctr_pct": 3.52,
-          "click_cvr_pct": 2.78,
-          "roas": 3.67
+          "impressions": 292118,
+          "clicks": 10415,
+          "cost": 7758.92,
+          "conversions": 296,
+          "ctr_pct": 3.57,
+          "click_cvr_pct": 2.84,
+          "roas": 3.81
         },
         {
           "campaign_name": "Shopping - All Products",
           "campaign_type": "SHOPPING",
-          "impressions": 713668,
-          "clicks": 14330,
-          "cost": 6607.91,
-          "conversions": 252,
+          "impressions": 466430,
+          "clicks": 9358,
+          "cost": 4305.59,
+          "conversions": 164,
           "ctr_pct": 2.01,
-          "click_cvr_pct": 1.76,
+          "click_cvr_pct": 1.75,
           "roas": 3.81
         },
         {
           "campaign_name": "YouTube - Brand Awareness",
           "campaign_type": "VIDEO",
-          "impressions": 1381947,
-          "clicks": 16340,
-          "cost": 2652.16,
+          "impressions": 910673,
+          "clicks": 10802,
+          "cost": 1748.77,
+          "conversions": 2,
+          "ctr_pct": 1.19,
+          "click_cvr_pct": 0.02,
+          "roas": 0.11
+        },
+        {
+          "campaign_name": "Display - Retargeting",
+          "campaign_type": "DISPLAY",
+          "impressions": 1209679,
+          "clicks": 5911,
+          "cost": 1553.41,
+          "conversions": 23,
+          "ctr_pct": 0.49,
+          "click_cvr_pct": 0.39,
+          "roas": 1.48
+        }
+      ],
+      "meta": [
+        {
+          "campaign_name": "Catalog Sales - Dynamic",
+          "objective": "CATALOG_SALES",
+          "impressions": 1148516,
+          "link_clicks": 18368,
+          "spend": 8731.76,
+          "purchases": 627,
+          "cpm": 7.6,
+          "click_cvr_pct": 3.41,
+          "roas": 10.51
+        },
+        {
+          "campaign_name": "Instagram Stories - Flash Sales",
+          "objective": "CONVERSIONS",
+          "impressions": 1155201,
+          "link_clicks": 20121,
+          "spend": 8436.57,
+          "purchases": 713,
+          "cpm": 7.3,
+          "click_cvr_pct": 3.54,
+          "roas": 12.27
+        },
+        {
+          "campaign_name": "Prospecting - Lookalike Purchasers",
+          "objective": "CONVERSIONS",
+          "impressions": 1107801,
+          "link_clicks": 19590,
+          "spend": 8147.28,
+          "purchases": 617,
+          "cpm": 7.35,
+          "click_cvr_pct": 3.15,
+          "roas": 11.9
+        },
+        {
+          "campaign_name": "Retargeting - Add to Cart",
+          "objective": "CONVERSIONS",
+          "impressions": 1064757,
+          "link_clicks": 16877,
+          "spend": 6891.18,
+          "purchases": 565,
+          "cpm": 6.47,
+          "click_cvr_pct": 3.35,
+          "roas": 11.6
+        },
+        {
+          "campaign_name": "Brand Awareness - Video",
+          "objective": "AWARENESS",
+          "impressions": 1044981,
+          "link_clicks": 17148,
+          "spend": 5204.56,
+          "purchases": 580,
+          "cpm": 4.98,
+          "click_cvr_pct": 3.38,
+          "roas": 16.39
+        }
+      ]
+    },
+    "crm": {
+      "hubspot": {
+        "total_contacts": 110818,
+        "total_pipeline_value": 25513808.09,
+        "pipeline_by_stage": [
+          {
+            "stage": "closed_won",
+            "deal_count": 108770,
+            "total_value": 17696177.75
+          },
+          {
+            "stage": "prospecting",
+            "deal_count": 19590,
+            "total_value": 1819289.81
+          },
+          {
+            "stage": "qualified",
+            "deal_count": 13072,
+            "total_value": 1765583.3
+          },
+          {
+            "stage": "presentation_scheduled",
+            "deal_count": 8673,
+            "total_value": 1420617.52
+          },
+          {
+            "stage": "proposal_sent",
+            "deal_count": 6529,
+            "total_value": 1251269.51
+          },
+          {
+            "stage": "negotiation",
+            "deal_count": 4357,
+            "total_value": 971559.25
+          },
+          {
+            "stage": "closed_lost",
+            "deal_count": 5487,
+            "total_value": 589310.95
+          }
+        ]
+      },
+      "salesforce": {
+        "closed_won_revenue": 12605297.89,
+        "pipeline_by_stage": [
+          {
+            "stage": "Closed Won",
+            "opp_count": 74462,
+            "total_value": 12605297.89,
+            "expected_revenue": 126052.98
+          },
+          {
+            "stage": "Prospecting",
+            "opp_count": 11163,
+            "total_value": 1750773.48,
+            "expected_revenue": 1750.77
+          },
+          {
+            "stage": "Qualification",
+            "opp_count": 7433,
+            "total_value": 1175132.48,
+            "expected_revenue": 2350.26
+          },
+          {
+            "stage": "Needs Analysis",
+            "opp_count": 5256,
+            "total_value": 823812.9,
+            "expected_revenue": 2471.44
+          },
+          {
+            "stage": "Value Proposition",
+            "opp_count": 3724,
+            "total_value": 585390.1,
+            "expected_revenue": 2926.95
+          },
+          {
+            "stage": "Closed Lost",
+            "opp_count": 2939,
+            "total_value": 470680.22,
+            "expected_revenue": 0.0
+          },
+          {
+            "stage": "Proposal/Price Quote",
+            "opp_count": 2969,
+            "total_value": 465153.78,
+            "expected_revenue": 3023.5
+          },
+          {
+            "stage": "Negotiation/Review",
+            "opp_count": 2236,
+            "total_value": 343390.89,
+            "expected_revenue": 2747.13
+          }
+        ],
+        "closed_won_by_source": [
+          {
+            "lead_source": "Web",
+            "revenue": 2542870.72,
+            "won_count": 15198
+          },
+          {
+            "lead_source": "Paid Search",
+            "revenue": 2112737.51,
+            "won_count": 12635
+          },
+          {
+            "lead_source": "Social Media",
+            "revenue": 1931241.16,
+            "won_count": 11717
+          },
+          {
+            "lead_source": "Email",
+            "revenue": 1704965.98,
+            "won_count": 10288
+          },
+          {
+            "lead_source": "Referral",
+            "revenue": 1450338.89,
+            "won_count": 8713
+          },
+          {
+            "lead_source": "Direct",
+            "revenue": 1303828.23,
+            "won_count": 7767
+          },
+          {
+            "lead_source": "Other",
+            "revenue": 525699.95,
+            "won_count": 2756
+          },
+          {
+            "lead_source": "Phone",
+            "revenue": 524329.22,
+            "won_count": 2723
+          },
+          {
+            "lead_source": "Partner",
+            "revenue": 509286.23,
+            "won_count": 2665
+          }
+        ]
+      }
+    }
+  },
+  "windowed_90d": {
+    "label": "90-day window (2026-05-07 → 2026-08-04)",
+    "window": {
+      "start": "2026-05-07",
+      "end": "2026-08-04"
+    },
+    "spend": {
+      "google": 52251.47999999997,
+      "meta": 57575.36,
+      "total": 109826.83999999994
+    },
+    "sessions": {
+      "total": 449803,
+      "engaged": 258760,
+      "engagement_rate_pct": 57.53
+    },
+    "conversions": {
+      "ga4_total": 11464,
+      "ad_platform": 6302,
+      "session_cvr_pct": 2.55
+    },
+    "blended_roas": 10.67,
+    "channel_performance": [
+      {
+        "channel": "google_ads",
+        "total_spend": 52251.48,
+        "attributed_revenue": 442534.64,
+        "total_orders": 4093.0,
+        "cac": 12.77,
+        "roas": 8.47
+      },
+      {
+        "channel": "meta_ads",
+        "total_spend": 57575.36,
+        "attributed_revenue": 327833.83,
+        "total_orders": 3385.0,
+        "cac": 17.01,
+        "roas": 5.69
+      },
+      {
+        "channel": "organic_search",
+        "total_spend": 0.0,
+        "attributed_revenue": 179508.61,
+        "total_orders": 2039.0,
+        "cac": 0.0,
+        "roas": 0.0
+      },
+      {
+        "channel": "direct",
+        "total_spend": 0.0,
+        "attributed_revenue": 116028.8,
+        "total_orders": 1406.0,
+        "cac": 0.0,
+        "roas": 0.0
+      },
+      {
+        "channel": "email_marketing",
+        "total_spend": 0.0,
+        "attributed_revenue": 105697.39,
+        "total_orders": 1272.0,
+        "cac": 0.0,
+        "roas": 0.0
+      }
+    ],
+    "attribution_by_channel": [
+      {
+        "channel": "google_ads_search",
+        "first_touch_revenue": 259564.76,
+        "last_touch_revenue": 263266.19,
+        "linear_revenue": 262112.48,
+        "total_orders": 2827.0
+      },
+      {
+        "channel": "meta_prospecting",
+        "first_touch_revenue": 196947.93,
+        "last_touch_revenue": 209274.0,
+        "linear_revenue": 203016.05,
+        "total_orders": 2345.0
+      },
+      {
+        "channel": "google_ads_shopping",
+        "first_touch_revenue": 180588.32,
+        "last_touch_revenue": 188173.24,
+        "linear_revenue": 180422.17,
+        "total_orders": 2115.0
+      },
+      {
+        "channel": "organic_search",
+        "first_touch_revenue": 173333.59,
+        "last_touch_revenue": 177584.24,
+        "linear_revenue": 179508.61,
+        "total_orders": 2039.0
+      },
+      {
+        "channel": "meta_retargeting",
+        "first_touch_revenue": 121527.19,
+        "last_touch_revenue": 130500.96,
+        "linear_revenue": 124817.78,
+        "total_orders": 1516.0
+      },
+      {
+        "channel": "direct",
+        "first_touch_revenue": 112294.94,
+        "last_touch_revenue": 118986.5,
+        "linear_revenue": 116028.8,
+        "total_orders": 1406.0
+      },
+      {
+        "channel": "email_marketing",
+        "first_touch_revenue": 102051.86,
+        "last_touch_revenue": 113659.58,
+        "linear_revenue": 105697.39,
+        "total_orders": 1272.0
+      }
+    ],
+    "ga4_by_channel": [
+      {
+        "channel": "organic_search",
+        "sessions": 111198,
+        "engaged_sessions": 60721,
+        "conversions": 2693,
+        "session_cvr_pct": 2.42,
+        "engagement_rate_pct": 54.61,
+        "session_share_pct": 24.7
+      },
+      {
+        "channel": "paid_search",
+        "sessions": 90621,
+        "engaged_sessions": 56688,
+        "conversions": 2751,
+        "session_cvr_pct": 3.04,
+        "engagement_rate_pct": 62.56,
+        "session_share_pct": 20.1
+      },
+      {
+        "channel": "paid_social",
+        "sessions": 81469,
+        "engaged_sessions": 36033,
+        "conversions": 1336,
+        "session_cvr_pct": 1.64,
+        "engagement_rate_pct": 44.23,
+        "session_share_pct": 18.1
+      },
+      {
+        "channel": "direct",
+        "sessions": 68306,
+        "engaged_sessions": 47589,
+        "conversions": 2316,
+        "session_cvr_pct": 3.39,
+        "engagement_rate_pct": 69.67,
+        "session_share_pct": 15.2
+      },
+      {
+        "channel": "email",
+        "sessions": 44325,
+        "engaged_sessions": 33187,
+        "conversions": 1732,
+        "session_cvr_pct": 3.91,
+        "engagement_rate_pct": 74.87,
+        "session_share_pct": 9.9
+      },
+      {
+        "channel": "referral",
+        "sessions": 31438,
+        "engaged_sessions": 15652,
+        "conversions": 477,
+        "session_cvr_pct": 1.52,
+        "engagement_rate_pct": 49.79,
+        "session_share_pct": 7.0
+      },
+      {
+        "channel": "organic_social",
+        "sessions": 22446,
+        "engaged_sessions": 8890,
+        "conversions": 159,
+        "session_cvr_pct": 0.71,
+        "engagement_rate_pct": 39.61,
+        "session_share_pct": 5.0
+      }
+    ],
+    "campaigns": {
+      "google": [
+        {
+          "campaign_name": "Generic - Electronics",
+          "campaign_type": "SEARCH",
+          "impressions": 471789,
+          "clicks": 16299,
+          "cost": 14977.11,
+          "conversions": 440,
+          "ctr_pct": 3.45,
+          "click_cvr_pct": 2.7,
+          "roas": 2.94
+        },
+        {
+          "campaign_name": "Generic - Home & Garden",
+          "campaign_type": "SEARCH",
+          "impressions": 453358,
+          "clicks": 15714,
+          "cost": 13656.9,
+          "conversions": 423,
+          "ctr_pct": 3.47,
+          "click_cvr_pct": 2.69,
+          "roas": 3.1
+        },
+        {
+          "campaign_name": "Brand - Olist",
+          "campaign_type": "SEARCH",
+          "impressions": 447729,
+          "clicks": 15719,
+          "cost": 11946.37,
+          "conversions": 438,
+          "ctr_pct": 3.51,
+          "click_cvr_pct": 2.79,
+          "roas": 3.67
+        },
+        {
+          "campaign_name": "Shopping - All Products",
+          "campaign_type": "SHOPPING",
+          "impressions": 714304,
+          "clicks": 14324,
+          "cost": 6597.75,
+          "conversions": 251,
+          "ctr_pct": 2.01,
+          "click_cvr_pct": 1.75,
+          "roas": 3.8
+        },
+        {
+          "campaign_name": "YouTube - Brand Awareness",
+          "campaign_type": "VIDEO",
+          "impressions": 1369178,
+          "clicks": 16213,
+          "cost": 2633.45,
           "conversions": 3,
           "ctr_pct": 1.18,
           "click_cvr_pct": 0.02,
@@ -2095,277 +2095,277 @@
         {
           "campaign_name": "Display - Retargeting",
           "campaign_type": "DISPLAY",
-          "impressions": 1834012,
-          "clicks": 9017,
-          "cost": 2470.69,
+          "impressions": 1822936,
+          "clicks": 8939,
+          "cost": 2439.9,
           "conversions": 33,
           "ctr_pct": 0.49,
           "click_cvr_pct": 0.37,
-          "roas": 1.34
+          "roas": 1.35
         }
       ],
       "meta": [
         {
           "campaign_name": "Catalog Sales - Dynamic",
           "objective": "CATALOG_SALES",
-          "impressions": 1739987,
-          "link_clicks": 28068,
-          "spend": 13136.84,
-          "purchases": 997,
-          "cpm": 7.55,
+          "impressions": 1752930,
+          "link_clicks": 28096,
+          "spend": 13306.67,
+          "purchases": 998,
+          "cpm": 7.59,
           "click_cvr_pct": 3.55,
-          "roas": 11.32
+          "roas": 11.21
         },
         {
           "campaign_name": "Prospecting - Lookalike Purchasers",
           "objective": "CONVERSIONS",
-          "impressions": 1706578,
-          "link_clicks": 29561,
-          "spend": 13101.45,
-          "purchases": 877,
-          "cpm": 7.68,
-          "click_cvr_pct": 2.97,
-          "roas": 10.33
+          "impressions": 1697132,
+          "link_clicks": 29505,
+          "spend": 13100.92,
+          "purchases": 901,
+          "cpm": 7.72,
+          "click_cvr_pct": 3.05,
+          "roas": 10.7
         },
         {
           "campaign_name": "Instagram Stories - Flash Sales",
           "objective": "CONVERSIONS",
-          "impressions": 1717664,
-          "link_clicks": 29072,
-          "spend": 12451.48,
-          "purchases": 1025,
-          "cpm": 7.25,
-          "click_cvr_pct": 3.53,
-          "roas": 11.8
+          "impressions": 1728561,
+          "link_clicks": 29596,
+          "spend": 12441.33,
+          "purchases": 1026,
+          "cpm": 7.2,
+          "click_cvr_pct": 3.47,
+          "roas": 11.88
         },
         {
           "campaign_name": "Retargeting - Add to Cart",
           "objective": "CONVERSIONS",
-          "impressions": 1672238,
-          "link_clicks": 25949,
-          "spend": 11017.77,
-          "purchases": 889,
-          "cpm": 6.59,
-          "click_cvr_pct": 3.43,
-          "roas": 11.66
+          "impressions": 1657097,
+          "link_clicks": 25760,
+          "spend": 10872.26,
+          "purchases": 876,
+          "cpm": 6.56,
+          "click_cvr_pct": 3.4,
+          "roas": 11.62
         },
         {
           "campaign_name": "Brand Awareness - Video",
           "objective": "AWARENESS",
-          "impressions": 1675715,
-          "link_clicks": 26977,
-          "spend": 7850.72,
-          "purchases": 916,
-          "cpm": 4.68,
-          "click_cvr_pct": 3.4,
-          "roas": 16.41
+          "impressions": 1659173,
+          "link_clicks": 27080,
+          "spend": 7854.18,
+          "purchases": 913,
+          "cpm": 4.73,
+          "click_cvr_pct": 3.37,
+          "roas": 16.38
         }
       ]
     },
     "crm": {
       "hubspot": {
-        "total_contacts": 110590,
-        "total_pipeline_value": 25468351.47,
+        "total_contacts": 110818,
+        "total_pipeline_value": 25513808.09,
         "pipeline_by_stage": [
           {
             "stage": "closed_won",
-            "deal_count": 108598,
-            "total_value": 17665143.87
+            "deal_count": 108770,
+            "total_value": 17696177.75
           },
           {
             "stage": "prospecting",
-            "deal_count": 19569,
-            "total_value": 1814893.13
+            "deal_count": 19590,
+            "total_value": 1819289.81
           },
           {
             "stage": "qualified",
-            "deal_count": 13055,
-            "total_value": 1762179.35
+            "deal_count": 13072,
+            "total_value": 1765583.3
           },
           {
             "stage": "presentation_scheduled",
-            "deal_count": 8661,
-            "total_value": 1418497.66
+            "deal_count": 8673,
+            "total_value": 1420617.52
           },
           {
             "stage": "proposal_sent",
-            "deal_count": 6524,
-            "total_value": 1250147.69
+            "deal_count": 6529,
+            "total_value": 1251269.51
           },
           {
             "stage": "negotiation",
-            "deal_count": 4349,
-            "total_value": 970093.89
+            "deal_count": 4357,
+            "total_value": 971559.25
           },
           {
             "stage": "closed_lost",
-            "deal_count": 5478,
-            "total_value": 587395.88
+            "deal_count": 5487,
+            "total_value": 589310.95
           }
         ]
       },
       "salesforce": {
-        "closed_won_revenue": 12584508.46,
+        "closed_won_revenue": 12605297.89,
         "pipeline_by_stage": [
           {
             "stage": "Closed Won",
-            "opp_count": 74354,
-            "total_value": 12584508.46,
-            "expected_revenue": 125845.08
+            "opp_count": 74462,
+            "total_value": 12605297.89,
+            "expected_revenue": 126052.98
           },
           {
             "stage": "Prospecting",
-            "opp_count": 11141,
-            "total_value": 1746060.98,
-            "expected_revenue": 1746.06
+            "opp_count": 11163,
+            "total_value": 1750773.48,
+            "expected_revenue": 1750.77
           },
           {
             "stage": "Qualification",
-            "opp_count": 7415,
-            "total_value": 1172138.79,
-            "expected_revenue": 2344.28
+            "opp_count": 7433,
+            "total_value": 1175132.48,
+            "expected_revenue": 2350.26
           },
           {
             "stage": "Needs Analysis",
-            "opp_count": 5251,
-            "total_value": 823053.73,
-            "expected_revenue": 2469.16
+            "opp_count": 5256,
+            "total_value": 823812.9,
+            "expected_revenue": 2471.44
           },
           {
             "stage": "Value Proposition",
-            "opp_count": 3718,
-            "total_value": 584303.68,
-            "expected_revenue": 2921.52
+            "opp_count": 3724,
+            "total_value": 585390.1,
+            "expected_revenue": 2926.95
           },
           {
             "stage": "Closed Lost",
-            "opp_count": 2935,
-            "total_value": 470078.04,
+            "opp_count": 2939,
+            "total_value": 470680.22,
             "expected_revenue": 0.0
           },
           {
             "stage": "Proposal/Price Quote",
-            "opp_count": 2960,
-            "total_value": 463398.53,
-            "expected_revenue": 3012.09
+            "opp_count": 2969,
+            "total_value": 465153.78,
+            "expected_revenue": 3023.5
           },
           {
             "stage": "Negotiation/Review",
-            "opp_count": 2233,
-            "total_value": 342843.63,
-            "expected_revenue": 2742.75
+            "opp_count": 2236,
+            "total_value": 343390.89,
+            "expected_revenue": 2747.13
           }
         ],
         "closed_won_by_source": [
           {
             "lead_source": "Web",
-            "revenue": 2541408.87,
-            "won_count": 15190
+            "revenue": 2542870.72,
+            "won_count": 15198
           },
           {
             "lead_source": "Paid Search",
-            "revenue": 2110306.81,
-            "won_count": 12622
+            "revenue": 2112737.51,
+            "won_count": 12635
           },
           {
             "lead_source": "Social Media",
-            "revenue": 1928823.45,
-            "won_count": 11706
+            "revenue": 1931241.16,
+            "won_count": 11717
           },
           {
             "lead_source": "Email",
-            "revenue": 1703263.09,
-            "won_count": 10280
+            "revenue": 1704965.98,
+            "won_count": 10288
           },
           {
             "lead_source": "Referral",
-            "revenue": 1448493.19,
-            "won_count": 8702
+            "revenue": 1450338.89,
+            "won_count": 8713
           },
           {
             "lead_source": "Direct",
-            "revenue": 1301356.49,
-            "won_count": 7753
+            "revenue": 1303828.23,
+            "won_count": 7767
           },
           {
             "lead_source": "Other",
-            "revenue": 522598.56,
-            "won_count": 2741
+            "revenue": 525699.95,
+            "won_count": 2756
           },
           {
             "lead_source": "Phone",
-            "revenue": 521705.2,
-            "won_count": 2710
+            "revenue": 524329.22,
+            "won_count": 2723
           },
           {
             "lead_source": "Partner",
-            "revenue": 506552.8,
-            "won_count": 2650
+            "revenue": 509286.23,
+            "won_count": 2665
           }
         ]
       }
     }
   },
   "windowed_180d": {
-    "label": "180-day window (2026-02-04 → 2026-08-02)",
+    "label": "180-day window (2026-02-06 → 2026-08-04)",
     "window": {
-      "start": "2026-02-04",
-      "end": "2026-08-02"
+      "start": "2026-02-06",
+      "end": "2026-08-04"
     },
     "spend": {
-      "google": 99211.99999999993,
-      "meta": 113842.37,
-      "total": 213054.36999999997
+      "google": 99137.63999999991,
+      "meta": 113782.37999999999,
+      "total": 212920.01999999993
     },
     "sessions": {
-      "total": 873773,
-      "engaged": 502504,
+      "total": 873089,
+      "engaged": 502082,
       "engagement_rate_pct": 57.51
     },
     "conversions": {
-      "ga4_total": 22099,
-      "ad_platform": 12274,
+      "ga4_total": 22095,
+      "ad_platform": 12247,
       "session_cvr_pct": 2.53
     },
-    "blended_roas": 13.81,
+    "blended_roas": 13.53,
     "channel_performance": [
       {
         "channel": "google_ads",
-        "total_spend": 99212.0,
-        "attributed_revenue": 1116613.91,
-        "total_orders": 11139.0,
-        "cac": 8.91,
-        "roas": 11.25
+        "total_spend": 99137.64,
+        "attributed_revenue": 1093723.09,
+        "total_orders": 10891.0,
+        "cac": 9.1,
+        "roas": 11.03
       },
       {
         "channel": "meta_ads",
-        "total_spend": 113842.37,
-        "attributed_revenue": 827760.75,
-        "total_orders": 9052.0,
-        "cac": 12.58,
-        "roas": 7.27
+        "total_spend": 113782.38,
+        "attributed_revenue": 810869.34,
+        "total_orders": 8853.0,
+        "cac": 12.85,
+        "roas": 7.13
       },
       {
         "channel": "organic_search",
         "total_spend": 0.0,
-        "attributed_revenue": 450014.53,
-        "total_orders": 5497.0,
+        "attributed_revenue": 442005.1,
+        "total_orders": 5369.0,
         "cac": 0.0,
         "roas": 0.0
       },
       {
         "channel": "direct",
         "total_spend": 0.0,
-        "attributed_revenue": 290081.33,
-        "total_orders": 3738.0,
+        "attributed_revenue": 286138.23,
+        "total_orders": 3653.0,
         "cac": 0.0,
         "roas": 0.0
       },
       {
         "channel": "email_marketing",
         "total_spend": 0.0,
-        "attributed_revenue": 256789.03,
-        "total_orders": 3247.0,
+        "attributed_revenue": 248830.21,
+        "total_orders": 3175.0,
         "cac": 0.0,
         "roas": 0.0
       }
@@ -2373,117 +2373,117 @@
     "attribution_by_channel": [
       {
         "channel": "google_ads_search",
-        "first_touch_revenue": 676031.32,
-        "last_touch_revenue": 629608.94,
-        "linear_revenue": 655275.75,
-        "total_orders": 7744.0
+        "first_touch_revenue": 662901.71,
+        "last_touch_revenue": 617724.61,
+        "linear_revenue": 642702.23,
+        "total_orders": 7568.0
       },
       {
         "channel": "meta_prospecting",
-        "first_touch_revenue": 502272.81,
-        "last_touch_revenue": 501608.18,
-        "linear_revenue": 510689.06,
-        "total_orders": 6230.0
+        "first_touch_revenue": 492709.29,
+        "last_touch_revenue": 493635.77,
+        "linear_revenue": 501079.11,
+        "total_orders": 6096.0
       },
       {
         "channel": "google_ads_shopping",
-        "first_touch_revenue": 469244.79,
-        "last_touch_revenue": 463186.2,
-        "linear_revenue": 461338.16,
-        "total_orders": 5648.0
+        "first_touch_revenue": 462476.36,
+        "last_touch_revenue": 451563.93,
+        "linear_revenue": 451020.86,
+        "total_orders": 5524.0
       },
       {
         "channel": "organic_search",
-        "first_touch_revenue": 455912.15,
-        "last_touch_revenue": 441144.06,
-        "linear_revenue": 450014.53,
-        "total_orders": 5497.0
+        "first_touch_revenue": 445938.98,
+        "last_touch_revenue": 434198.01,
+        "linear_revenue": 442005.1,
+        "total_orders": 5369.0
       },
       {
         "channel": "meta_retargeting",
-        "first_touch_revenue": 310774.81,
-        "last_touch_revenue": 329137.08,
-        "linear_revenue": 317071.69,
-        "total_orders": 4082.0
+        "first_touch_revenue": 302183.31,
+        "last_touch_revenue": 322501.7,
+        "linear_revenue": 309790.23,
+        "total_orders": 3982.0
       },
       {
         "channel": "direct",
-        "first_touch_revenue": 277243.65,
-        "last_touch_revenue": 312652.64,
-        "linear_revenue": 290081.33,
-        "total_orders": 3738.0
+        "first_touch_revenue": 274474.43,
+        "last_touch_revenue": 307979.28,
+        "linear_revenue": 286138.23,
+        "total_orders": 3653.0
       },
       {
         "channel": "email_marketing",
-        "first_touch_revenue": 249848.6,
-        "last_touch_revenue": 265688.32,
-        "linear_revenue": 256789.03,
-        "total_orders": 3247.0
+        "first_touch_revenue": 243605.37,
+        "last_touch_revenue": 256517.34,
+        "linear_revenue": 248830.21,
+        "total_orders": 3175.0
       }
     ],
     "ga4_by_channel": [
       {
         "channel": "organic_search",
-        "sessions": 217986,
-        "engaged_sessions": 119001,
-        "conversions": 5185,
-        "session_cvr_pct": 2.38,
-        "engagement_rate_pct": 54.59,
+        "sessions": 217491,
+        "engaged_sessions": 118741,
+        "conversions": 5165,
+        "session_cvr_pct": 2.37,
+        "engagement_rate_pct": 54.6,
         "session_share_pct": 24.9
       },
       {
         "channel": "paid_search",
-        "sessions": 175819,
-        "engaged_sessions": 109657,
-        "conversions": 5368,
-        "session_cvr_pct": 3.05,
-        "engagement_rate_pct": 62.37,
-        "session_share_pct": 20.1
+        "sessions": 175993,
+        "engaged_sessions": 109836,
+        "conversions": 5386,
+        "session_cvr_pct": 3.06,
+        "engagement_rate_pct": 62.41,
+        "session_share_pct": 20.2
       },
       {
         "channel": "paid_social",
-        "sessions": 157509,
-        "engaged_sessions": 70051,
-        "conversions": 2547,
+        "sessions": 157443,
+        "engaged_sessions": 69938,
+        "conversions": 2550,
         "session_cvr_pct": 1.62,
-        "engagement_rate_pct": 44.47,
+        "engagement_rate_pct": 44.42,
         "session_share_pct": 18.0
       },
       {
         "channel": "direct",
-        "sessions": 131728,
-        "engaged_sessions": 91836,
-        "conversions": 4414,
+        "sessions": 131722,
+        "engaged_sessions": 91838,
+        "conversions": 4419,
         "session_cvr_pct": 3.35,
         "engagement_rate_pct": 69.72,
         "session_share_pct": 15.1
       },
       {
         "channel": "email",
-        "sessions": 86361,
-        "engaged_sessions": 64556,
-        "conversions": 3355,
-        "session_cvr_pct": 3.88,
-        "engagement_rate_pct": 74.75,
+        "sessions": 86096,
+        "engaged_sessions": 64338,
+        "conversions": 3349,
+        "session_cvr_pct": 3.89,
+        "engagement_rate_pct": 74.73,
         "session_share_pct": 9.9
       },
       {
         "channel": "referral",
-        "sessions": 61175,
-        "engaged_sessions": 30486,
-        "conversions": 937,
+        "sessions": 61088,
+        "engaged_sessions": 30448,
+        "conversions": 932,
         "session_cvr_pct": 1.53,
-        "engagement_rate_pct": 49.83,
+        "engagement_rate_pct": 49.84,
         "session_share_pct": 7.0
       },
       {
         "channel": "organic_social",
-        "sessions": 43195,
-        "engaged_sessions": 16917,
-        "conversions": 293,
+        "sessions": 43256,
+        "engaged_sessions": 16943,
+        "conversions": 294,
         "session_cvr_pct": 0.68,
-        "engagement_rate_pct": 39.16,
-        "session_share_pct": 4.9
+        "engagement_rate_pct": 39.17,
+        "session_share_pct": 5.0
       }
     ],
     "campaigns": {
@@ -2491,53 +2491,53 @@
         {
           "campaign_name": "Generic - Electronics",
           "campaign_type": "SEARCH",
-          "impressions": 889630,
-          "clicks": 30922,
-          "cost": 27537.04,
-          "conversions": 828,
-          "ctr_pct": 3.48,
+          "impressions": 889084,
+          "clicks": 30892,
+          "cost": 27533.11,
+          "conversions": 827,
+          "ctr_pct": 3.47,
           "click_cvr_pct": 2.68,
-          "roas": 3.01
+          "roas": 3.0
         },
         {
           "campaign_name": "Generic - Home & Garden",
           "campaign_type": "SEARCH",
-          "impressions": 871542,
-          "clicks": 30144,
-          "cost": 26072.51,
-          "conversions": 794,
+          "impressions": 870360,
+          "clicks": 30109,
+          "cost": 26051.47,
+          "conversions": 790,
           "ctr_pct": 3.46,
-          "click_cvr_pct": 2.63,
-          "roas": 3.05
+          "click_cvr_pct": 2.62,
+          "roas": 3.03
         },
         {
           "campaign_name": "Brand - Olist",
           "campaign_type": "SEARCH",
-          "impressions": 876519,
-          "clicks": 31094,
-          "cost": 23722.5,
-          "conversions": 836,
-          "ctr_pct": 3.55,
-          "click_cvr_pct": 2.69,
+          "impressions": 874924,
+          "clicks": 30994,
+          "cost": 23647.33,
+          "conversions": 832,
+          "ctr_pct": 3.54,
+          "click_cvr_pct": 2.68,
           "roas": 3.52
         },
         {
           "campaign_name": "Shopping - All Products",
           "campaign_type": "SHOPPING",
-          "impressions": 1393615,
-          "clicks": 28024,
-          "cost": 12591.68,
-          "conversions": 519,
+          "impressions": 1394900,
+          "clicks": 27994,
+          "cost": 12574.66,
+          "conversions": 516,
           "ctr_pct": 2.01,
-          "click_cvr_pct": 1.85,
-          "roas": 4.12
+          "click_cvr_pct": 1.84,
+          "roas": 4.1
         },
         {
           "campaign_name": "YouTube - Brand Awareness",
           "campaign_type": "VIDEO",
-          "impressions": 2632301,
-          "clicks": 31009,
-          "cost": 4757.96,
+          "impressions": 2633543,
+          "clicks": 31094,
+          "cost": 4785.02,
           "conversions": 3,
           "ctr_pct": 1.18,
           "click_cvr_pct": 0.01,
@@ -2546,395 +2546,395 @@
         {
           "campaign_name": "Display - Retargeting",
           "campaign_type": "DISPLAY",
-          "impressions": 3504399,
-          "clicks": 17285,
-          "cost": 4530.31,
-          "conversions": 47,
+          "impressions": 3513198,
+          "clicks": 17344,
+          "cost": 4546.05,
+          "conversions": 49,
           "ctr_pct": 0.49,
-          "click_cvr_pct": 0.27,
-          "roas": 1.04
+          "click_cvr_pct": 0.28,
+          "roas": 1.08
         }
       ],
       "meta": [
         {
-          "campaign_name": "Prospecting - Lookalike Purchasers",
-          "objective": "CONVERSIONS",
-          "impressions": 3423488,
-          "link_clicks": 57197,
-          "spend": 26578.61,
-          "purchases": 1877,
-          "cpm": 7.76,
-          "click_cvr_pct": 3.28,
-          "roas": 10.68
-        },
-        {
           "campaign_name": "Catalog Sales - Dynamic",
           "objective": "CATALOG_SALES",
-          "impressions": 3397876,
-          "link_clicks": 54700,
-          "spend": 26577.79,
-          "purchases": 1814,
-          "cpm": 7.82,
-          "click_cvr_pct": 3.32,
-          "roas": 10.05
+          "impressions": 3399761,
+          "link_clicks": 54483,
+          "spend": 26678.61,
+          "purchases": 1803,
+          "cpm": 7.85,
+          "click_cvr_pct": 3.31,
+          "roas": 9.93
+        },
+        {
+          "campaign_name": "Prospecting - Lookalike Purchasers",
+          "objective": "CONVERSIONS",
+          "impressions": 3411453,
+          "link_clicks": 57127,
+          "spend": 26469.43,
+          "purchases": 1884,
+          "cpm": 7.76,
+          "click_cvr_pct": 3.3,
+          "roas": 10.82
         },
         {
           "campaign_name": "Instagram Stories - Flash Sales",
           "objective": "CONVERSIONS",
-          "impressions": 3399517,
-          "link_clicks": 56048,
-          "spend": 24132.68,
-          "purchases": 1943,
-          "cpm": 7.1,
-          "click_cvr_pct": 3.47,
-          "roas": 11.45
+          "impressions": 3399132,
+          "link_clicks": 56431,
+          "spend": 24192.62,
+          "purchases": 1934,
+          "cpm": 7.12,
+          "click_cvr_pct": 3.43,
+          "roas": 11.33
         },
         {
           "campaign_name": "Retargeting - Add to Cart",
           "objective": "CONVERSIONS",
-          "impressions": 3309349,
-          "link_clicks": 52359,
-          "spend": 21110.66,
-          "purchases": 1805,
-          "cpm": 6.38,
+          "impressions": 3284468,
+          "link_clicks": 52263,
+          "spend": 20986.52,
+          "purchases": 1803,
+          "cpm": 6.39,
           "click_cvr_pct": 3.45,
           "roas": 12.55
         },
         {
           "campaign_name": "Brand Awareness - Video",
           "objective": "AWARENESS",
-          "impressions": 3236763,
-          "link_clicks": 54173,
-          "spend": 15442.63,
-          "purchases": 1808,
+          "impressions": 3243100,
+          "link_clicks": 54334,
+          "spend": 15455.2,
+          "purchases": 1806,
           "cpm": 4.77,
-          "click_cvr_pct": 3.34,
-          "roas": 16.57
+          "click_cvr_pct": 3.32,
+          "roas": 16.5
         }
       ]
     },
     "crm": {
       "hubspot": {
-        "total_contacts": 110590,
-        "total_pipeline_value": 25468351.47,
+        "total_contacts": 110818,
+        "total_pipeline_value": 25513808.09,
         "pipeline_by_stage": [
           {
             "stage": "closed_won",
-            "deal_count": 108598,
-            "total_value": 17665143.87
+            "deal_count": 108770,
+            "total_value": 17696177.75
           },
           {
             "stage": "prospecting",
-            "deal_count": 19569,
-            "total_value": 1814893.13
+            "deal_count": 19590,
+            "total_value": 1819289.81
           },
           {
             "stage": "qualified",
-            "deal_count": 13055,
-            "total_value": 1762179.35
+            "deal_count": 13072,
+            "total_value": 1765583.3
           },
           {
             "stage": "presentation_scheduled",
-            "deal_count": 8661,
-            "total_value": 1418497.66
+            "deal_count": 8673,
+            "total_value": 1420617.52
           },
           {
             "stage": "proposal_sent",
-            "deal_count": 6524,
-            "total_value": 1250147.69
+            "deal_count": 6529,
+            "total_value": 1251269.51
           },
           {
             "stage": "negotiation",
-            "deal_count": 4349,
-            "total_value": 970093.89
+            "deal_count": 4357,
+            "total_value": 971559.25
           },
           {
             "stage": "closed_lost",
-            "deal_count": 5478,
-            "total_value": 587395.88
+            "deal_count": 5487,
+            "total_value": 589310.95
           }
         ]
       },
       "salesforce": {
-        "closed_won_revenue": 12584508.46,
+        "closed_won_revenue": 12605297.89,
         "pipeline_by_stage": [
           {
             "stage": "Closed Won",
-            "opp_count": 74354,
-            "total_value": 12584508.46,
-            "expected_revenue": 125845.08
+            "opp_count": 74462,
+            "total_value": 12605297.89,
+            "expected_revenue": 126052.98
           },
           {
             "stage": "Prospecting",
-            "opp_count": 11141,
-            "total_value": 1746060.98,
-            "expected_revenue": 1746.06
+            "opp_count": 11163,
+            "total_value": 1750773.48,
+            "expected_revenue": 1750.77
           },
           {
             "stage": "Qualification",
-            "opp_count": 7415,
-            "total_value": 1172138.79,
-            "expected_revenue": 2344.28
+            "opp_count": 7433,
+            "total_value": 1175132.48,
+            "expected_revenue": 2350.26
           },
           {
             "stage": "Needs Analysis",
-            "opp_count": 5251,
-            "total_value": 823053.73,
-            "expected_revenue": 2469.16
+            "opp_count": 5256,
+            "total_value": 823812.9,
+            "expected_revenue": 2471.44
           },
           {
             "stage": "Value Proposition",
-            "opp_count": 3718,
-            "total_value": 584303.68,
-            "expected_revenue": 2921.52
+            "opp_count": 3724,
+            "total_value": 585390.1,
+            "expected_revenue": 2926.95
           },
           {
             "stage": "Closed Lost",
-            "opp_count": 2935,
-            "total_value": 470078.04,
+            "opp_count": 2939,
+            "total_value": 470680.22,
             "expected_revenue": 0.0
           },
           {
             "stage": "Proposal/Price Quote",
-            "opp_count": 2960,
-            "total_value": 463398.53,
-            "expected_revenue": 3012.09
+            "opp_count": 2969,
+            "total_value": 465153.78,
+            "expected_revenue": 3023.5
           },
           {
             "stage": "Negotiation/Review",
-            "opp_count": 2233,
-            "total_value": 342843.63,
-            "expected_revenue": 2742.75
+            "opp_count": 2236,
+            "total_value": 343390.89,
+            "expected_revenue": 2747.13
           }
         ],
         "closed_won_by_source": [
           {
             "lead_source": "Web",
-            "revenue": 2541408.87,
-            "won_count": 15190
+            "revenue": 2542870.72,
+            "won_count": 15198
           },
           {
             "lead_source": "Paid Search",
-            "revenue": 2110306.81,
-            "won_count": 12622
+            "revenue": 2112737.51,
+            "won_count": 12635
           },
           {
             "lead_source": "Social Media",
-            "revenue": 1928823.45,
-            "won_count": 11706
+            "revenue": 1931241.16,
+            "won_count": 11717
           },
           {
             "lead_source": "Email",
-            "revenue": 1703263.09,
-            "won_count": 10280
+            "revenue": 1704965.98,
+            "won_count": 10288
           },
           {
             "lead_source": "Referral",
-            "revenue": 1448493.19,
-            "won_count": 8702
+            "revenue": 1450338.89,
+            "won_count": 8713
           },
           {
             "lead_source": "Direct",
-            "revenue": 1301356.49,
-            "won_count": 7753
+            "revenue": 1303828.23,
+            "won_count": 7767
           },
           {
             "lead_source": "Other",
-            "revenue": 522598.56,
-            "won_count": 2741
+            "revenue": 525699.95,
+            "won_count": 2756
           },
           {
             "lead_source": "Phone",
-            "revenue": 521705.2,
-            "won_count": 2710
+            "revenue": 524329.22,
+            "won_count": 2723
           },
           {
             "lead_source": "Partner",
-            "revenue": 506552.8,
-            "won_count": 2650
+            "revenue": 509286.23,
+            "won_count": 2665
           }
         ]
       }
     }
   },
   "month_2026_08": {
-    "label": "August 2026 (month to date: 2026-08-01 → 2026-08-02)",
+    "label": "August 2026 (month to date: 2026-08-01 → 2026-08-04)",
     "window": {
       "start": "2026-08-01",
-      "end": "2026-08-02"
+      "end": "2026-08-04"
     },
     "spend": {
-      "google": 708.29,
-      "meta": 799.3599999999999,
-      "total": 1507.65
+      "google": 1666.26,
+      "meta": 2114.3999999999996,
+      "total": 3780.66
     },
     "sessions": {
-      "total": 7265,
-      "engaged": 4161,
-      "engagement_rate_pct": 57.27
+      "total": 16719,
+      "engaged": 9647,
+      "engagement_rate_pct": 57.7
     },
     "conversions": {
-      "ga4_total": 175,
-      "ad_platform": 108,
-      "session_cvr_pct": 2.41
+      "ga4_total": 423,
+      "ad_platform": 245,
+      "session_cvr_pct": 2.53
     },
-    "blended_roas": 6.33,
+    "blended_roas": 6.54,
     "channel_performance": [
       {
         "channel": "google_ads",
-        "total_spend": 708.29,
-        "attributed_revenue": 3224.02,
-        "total_orders": 42.0,
-        "cac": 16.86,
-        "roas": 4.55
+        "total_spend": 1666.26,
+        "attributed_revenue": 9530.47,
+        "total_orders": 103.0,
+        "cac": 16.18,
+        "roas": 5.72
       },
       {
         "channel": "meta_ads",
-        "total_spend": 799.36,
-        "attributed_revenue": 3049.38,
-        "total_orders": 31.0,
-        "cac": 25.79,
-        "roas": 3.81
+        "total_spend": 2114.4,
+        "attributed_revenue": 7415.72,
+        "total_orders": 71.0,
+        "cac": 29.78,
+        "roas": 3.51
       },
       {
         "channel": "organic_search",
         "total_spend": 0.0,
-        "attributed_revenue": 1627.05,
-        "total_orders": 16.0,
+        "attributed_revenue": 4056.44,
+        "total_orders": 41.0,
         "cac": 0.0,
         "roas": 0.0
       },
       {
         "channel": "direct",
         "total_spend": 0.0,
-        "attributed_revenue": 846.26,
-        "total_orders": 9.0,
+        "attributed_revenue": 2069.53,
+        "total_orders": 26.0,
         "cac": 0.0,
         "roas": 0.0
       },
       {
         "channel": "email_marketing",
         "total_spend": 0.0,
-        "attributed_revenue": 791.46,
-        "total_orders": 10.0,
+        "attributed_revenue": 1644.7,
+        "total_orders": 23.0,
         "cac": 0.0,
         "roas": 0.0
       }
     ],
     "attribution_by_channel": [
       {
-        "channel": "meta_prospecting",
-        "first_touch_revenue": 988.33,
-        "last_touch_revenue": 4251.02,
-        "linear_revenue": 2378.18,
-        "total_orders": 24.0
+        "channel": "google_ads_search",
+        "first_touch_revenue": 2475.12,
+        "last_touch_revenue": 10497.08,
+        "linear_revenue": 5904.67,
+        "total_orders": 67.0
       },
       {
-        "channel": "google_ads_search",
-        "first_touch_revenue": 454.93,
-        "last_touch_revenue": 4046.9,
-        "linear_revenue": 1702.22,
-        "total_orders": 23.0
+        "channel": "meta_prospecting",
+        "first_touch_revenue": 2239.29,
+        "last_touch_revenue": 7116.57,
+        "linear_revenue": 4516.24,
+        "total_orders": 45.0
       },
       {
         "channel": "organic_search",
-        "first_touch_revenue": 605.67,
-        "last_touch_revenue": 3169.53,
-        "linear_revenue": 1627.05,
-        "total_orders": 16.0
+        "first_touch_revenue": 1171.82,
+        "last_touch_revenue": 7396.71,
+        "linear_revenue": 4056.44,
+        "total_orders": 41.0
       },
       {
         "channel": "google_ads_shopping",
-        "first_touch_revenue": 369.74,
-        "last_touch_revenue": 3379.62,
-        "linear_revenue": 1521.8,
-        "total_orders": 19.0
-      },
-      {
-        "channel": "direct",
-        "first_touch_revenue": 251.94,
-        "last_touch_revenue": 1428.77,
-        "linear_revenue": 846.26,
-        "total_orders": 9.0
-      },
-      {
-        "channel": "email_marketing",
-        "first_touch_revenue": 191.98,
-        "last_touch_revenue": 1441.54,
-        "linear_revenue": 791.46,
-        "total_orders": 10.0
+        "first_touch_revenue": 1041.43,
+        "last_touch_revenue": 7357.38,
+        "linear_revenue": 3625.81,
+        "total_orders": 42.0
       },
       {
         "channel": "meta_retargeting",
-        "first_touch_revenue": 275.52,
-        "last_touch_revenue": 1387.11,
-        "linear_revenue": 671.2,
-        "total_orders": 7.0
+        "first_touch_revenue": 1391.8,
+        "last_touch_revenue": 4848.67,
+        "linear_revenue": 2899.48,
+        "total_orders": 27.0
+      },
+      {
+        "channel": "direct",
+        "first_touch_revenue": 986.4,
+        "last_touch_revenue": 3701.02,
+        "linear_revenue": 2069.53,
+        "total_orders": 26.0
+      },
+      {
+        "channel": "email_marketing",
+        "first_touch_revenue": 253.63,
+        "last_touch_revenue": 2850.87,
+        "linear_revenue": 1644.7,
+        "total_orders": 23.0
       }
     ],
     "ga4_by_channel": [
       {
         "channel": "organic_search",
-        "sessions": 1676,
-        "engaged_sessions": 906,
-        "conversions": 40,
-        "session_cvr_pct": 2.39,
-        "engagement_rate_pct": 54.06,
-        "session_share_pct": 23.1
+        "sessions": 3939,
+        "engaged_sessions": 2209,
+        "conversions": 90,
+        "session_cvr_pct": 2.28,
+        "engagement_rate_pct": 56.08,
+        "session_share_pct": 23.6
       },
       {
         "channel": "paid_search",
-        "sessions": 1558,
-        "engaged_sessions": 941,
-        "conversions": 42,
-        "session_cvr_pct": 2.7,
-        "engagement_rate_pct": 60.4,
-        "session_share_pct": 21.4
+        "sessions": 3601,
+        "engaged_sessions": 2226,
+        "conversions": 110,
+        "session_cvr_pct": 3.05,
+        "engagement_rate_pct": 61.82,
+        "session_share_pct": 21.5
       },
       {
         "channel": "paid_social",
-        "sessions": 1303,
-        "engaged_sessions": 563,
-        "conversions": 21,
-        "session_cvr_pct": 1.61,
-        "engagement_rate_pct": 43.21,
-        "session_share_pct": 17.9
+        "sessions": 3041,
+        "engaged_sessions": 1271,
+        "conversions": 50,
+        "session_cvr_pct": 1.64,
+        "engagement_rate_pct": 41.8,
+        "session_share_pct": 18.2
       },
       {
         "channel": "direct",
-        "sessions": 1157,
-        "engaged_sessions": 800,
-        "conversions": 40,
-        "session_cvr_pct": 3.46,
-        "engagement_rate_pct": 69.14,
-        "session_share_pct": 15.9
+        "sessions": 2645,
+        "engaged_sessions": 1850,
+        "conversions": 93,
+        "session_cvr_pct": 3.52,
+        "engagement_rate_pct": 69.94,
+        "session_share_pct": 15.8
       },
       {
         "channel": "email",
-        "sessions": 762,
-        "engaged_sessions": 583,
-        "conversions": 24,
-        "session_cvr_pct": 3.15,
-        "engagement_rate_pct": 76.51,
-        "session_share_pct": 10.5
+        "sessions": 1587,
+        "engaged_sessions": 1201,
+        "conversions": 61,
+        "session_cvr_pct": 3.84,
+        "engagement_rate_pct": 75.68,
+        "session_share_pct": 9.5
       },
       {
         "channel": "referral",
-        "sessions": 415,
-        "engaged_sessions": 215,
-        "conversions": 5,
-        "session_cvr_pct": 1.2,
-        "engagement_rate_pct": 51.81,
-        "session_share_pct": 5.7
+        "sessions": 980,
+        "engaged_sessions": 509,
+        "conversions": 12,
+        "session_cvr_pct": 1.22,
+        "engagement_rate_pct": 51.94,
+        "session_share_pct": 5.9
       },
       {
         "channel": "organic_social",
-        "sessions": 394,
-        "engaged_sessions": 153,
-        "conversions": 3,
+        "sessions": 926,
+        "engaged_sessions": 381,
+        "conversions": 7,
         "session_cvr_pct": 0.76,
-        "engagement_rate_pct": 38.83,
-        "session_share_pct": 5.4
+        "engagement_rate_pct": 41.14,
+        "session_share_pct": 5.5
       }
     ],
     "campaigns": {
@@ -2942,267 +2942,267 @@
         {
           "campaign_name": "Generic - Electronics",
           "campaign_type": "SEARCH",
-          "impressions": 8305,
-          "clicks": 269,
-          "cost": 233.96,
-          "conversions": 8,
-          "ctr_pct": 3.24,
-          "click_cvr_pct": 2.97,
-          "roas": 3.42
+          "impressions": 19552,
+          "clicks": 623,
+          "cost": 483.38,
+          "conversions": 18,
+          "ctr_pct": 3.19,
+          "click_cvr_pct": 2.89,
+          "roas": 3.72
         },
         {
           "campaign_name": "Generic - Home & Garden",
           "campaign_type": "SEARCH",
-          "impressions": 7673,
-          "clicks": 281,
-          "cost": 193.94,
-          "conversions": 7,
-          "ctr_pct": 3.66,
-          "click_cvr_pct": 2.49,
-          "roas": 3.61
+          "impressions": 16275,
+          "clicks": 530,
+          "cost": 421.89,
+          "conversions": 12,
+          "ctr_pct": 3.26,
+          "click_cvr_pct": 2.26,
+          "roas": 2.84
         },
         {
           "campaign_name": "Brand - Olist",
           "campaign_type": "SEARCH",
-          "impressions": 6474,
-          "clicks": 215,
-          "cost": 147.07,
-          "conversions": 8,
-          "ctr_pct": 3.32,
-          "click_cvr_pct": 3.72,
-          "roas": 5.44
+          "impressions": 15916,
+          "clicks": 515,
+          "cost": 391.3,
+          "conversions": 17,
+          "ctr_pct": 3.24,
+          "click_cvr_pct": 3.3,
+          "roas": 4.34
         },
         {
           "campaign_name": "Shopping - All Products",
           "campaign_type": "SHOPPING",
-          "impressions": 9701,
-          "clicks": 210,
-          "cost": 82.31,
-          "conversions": 5,
-          "ctr_pct": 2.16,
-          "click_cvr_pct": 2.38,
-          "roas": 6.07
-        },
-        {
-          "campaign_name": "Display - Retargeting",
-          "campaign_type": "DISPLAY",
-          "impressions": 26764,
-          "clicks": 126,
-          "cost": 31.19,
-          "conversions": 0,
-          "ctr_pct": 0.47,
-          "click_cvr_pct": 0.0,
-          "roas": 0.0
+          "impressions": 23735,
+          "clicks": 455,
+          "cost": 191.65,
+          "conversions": 8,
+          "ctr_pct": 1.92,
+          "click_cvr_pct": 1.76,
+          "roas": 4.17
         },
         {
           "campaign_name": "YouTube - Brand Awareness",
           "campaign_type": "VIDEO",
-          "impressions": 20146,
-          "clicks": 221,
-          "cost": 19.82,
+          "impressions": 49653,
+          "clicks": 628,
+          "cost": 98.98,
           "conversions": 0,
-          "ctr_pct": 1.1,
+          "ctr_pct": 1.26,
           "click_cvr_pct": 0.0,
           "roas": 0.0
+        },
+        {
+          "campaign_name": "Display - Retargeting",
+          "campaign_type": "DISPLAY",
+          "impressions": 68438,
+          "clicks": 326,
+          "cost": 79.06,
+          "conversions": 2,
+          "ctr_pct": 0.48,
+          "click_cvr_pct": 0.61,
+          "roas": 2.53
         }
       ],
       "meta": [
         {
-          "campaign_name": "Brand Awareness - Video",
-          "objective": "AWARENESS",
-          "impressions": 29409,
-          "link_clicks": 316,
-          "spend": 175.14,
-          "purchases": 13,
-          "cpm": 5.96,
-          "click_cvr_pct": 4.11,
-          "roas": 12.27
-        },
-        {
           "campaign_name": "Instagram Stories - Flash Sales",
           "objective": "CONVERSIONS",
-          "impressions": 35475,
-          "link_clicks": 359,
-          "spend": 174.5,
-          "purchases": 14,
-          "cpm": 4.92,
-          "click_cvr_pct": 3.9,
-          "roas": 11.37
+          "impressions": 87209,
+          "link_clicks": 1609,
+          "spend": 533.28,
+          "purchases": 50,
+          "cpm": 6.11,
+          "click_cvr_pct": 3.11,
+          "roas": 12.04
         },
         {
           "campaign_name": "Catalog Sales - Dynamic",
           "objective": "CATALOG_SALES",
-          "impressions": 29188,
-          "link_clicks": 431,
-          "spend": 168.99,
-          "purchases": 21,
-          "cpm": 5.79,
-          "click_cvr_pct": 4.87,
-          "roas": 21.32
-        },
-        {
-          "campaign_name": "Retargeting - Add to Cart",
-          "objective": "CONVERSIONS",
-          "impressions": 23135,
-          "link_clicks": 310,
-          "spend": 143.01,
-          "purchases": 11,
-          "cpm": 6.18,
-          "click_cvr_pct": 3.55,
-          "roas": 11.88
+          "impressions": 64668,
+          "link_clicks": 864,
+          "spend": 500.23,
+          "purchases": 34,
+          "cpm": 7.74,
+          "click_cvr_pct": 3.94,
+          "roas": 11.53
         },
         {
           "campaign_name": "Prospecting - Lookalike Purchasers",
           "objective": "CONVERSIONS",
-          "impressions": 20624,
-          "link_clicks": 454,
-          "spend": 137.72,
-          "purchases": 21,
-          "cpm": 6.68,
-          "click_cvr_pct": 4.63,
-          "roas": 24.97
+          "impressions": 56302,
+          "link_clicks": 1101,
+          "spend": 432.45,
+          "purchases": 55,
+          "cpm": 7.68,
+          "click_cvr_pct": 5.0,
+          "roas": 22.01
+        },
+        {
+          "campaign_name": "Brand Awareness - Video",
+          "objective": "AWARENESS",
+          "impressions": 73013,
+          "link_clicks": 1002,
+          "spend": 372.02,
+          "purchases": 25,
+          "cpm": 5.1,
+          "click_cvr_pct": 2.5,
+          "roas": 10.11
+        },
+        {
+          "campaign_name": "Retargeting - Add to Cart",
+          "objective": "CONVERSIONS",
+          "impressions": 48729,
+          "link_clicks": 711,
+          "spend": 276.42,
+          "purchases": 24,
+          "cpm": 5.67,
+          "click_cvr_pct": 3.38,
+          "roas": 10.88
         }
       ]
     },
     "crm": {
       "hubspot": {
-        "total_contacts": 110590,
-        "total_pipeline_value": 25468351.47,
+        "total_contacts": 110818,
+        "total_pipeline_value": 25513808.09,
         "pipeline_by_stage": [
           {
             "stage": "closed_won",
-            "deal_count": 108598,
-            "total_value": 17665143.87
+            "deal_count": 108770,
+            "total_value": 17696177.75
           },
           {
             "stage": "prospecting",
-            "deal_count": 19569,
-            "total_value": 1814893.13
+            "deal_count": 19590,
+            "total_value": 1819289.81
           },
           {
             "stage": "qualified",
-            "deal_count": 13055,
-            "total_value": 1762179.35
+            "deal_count": 13072,
+            "total_value": 1765583.3
           },
           {
             "stage": "presentation_scheduled",
-            "deal_count": 8661,
-            "total_value": 1418497.66
+            "deal_count": 8673,
+            "total_value": 1420617.52
           },
           {
             "stage": "proposal_sent",
-            "deal_count": 6524,
-            "total_value": 1250147.69
+            "deal_count": 6529,
+            "total_value": 1251269.51
           },
           {
             "stage": "negotiation",
-            "deal_count": 4349,
-            "total_value": 970093.89
+            "deal_count": 4357,
+            "total_value": 971559.25
           },
           {
             "stage": "closed_lost",
-            "deal_count": 5478,
-            "total_value": 587395.88
+            "deal_count": 5487,
+            "total_value": 589310.95
           }
         ]
       },
       "salesforce": {
-        "closed_won_revenue": 12584508.46,
+        "closed_won_revenue": 12605297.89,
         "pipeline_by_stage": [
           {
             "stage": "Closed Won",
-            "opp_count": 74354,
-            "total_value": 12584508.46,
-            "expected_revenue": 125845.08
+            "opp_count": 74462,
+            "total_value": 12605297.89,
+            "expected_revenue": 126052.98
           },
           {
             "stage": "Prospecting",
-            "opp_count": 11141,
-            "total_value": 1746060.98,
-            "expected_revenue": 1746.06
+            "opp_count": 11163,
+            "total_value": 1750773.48,
+            "expected_revenue": 1750.77
           },
           {
             "stage": "Qualification",
-            "opp_count": 7415,
-            "total_value": 1172138.79,
-            "expected_revenue": 2344.28
+            "opp_count": 7433,
+            "total_value": 1175132.48,
+            "expected_revenue": 2350.26
           },
           {
             "stage": "Needs Analysis",
-            "opp_count": 5251,
-            "total_value": 823053.73,
-            "expected_revenue": 2469.16
+            "opp_count": 5256,
+            "total_value": 823812.9,
+            "expected_revenue": 2471.44
           },
           {
             "stage": "Value Proposition",
-            "opp_count": 3718,
-            "total_value": 584303.68,
-            "expected_revenue": 2921.52
+            "opp_count": 3724,
+            "total_value": 585390.1,
+            "expected_revenue": 2926.95
           },
           {
             "stage": "Closed Lost",
-            "opp_count": 2935,
-            "total_value": 470078.04,
+            "opp_count": 2939,
+            "total_value": 470680.22,
             "expected_revenue": 0.0
           },
           {
             "stage": "Proposal/Price Quote",
-            "opp_count": 2960,
-            "total_value": 463398.53,
-            "expected_revenue": 3012.09
+            "opp_count": 2969,
+            "total_value": 465153.78,
+            "expected_revenue": 3023.5
           },
           {
             "stage": "Negotiation/Review",
-            "opp_count": 2233,
-            "total_value": 342843.63,
-            "expected_revenue": 2742.75
+            "opp_count": 2236,
+            "total_value": 343390.89,
+            "expected_revenue": 2747.13
           }
         ],
         "closed_won_by_source": [
           {
             "lead_source": "Web",
-            "revenue": 2541408.87,
-            "won_count": 15190
+            "revenue": 2542870.72,
+            "won_count": 15198
           },
           {
             "lead_source": "Paid Search",
-            "revenue": 2110306.81,
-            "won_count": 12622
+            "revenue": 2112737.51,
+            "won_count": 12635
           },
           {
             "lead_source": "Social Media",
-            "revenue": 1928823.45,
-            "won_count": 11706
+            "revenue": 1931241.16,
+            "won_count": 11717
           },
           {
             "lead_source": "Email",
-            "revenue": 1703263.09,
-            "won_count": 10280
+            "revenue": 1704965.98,
+            "won_count": 10288
           },
           {
             "lead_source": "Referral",
-            "revenue": 1448493.19,
-            "won_count": 8702
+            "revenue": 1450338.89,
+            "won_count": 8713
           },
           {
             "lead_source": "Direct",
-            "revenue": 1301356.49,
-            "won_count": 7753
+            "revenue": 1303828.23,
+            "won_count": 7767
           },
           {
             "lead_source": "Other",
-            "revenue": 522598.56,
-            "won_count": 2741
+            "revenue": 525699.95,
+            "won_count": 2756
           },
           {
             "lead_source": "Phone",
-            "revenue": 521705.2,
-            "won_count": 2710
+            "revenue": 524329.22,
+            "won_count": 2723
           },
           {
             "lead_source": "Partner",
-            "revenue": 506552.8,
-            "won_count": 2650
+            "revenue": 509286.23,
+            "won_count": 2665
           }
         ]
       }
@@ -3229,45 +3229,45 @@
       "ad_platform": 2086,
       "session_cvr_pct": 2.54
     },
-    "blended_roas": 10.69,
+    "blended_roas": 10.96,
     "channel_performance": [
       {
         "channel": "google_ads",
         "total_spend": 16456.94,
-        "attributed_revenue": 141926.29,
-        "total_orders": 1376.0,
-        "cac": 11.96,
-        "roas": 8.62
+        "attributed_revenue": 145275.31,
+        "total_orders": 1411.0,
+        "cac": 11.66,
+        "roas": 8.83
       },
       {
         "channel": "meta_ads",
         "total_spend": 18660.46,
-        "attributed_revenue": 105778.16,
-        "total_orders": 1112.0,
-        "cac": 16.78,
-        "roas": 5.67
+        "attributed_revenue": 108641.34,
+        "total_orders": 1147.0,
+        "cac": 16.27,
+        "roas": 5.82
       },
       {
         "channel": "organic_search",
         "total_spend": 0.0,
-        "attributed_revenue": 56941.86,
-        "total_orders": 659.0,
+        "attributed_revenue": 58267.49,
+        "total_orders": 678.0,
         "cac": 0.0,
         "roas": 0.0
       },
       {
         "channel": "direct",
         "total_spend": 0.0,
-        "attributed_revenue": 37258.32,
-        "total_orders": 448.0,
+        "attributed_revenue": 38430.2,
+        "total_orders": 463.0,
         "cac": 0.0,
         "roas": 0.0
       },
       {
         "channel": "email_marketing",
         "total_spend": 0.0,
-        "attributed_revenue": 33364.06,
-        "total_orders": 406.0,
+        "attributed_revenue": 34138.64,
+        "total_orders": 417.0,
         "cac": 0.0,
         "roas": 0.0
       }
@@ -3275,52 +3275,52 @@
     "attribution_by_channel": [
       {
         "channel": "google_ads_search",
-        "first_touch_revenue": 80665.35,
+        "first_touch_revenue": 84311.2,
         "last_touch_revenue": 90843.35,
-        "linear_revenue": 85698.58,
-        "total_orders": 928.0
+        "linear_revenue": 87637.56,
+        "total_orders": 949.0
       },
       {
         "channel": "meta_prospecting",
-        "first_touch_revenue": 60843.16,
+        "first_touch_revenue": 65146.52,
         "last_touch_revenue": 68375.41,
-        "linear_revenue": 65002.07,
-        "total_orders": 763.0
+        "linear_revenue": 67012.3,
+        "total_orders": 788.0
       },
       {
         "channel": "organic_search",
-        "first_touch_revenue": 54835.76,
+        "first_touch_revenue": 56788.4,
         "last_touch_revenue": 56214.3,
-        "linear_revenue": 56941.86,
-        "total_orders": 659.0
+        "linear_revenue": 58267.49,
+        "total_orders": 678.0
       },
       {
         "channel": "google_ads_shopping",
-        "first_touch_revenue": 53777.5,
+        "first_touch_revenue": 57580.09,
         "last_touch_revenue": 60552.04,
-        "linear_revenue": 56227.72,
-        "total_orders": 704.0
+        "linear_revenue": 57637.75,
+        "total_orders": 721.0
       },
       {
         "channel": "meta_retargeting",
-        "first_touch_revenue": 37701.9,
+        "first_touch_revenue": 38826.15,
         "last_touch_revenue": 41585.73,
-        "linear_revenue": 40776.09,
-        "total_orders": 495.0
+        "linear_revenue": 41629.04,
+        "total_orders": 508.0
       },
       {
         "channel": "direct",
-        "first_touch_revenue": 39341.5,
+        "first_touch_revenue": 41127.79,
         "last_touch_revenue": 36192.01,
-        "linear_revenue": 37258.32,
-        "total_orders": 448.0
+        "linear_revenue": 38430.2,
+        "total_orders": 463.0
       },
       {
         "channel": "email_marketing",
-        "first_touch_revenue": 30851.75,
+        "first_touch_revenue": 32479.2,
         "last_touch_revenue": 38935.47,
-        "linear_revenue": 33364.06,
-        "total_orders": 406.0
+        "linear_revenue": 34138.64,
+        "total_orders": 417.0
       }
     ],
     "ga4_by_channel": [
@@ -3517,143 +3517,143 @@
     },
     "crm": {
       "hubspot": {
-        "total_contacts": 110590,
-        "total_pipeline_value": 25468351.47,
+        "total_contacts": 110818,
+        "total_pipeline_value": 25513808.09,
         "pipeline_by_stage": [
           {
             "stage": "closed_won",
-            "deal_count": 108598,
-            "total_value": 17665143.87
+            "deal_count": 108770,
+            "total_value": 17696177.75
           },
           {
             "stage": "prospecting",
-            "deal_count": 19569,
-            "total_value": 1814893.13
+            "deal_count": 19590,
+            "total_value": 1819289.81
           },
           {
             "stage": "qualified",
-            "deal_count": 13055,
-            "total_value": 1762179.35
+            "deal_count": 13072,
+            "total_value": 1765583.3
           },
           {
             "stage": "presentation_scheduled",
-            "deal_count": 8661,
-            "total_value": 1418497.66
+            "deal_count": 8673,
+            "total_value": 1420617.52
           },
           {
             "stage": "proposal_sent",
-            "deal_count": 6524,
-            "total_value": 1250147.69
+            "deal_count": 6529,
+            "total_value": 1251269.51
           },
           {
             "stage": "negotiation",
-            "deal_count": 4349,
-            "total_value": 970093.89
+            "deal_count": 4357,
+            "total_value": 971559.25
           },
           {
             "stage": "closed_lost",
-            "deal_count": 5478,
-            "total_value": 587395.88
+            "deal_count": 5487,
+            "total_value": 589310.95
           }
         ]
       },
       "salesforce": {
-        "closed_won_revenue": 12584508.46,
+        "closed_won_revenue": 12605297.89,
         "pipeline_by_stage": [
           {
             "stage": "Closed Won",
-            "opp_count": 74354,
-            "total_value": 12584508.46,
-            "expected_revenue": 125845.08
+            "opp_count": 74462,
+            "total_value": 12605297.89,
+            "expected_revenue": 126052.98
           },
           {
             "stage": "Prospecting",
-            "opp_count": 11141,
-            "total_value": 1746060.98,
-            "expected_revenue": 1746.06
+            "opp_count": 11163,
+            "total_value": 1750773.48,
+            "expected_revenue": 1750.77
           },
           {
             "stage": "Qualification",
-            "opp_count": 7415,
-            "total_value": 1172138.79,
-            "expected_revenue": 2344.28
+            "opp_count": 7433,
+            "total_value": 1175132.48,
+            "expected_revenue": 2350.26
           },
           {
             "stage": "Needs Analysis",
-            "opp_count": 5251,
-            "total_value": 823053.73,
-            "expected_revenue": 2469.16
+            "opp_count": 5256,
+            "total_value": 823812.9,
+            "expected_revenue": 2471.44
           },
           {
             "stage": "Value Proposition",
-            "opp_count": 3718,
-            "total_value": 584303.68,
-            "expected_revenue": 2921.52
+            "opp_count": 3724,
+            "total_value": 585390.1,
+            "expected_revenue": 2926.95
           },
           {
             "stage": "Closed Lost",
-            "opp_count": 2935,
-            "total_value": 470078.04,
+            "opp_count": 2939,
+            "total_value": 470680.22,
             "expected_revenue": 0.0
           },
           {
             "stage": "Proposal/Price Quote",
-            "opp_count": 2960,
-            "total_value": 463398.53,
-            "expected_revenue": 3012.09
+            "opp_count": 2969,
+            "total_value": 465153.78,
+            "expected_revenue": 3023.5
           },
           {
             "stage": "Negotiation/Review",
-            "opp_count": 2233,
-            "total_value": 342843.63,
-            "expected_revenue": 2742.75
+            "opp_count": 2236,
+            "total_value": 343390.89,
+            "expected_revenue": 2747.13
           }
         ],
         "closed_won_by_source": [
           {
             "lead_source": "Web",
-            "revenue": 2541408.87,
-            "won_count": 15190
+            "revenue": 2542870.72,
+            "won_count": 15198
           },
           {
             "lead_source": "Paid Search",
-            "revenue": 2110306.81,
-            "won_count": 12622
+            "revenue": 2112737.51,
+            "won_count": 12635
           },
           {
             "lead_source": "Social Media",
-            "revenue": 1928823.45,
-            "won_count": 11706
+            "revenue": 1931241.16,
+            "won_count": 11717
           },
           {
             "lead_source": "Email",
-            "revenue": 1703263.09,
-            "won_count": 10280
+            "revenue": 1704965.98,
+            "won_count": 10288
           },
           {
             "lead_source": "Referral",
-            "revenue": 1448493.19,
-            "won_count": 8702
+            "revenue": 1450338.89,
+            "won_count": 8713
           },
           {
             "lead_source": "Direct",
-            "revenue": 1301356.49,
-            "won_count": 7753
+            "revenue": 1303828.23,
+            "won_count": 7767
           },
           {
             "lead_source": "Other",
-            "revenue": 522598.56,
-            "won_count": 2741
+            "revenue": 525699.95,
+            "won_count": 2756
           },
           {
             "lead_source": "Phone",
-            "revenue": 521705.2,
-            "won_count": 2710
+            "revenue": 524329.22,
+            "won_count": 2723
           },
           {
             "lead_source": "Partner",
-            "revenue": 506552.8,
-            "won_count": 2650
+            "revenue": 509286.23,
+            "won_count": 2665
           }
         ]
       }
@@ -3968,143 +3968,143 @@
     },
     "crm": {
       "hubspot": {
-        "total_contacts": 110590,
-        "total_pipeline_value": 25468351.47,
+        "total_contacts": 110818,
+        "total_pipeline_value": 25513808.09,
         "pipeline_by_stage": [
           {
             "stage": "closed_won",
-            "deal_count": 108598,
-            "total_value": 17665143.87
+            "deal_count": 108770,
+            "total_value": 17696177.75
           },
           {
             "stage": "prospecting",
-            "deal_count": 19569,
-            "total_value": 1814893.13
+            "deal_count": 19590,
+            "total_value": 1819289.81
           },
           {
             "stage": "qualified",
-            "deal_count": 13055,
-            "total_value": 1762179.35
+            "deal_count": 13072,
+            "total_value": 1765583.3
           },
           {
             "stage": "presentation_scheduled",
-            "deal_count": 8661,
-            "total_value": 1418497.66
+            "deal_count": 8673,
+            "total_value": 1420617.52
           },
           {
             "stage": "proposal_sent",
-            "deal_count": 6524,
-            "total_value": 1250147.69
+            "deal_count": 6529,
+            "total_value": 1251269.51
           },
           {
             "stage": "negotiation",
-            "deal_count": 4349,
-            "total_value": 970093.89
+            "deal_count": 4357,
+            "total_value": 971559.25
           },
           {
             "stage": "closed_lost",
-            "deal_count": 5478,
-            "total_value": 587395.88
+            "deal_count": 5487,
+            "total_value": 589310.95
           }
         ]
       },
       "salesforce": {
-        "closed_won_revenue": 12584508.46,
+        "closed_won_revenue": 12605297.89,
         "pipeline_by_stage": [
           {
             "stage": "Closed Won",
-            "opp_count": 74354,
-            "total_value": 12584508.46,
-            "expected_revenue": 125845.08
+            "opp_count": 74462,
+            "total_value": 12605297.89,
+            "expected_revenue": 126052.98
           },
           {
             "stage": "Prospecting",
-            "opp_count": 11141,
-            "total_value": 1746060.98,
-            "expected_revenue": 1746.06
+            "opp_count": 11163,
+            "total_value": 1750773.48,
+            "expected_revenue": 1750.77
           },
           {
             "stage": "Qualification",
-            "opp_count": 7415,
-            "total_value": 1172138.79,
-            "expected_revenue": 2344.28
+            "opp_count": 7433,
+            "total_value": 1175132.48,
+            "expected_revenue": 2350.26
           },
           {
             "stage": "Needs Analysis",
-            "opp_count": 5251,
-            "total_value": 823053.73,
-            "expected_revenue": 2469.16
+            "opp_count": 5256,
+            "total_value": 823812.9,
+            "expected_revenue": 2471.44
           },
           {
             "stage": "Value Proposition",
-            "opp_count": 3718,
-            "total_value": 584303.68,
-            "expected_revenue": 2921.52
+            "opp_count": 3724,
+            "total_value": 585390.1,
+            "expected_revenue": 2926.95
           },
           {
             "stage": "Closed Lost",
-            "opp_count": 2935,
-            "total_value": 470078.04,
+            "opp_count": 2939,
+            "total_value": 470680.22,
             "expected_revenue": 0.0
           },
           {
             "stage": "Proposal/Price Quote",
-            "opp_count": 2960,
-            "total_value": 463398.53,
-            "expected_revenue": 3012.09
+            "opp_count": 2969,
+            "total_value": 465153.78,
+            "expected_revenue": 3023.5
           },
           {
             "stage": "Negotiation/Review",
-            "opp_count": 2233,
-            "total_value": 342843.63,
-            "expected_revenue": 2742.75
+            "opp_count": 2236,
+            "total_value": 343390.89,
+            "expected_revenue": 2747.13
           }
         ],
         "closed_won_by_source": [
           {
             "lead_source": "Web",
-            "revenue": 2541408.87,
-            "won_count": 15190
+            "revenue": 2542870.72,
+            "won_count": 15198
           },
           {
             "lead_source": "Paid Search",
-            "revenue": 2110306.81,
-            "won_count": 12622
+            "revenue": 2112737.51,
+            "won_count": 12635
           },
           {
             "lead_source": "Social Media",
-            "revenue": 1928823.45,
-            "won_count": 11706
+            "revenue": 1931241.16,
+            "won_count": 11717
           },
           {
             "lead_source": "Email",
-            "revenue": 1703263.09,
-            "won_count": 10280
+            "revenue": 1704965.98,
+            "won_count": 10288
           },
           {
             "lead_source": "Referral",
-            "revenue": 1448493.19,
-            "won_count": 8702
+            "revenue": 1450338.89,
+            "won_count": 8713
           },
           {
             "lead_source": "Direct",
-            "revenue": 1301356.49,
-            "won_count": 7753
+            "revenue": 1303828.23,
+            "won_count": 7767
           },
           {
             "lead_source": "Other",
-            "revenue": 522598.56,
-            "won_count": 2741
+            "revenue": 525699.95,
+            "won_count": 2756
           },
           {
             "lead_source": "Phone",
-            "revenue": 521705.2,
-            "won_count": 2710
+            "revenue": 524329.22,
+            "won_count": 2723
           },
           {
             "lead_source": "Partner",
-            "revenue": 506552.8,
-            "won_count": 2650
+            "revenue": 509286.23,
+            "won_count": 2665
           }
         ]
       }

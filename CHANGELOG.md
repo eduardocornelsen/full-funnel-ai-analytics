@@ -5,6 +5,22 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: [SemVer](
 
 ## [Unreleased]
 
+### Fixed
+- **Time-decay attribution is now normalised per order.** The raw weights
+  `POWER(2, -days/7)` were summed without dividing by the order's total, so
+  time-decay revenue came out at ~$24.7M against ~$18.2M of order revenue
+  (+35%). Weights now sum to 1 within each order. The canonical linear model
+  and `golden_metrics.json` are unaffected (they never used time-decay)
+- New dbt test `assert_attribution_conserves_revenue`: every attribution model
+  (first/last/linear/time-decay) must attribute total order revenue within
+  0.01% (linear credits are stored rounded to 4 decimals, ~0.003% under)
+- Docs no longer oversell the ML layer: the lead-scoring features are random,
+  the logged AUC is ≈ 0.49, and the README now says it is a plumbing demo
+- README accuracy: 3 workflows (not 4), 6 MCP servers (not 7), which warehouses
+  are actually tested, Olist CSVs are committed, no Weather API, no
+  `run_mlflow_server.sh`, and a "what's real vs synthetic" box up top
+- `src/*.egg-info` is no longer tracked
+
 ### Added
 - Committed-artifact spot check: `validate_metrics.py --completed-months-only`
   validates the checked-in `golden_metrics.json` against the warehouse using

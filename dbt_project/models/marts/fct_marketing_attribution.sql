@@ -12,13 +12,32 @@
 --   first_touch  — 100% credit to the channel of the first touchpoint
 --   last_touch   — 100% credit to the channel of the last touchpoint
 --   linear       — equal credit split across all touchpoints (CANONICAL)
---   time_decay   — exponential decay by recency; half-life = 7 days (macro default)
+--   time_decay   — exponential decay by recency; half-life = 7 days (macro default),
+--                  normalised so each order's credits sum to 1
 
 WITH stg AS (
     -- Pull every attribution touchpoint row from the staging model.
     -- One row per (order_id × touchpoint_position); contains credit weights
     -- (first_touch_credit, last_touch_credit, linear_credit) pre-computed upstream.
     SELECT * FROM {{ ref('stg_marketing_attribution') }}
+),
+
+decay AS (
+    -- Raw time-decay weight per touchpoint: POWER(2, -days_to_conversion / half_life_days).
+    SELECT
+        stg.*,
+        {{ time_decay_credit('touchpoint_date', 'order_date') }} AS time_decay_weight
+    FROM stg
+),
+
+weighted AS (
+    -- Normalise the raw weights within each order so they sum to 1. Without this,
+    -- an order's time-decay credit summed to anything between ~0 and N and the
+    -- model over- or under-stated revenue instead of redistributing it.
+    SELECT
+        decay.*,
+        time_decay_weight / SUM(time_decay_weight) OVER (PARTITION BY order_id) AS time_decay_credit
+    FROM decay
 )
 
 SELECT
@@ -44,15 +63,15 @@ SELECT
     COALESCE(SUM(linear_credit * order_revenue), 0)                                   AS linear_revenue,
 
     -- Time-decay revenue: touchpoints closer to conversion receive exponentially more credit.
-    -- The macro time_decay_credit() computes POWER(2, -days_to_conversion / half_life_days).
-    -- half_life_days defaults to 7 (one week) — touchpoint 7 days before conversion gets 50% weight.
-    COALESCE(SUM({{ time_decay_credit('touchpoint_date', 'order_date') }} * order_revenue), 0) AS time_decay_revenue,
+    -- time_decay_credit is the macro weight (half-life 7 days) normalised per order in the
+    -- `weighted` CTE, so each order's credits sum to 1 like the other three models.
+    COALESCE(SUM(time_decay_credit * order_revenue), 0)                               AS time_decay_revenue,
 
     -- Distinct order count for this date × channel combination.
     -- Used as the denominator for channel-level CVR and CAC calculations.
     COUNT(DISTINCT order_id)                                                          AS total_orders
 
-FROM stg
+FROM weighted
 
 -- Group by order_date AND channel (previously channel only).
 -- This is the critical change: adding order_date enables MetricFlow time filtering.

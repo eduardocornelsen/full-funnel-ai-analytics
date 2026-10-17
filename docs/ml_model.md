@@ -30,6 +30,10 @@ This probability — the "lead score" — is used in two ways:
 
 The model is intentionally lightweight — four behavioural features, one training script, one JSON file. The goal is a working ML-in-the-loop pipeline, not a production model requiring feature stores.
 
+> **Read this before quoting the model.** The model has **no predictive power**. The four features are generated with `np.random` in `scripts/generate_lead_scoring_features.py`, contacts are joined to deals by row position rather than by a key, and half of the positive labels are flipped at random to balance the classes. The logged test metrics reflect that: **AUC ≈ 0.49, accuracy ≈ 0.49** (`ml/mlflow/`), i.e. chance level.
+>
+> What this layer demonstrates is the plumbing — dbt feature table → training with MLflow tracking → FastAPI `/score` → n8n routing — not a lead-scoring result. A meaningful model needs real behavioural features joined to outcomes by a real key, a baseline to beat, and cross-validated, calibrated evaluation.
+
 ---
 
 ## 2. Input features
@@ -45,7 +49,7 @@ Features are derived from `fct_lead_scoring_features` (a dbt mart table) and exp
 
 **Target variable:** `is_won` — binary (1 = contact became a closed-won deal, 0 = otherwise)
 
-**Training data:** 93,000 rows sourced from the Olist e-commerce dataset joined with synthetic marketing engagement data.
+**Training data:** ~93,000 rows: synthetic HubSpot contacts and deals, with randomly generated engagement features (see the note in §1).
 
 The feature set is defined in `dbt_project/models/metrics/metrics.yml` under the `leads` semantic model. If you add new features to the dbt model, update the feature list in both `ml/src/train.py` and `api/main.py`.
 
@@ -296,7 +300,7 @@ mlflow runs list --experiment-name "Lead Scoring Optimization"
 
 | Item | Status |
 |------|--------|
-| XGBoost training on 93K rows | ✅ Complete |
+| XGBoost training pipeline (synthetic features, AUC ≈ 0.49) | ✅ Plumbing complete — no predictive signal |
 | MLflow local experiment tracking | ✅ Complete |
 | FastAPI `/score` endpoint | ✅ Complete |
 | n8n workflow definition | ✅ Complete |

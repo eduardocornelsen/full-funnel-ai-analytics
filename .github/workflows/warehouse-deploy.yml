@@ -24,47 +24,98 @@ jobs:
         target: [bigquery, snowflake]
       fail-fast: false
 
+    # Secrets are read once here; a missing one is an empty string, which the
+    # credentials step below turns into a clean skip instead of a red run.
+    env:
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GCP_SERVICE_ACCOUNT_KEY_JSON: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY_JSON }}
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+      SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+      SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+      SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+      SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
+      # Raw CSV loads land in schema RAW on Snowflake: the loader's and
+      # sources.yml's default (override with SNOWFLAKE_RAW_SCHEMA + RAW_SCHEMA).
+
     steps:
+      # ── Gate: is this target requested, and are its secrets configured? ────
+      - name: Check credentials for ${{ matrix.target }}
+        id: creds
+        env:
+          REQUESTED: ${{ github.event.inputs.target || 'both' }}
+        run: |
+          if [ "$REQUESTED" != "both" ] && [ "$REQUESTED" != "${{ matrix.target }}" ]; then
+            echo "⏭️  ${{ matrix.target }} not requested (target=$REQUESTED) — skipping."
+            echo "ok=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          if [ "${{ matrix.target }}" = "snowflake" ]; then
+            required="SNOWFLAKE_ACCOUNT SNOWFLAKE_USER SNOWFLAKE_ROLE SNOWFLAKE_WAREHOUSE SNOWFLAKE_DATABASE SNOWFLAKE_SCHEMA"
+          else
+            required="GCP_PROJECT_ID GCP_SERVICE_ACCOUNT_KEY_JSON"
+          fi
+          missing=""
+          for name in $required; do
+            [ -z "${!name}" ] && missing="$missing $name"
+          done
+          # Snowflake takes a password or a key pair (SNOWFLAKE_PRIVATE_KEY, PEM text).
+          if [ "${{ matrix.target }}" = "snowflake" ] && [ -z "$SNOWFLAKE_PASSWORD" ] && [ -z "$SNOWFLAKE_PRIVATE_KEY" ]; then
+            missing="$missing SNOWFLAKE_PASSWORD|SNOWFLAKE_PRIVATE_KEY"
+          fi
+          if [ -n "$missing" ]; then
+            echo "::notice title=${{ matrix.target }} deploy skipped::Missing secrets:$missing (see docs/guides/snowflake.md)"
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/checkout@v4
+        if: steps.creds.outputs.ok == 'true'
 
       - uses: actions/setup-python@v5
+        if: steps.creds.outputs.ok == 'true'
         with:
           python-version: "3.11"
           cache: pip
 
       - name: Install dependencies
+        if: steps.creds.outputs.ok == 'true'
         run: pip install -r requirements.txt
 
       - name: Install dbt packages
+        if: steps.creds.outputs.ok == 'true'
         working-directory: dbt_project
         run: dbt deps
 
       # ── BigQuery auth: write service account key to temp file ───────────────
       - name: Write BigQuery service account key
-        if: matrix.target == 'bigquery'
+        if: steps.creds.outputs.ok == 'true' && matrix.target == 'bigquery'
         run: |
-          echo '${{ secrets.GCP_SERVICE_ACCOUNT_KEY_JSON }}' > /tmp/gcp_key.json
+          printf '%s' "$GCP_SERVICE_ACCOUNT_KEY_JSON" > /tmp/gcp_key.json
           echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp_key.json" >> $GITHUB_ENV
-        env:
-          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
 
-      # ── Write dbt profiles.yml from template ────────────────────────────────
+      - name: Write Snowflake private key
+        if: steps.creds.outputs.ok == 'true' && matrix.target == 'snowflake' && env.SNOWFLAKE_PRIVATE_KEY != ''
+        run: |
+          printf '%s\n' "$SNOWFLAKE_PRIVATE_KEY" > /tmp/snowflake_key.p8
+          chmod 600 /tmp/snowflake_key.p8
+          echo "SNOWFLAKE_PRIVATE_KEY_PATH=/tmp/snowflake_key.p8" >> $GITHUB_ENV
+
+      # ── Write dbt profiles.yml from template (values come from env_var) ─────
       - name: Write dbt profiles.yml
+        if: steps.creds.outputs.ok == 'true'
         run: cp dbt_project/profiles.yml.example dbt_project/profiles.yml
-        env:
-          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
-          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-          SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
-          SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
-          SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
 
       # ── Load raw data into warehouse ─────────────────────────────────────────
-      # Deploy the COMMITTED dataset — the same CSVs the golden layer was
-      # generated from. Regenerating data here would load a different random
-      # universe into the warehouse and break cross-warehouse metric parity.
-      - name: Verify committed dataset present (fallback: standalone)
+      # Same data CI validates on DuckDB: the committed CSVs plus the
+      # deterministic synthetic catch-up to today. The append regenerates the
+      # same rows on every machine, so the warehouse sees exactly the universe
+      # the golden layer was generated from. Without it the warehouse would
+      # stop at the last committed day and every recent month would drift.
+      - name: "Verify committed dataset present (fallback: standalone)"
+        if: steps.creds.outputs.ok == 'true'
         id: dataset
         run: |
           if [ -f data/mock_marketing/google_ads_daily_performance.csv ]; then
@@ -76,63 +127,37 @@ jobs:
             echo "committed=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Regenerate synthetic appends up to today
+        if: steps.creds.outputs.ok == 'true' && steps.dataset.outputs.committed == 'true'
+        run: python scripts/daily_synthetic_append.py
+
       - name: Load data into ${{ matrix.target }}
+        if: steps.creds.outputs.ok == 'true'
         run: python scripts/load_${{ matrix.target }}.py
-        env:
-          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
-          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-          SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
-          SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
-          SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
 
       # ── dbt run + test ───────────────────────────────────────────────────────
       - name: dbt run — ${{ matrix.target }}
+        if: steps.creds.outputs.ok == 'true'
         working-directory: dbt_project
         run: dbt run --target ${{ matrix.target }}
-        env:
-          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
-          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-          SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
-          SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
-          SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
 
       - name: dbt test — ${{ matrix.target }}
+        if: steps.creds.outputs.ok == 'true'
         working-directory: dbt_project
         run: dbt test --target ${{ matrix.target }}
-        env:
-          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
-          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-          SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
-          SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
-          SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
 
       # ── Cross-warehouse parity gate ───────────────────────────────────────────
-      # Validate the COMMITTED golden_metrics.json (generated from DuckDB by the
-      # scheduled refresh) against this warehouse. Same data + same dbt models
-      # on a different engine must produce the same metrics — this is the
-      # project's cross-warehouse zero-drift guarantee, enforced.
+      # Validate the COMMITTED golden_metrics.json (generated on DuckDB) against
+      # this warehouse's marts. Completed calendar months are anchor-independent,
+      # so the check holds whatever day it runs, and it is the same gate CI runs
+      # on DuckDB: same data + same dbt models on another engine must give the
+      # same numbers. The full mode also gates on freshness of the committed
+      # anchor, which is about the refresh job, not about this warehouse.
       #
-      # This workflow never writes golden_metrics.json: the DuckDB scheduled
-      # refresh is its single writer. (Previously the BigQuery job committed a
-      # golden file generated from freshly randomized data, silently clobbering
-      # the real artifact.)
+      # This workflow never writes golden_metrics.json: the DuckDB refresh is
+      # its single writer.
       # Skipped on the standalone fallback: freshly generated random data is a
-      # different universe than the committed golden file, so parity would be
-      # guaranteed to fail — the fallback is a structural deploy only.
-      - name: Validate — committed golden layer matches ${{ matrix.target }}
-        if: steps.dataset.outputs.committed == 'true'
-        run: python scripts/validate_metrics.py --target ${{ matrix.target }}
-        env:
-          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
-          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-          SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
-          SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
-          SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
+      # different universe than the committed golden file.
+      - name: Parity — committed golden layer matches ${{ matrix.target }}
+        if: steps.creds.outputs.ok == 'true' && steps.dataset.outputs.committed == 'true'
+        run: python scripts/validate_metrics.py --target ${{ matrix.target }} --completed-months-only

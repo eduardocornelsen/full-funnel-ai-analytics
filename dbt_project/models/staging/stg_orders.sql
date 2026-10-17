@@ -17,6 +17,8 @@ SELECT
         TIMESTAMP_DIFF(CAST(order_delivered_customer_date AS TIMESTAMP), CAST(order_purchase_timestamp AS TIMESTAMP), DAY) AS delivery_days,
     {% elif target.type == 'postgres' %}
         EXTRACT(DAY FROM (CAST(order_delivered_customer_date AS TIMESTAMP) - CAST(order_purchase_timestamp AS TIMESTAMP))) AS delivery_days,
+    {% elif target.type == 'snowflake' %}
+        DATEDIFF(day, CAST(order_purchase_timestamp AS TIMESTAMP), CAST(order_delivered_customer_date AS TIMESTAMP)) AS delivery_days,
     {% else %}
         DATEDIFF('day', CAST(order_purchase_timestamp AS TIMESTAMP), CAST(order_delivered_customer_date AS TIMESTAMP)) AS delivery_days,
     {% endif %}

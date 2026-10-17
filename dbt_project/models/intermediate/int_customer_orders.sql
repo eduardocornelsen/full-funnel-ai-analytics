@@ -20,6 +20,8 @@ SELECT
         DATE_DIFF(MAX(o.order_date), MIN(o.order_date), DAY) / NULLIF(COUNT(DISTINCT o.order_id) - 1, 0) AS avg_days_between_orders
     {% elif target.type == 'postgres' %}
         EXTRACT(DAY FROM (MAX(o.order_date) - MIN(o.order_date))) / NULLIF(COUNT(DISTINCT o.order_id) - 1, 0) AS avg_days_between_orders
+    {% elif target.type == 'snowflake' %}
+        DATEDIFF(day, MIN(o.order_date), MAX(o.order_date)) / NULLIF(COUNT(DISTINCT o.order_id) - 1, 0) AS avg_days_between_orders
     {% else %}
         DATEDIFF('day', MIN(o.order_date), MAX(o.order_date)) / NULLIF(COUNT(DISTINCT o.order_id) - 1, 0) AS avg_days_between_orders
     {% endif %}

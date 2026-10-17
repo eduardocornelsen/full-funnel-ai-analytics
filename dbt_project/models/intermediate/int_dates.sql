@@ -12,6 +12,9 @@
 -- DuckDB range() end is EXCLUSIVE, so add 1 day beyond time_spine_end to ensure
 -- the final day (2026-12-31) is included.
 
+{% if target.type == 'snowflake' %}
+{{ snowflake_day_spine(var("time_spine_start", "2024-01-01"), var("time_spine_end", none)) }}
+{% else %}
 SELECT
     -- Cast the generated value to DATE; range() returns timestamps in DuckDB.
     CAST(range AS DATE) AS date_day    -- one row per calendar day
@@ -27,3 +30,4 @@ FROM range(
     -- Step: one calendar day per row.
     INTERVAL 1 DAY
 )
+{% endif %}

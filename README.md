@@ -25,7 +25,7 @@
 **Natural language marketing analytics powered by MCP, dbt Semantic Layer, and ML lead scoring. Works with Claude Desktop, OpenCode, Gemini CLI, and Antigravity IDE.**
 
 > *"Which channels actually drive revenue, not just clicks?"*<br>
-> This system answers that question in 15 seconds via natural language — backed by multi-touch attribution and dashboards fed from a single governed semantic layer that runs on DuckDB locally and on BigQuery and Snowflake in CI.
+> This system answers that question in 15 seconds via natural language — backed by multi-touch attribution and dashboards fed from a single governed semantic layer that runs on DuckDB (locally and in CI), with dbt profiles for BigQuery and Snowflake.
 
 > **Data: what's real and what's synthetic**
 > - **Real:** orders, customers, products and revenue come from the public [Olist Brazilian e-commerce dataset](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce) (~100K orders, 2016–2018).
@@ -164,7 +164,7 @@ The project ships with three GitHub Actions workflows that enforce zero metric d
 | Workflow | Trigger | What it does |
 | -------- | ------- | ------------ |
 | [`ci.yml`](.github/workflows/ci.yml) | Every pull request | dbt compile + test on DuckDB → generate golden metrics → validate drift → pytest. No cloud creds needed. |
-| [`warehouse-deploy.yml`](.github/workflows/warehouse-deploy.yml) | Push to `main` | Deploys dbt to BigQuery **and** Snowflake in parallel → validates cross-warehouse parity against the committed golden layer. |
+| [`warehouse-deploy.yml`](.github/workflows/warehouse-deploy.yml) | Push to `main` | Deploys dbt to BigQuery **and** Snowflake in parallel → validates cross-warehouse parity against the committed golden layer. **Not green yet:** it needs the warehouse secrets below, and the Snowflake leg calls `scripts/load_snowflake.py`, which doesn't exist. |
 | [`scheduled-refresh.yml`](.github/workflows/scheduled-refresh.yml) | Daily 06:00 UTC | Regenerates synthetic appends up to today (in the runner — never committed) → dbt run/test → regenerates golden metrics → validates drift + freshness → commits **only** `golden_metrics.json`. |
 
 ### The Zero-Drift Guarantee

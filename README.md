@@ -164,7 +164,7 @@ The project ships with three GitHub Actions workflows that enforce zero metric d
 | Workflow | Trigger | What it does |
 | -------- | ------- | ------------ |
 | [`ci.yml`](.github/workflows/ci.yml) | Every pull request | dbt compile + test on DuckDB → generate golden metrics → validate drift → pytest. No cloud creds needed. |
-| [`warehouse-deploy.yml`](.github/workflows/warehouse-deploy.yml) | Push to `main` | Deploys dbt to BigQuery **and** Snowflake in parallel → validates cross-warehouse parity against the committed golden layer. **Not green yet:** it needs the warehouse secrets below, and the Snowflake leg calls `scripts/load_snowflake.py`, which doesn't exist. |
+| [`warehouse-deploy.yml`](.github/workflows/warehouse-deploy.yml) | Push to `main` | Loads the same data into BigQuery **and** Snowflake in parallel → dbt run/test → checks the warehouse's marts against the committed golden layer. A leg whose secrets aren't configured is skipped, not failed. The Snowflake leg is verified locally on an emulator; its first live run is pending (see [Runs on Snowflake](#runs-on-snowflake)). |
 | [`scheduled-refresh.yml`](.github/workflows/scheduled-refresh.yml) | Daily 06:00 UTC | Regenerates synthetic appends up to today (in the runner — never committed) → dbt run/test → regenerates golden metrics → validates drift + freshness → commits **only** `golden_metrics.json`. |
 
 ### The Zero-Drift Guarantee
@@ -189,14 +189,40 @@ To enable BigQuery and Snowflake deploys, add these secrets in **Settings → Se
 | `GCP_SERVICE_ACCOUNT_KEY_JSON` | BigQuery |
 | `SNOWFLAKE_ACCOUNT` | Snowflake |
 | `SNOWFLAKE_USER` | Snowflake |
-| `SNOWFLAKE_PASSWORD` | Snowflake |
+| `SNOWFLAKE_PASSWORD` (or `SNOWFLAKE_PRIVATE_KEY`) | Snowflake |
+| `SNOWFLAKE_ROLE` | Snowflake |
 | `SNOWFLAKE_WAREHOUSE` | Snowflake |
 | `SNOWFLAKE_DATABASE` | Snowflake |
 | `SNOWFLAKE_SCHEMA` | Snowflake |
 
 The DuckDB PR gate needs **no secrets** — it runs entirely locally inside the Actions runner.
 
-See the [Production Readiness Guide](docs/guides/production_readiness_guide.md) for full setup instructions, including how to create a BigQuery service account and configure Snowflake.
+See the [Production Readiness Guide](docs/guides/production_readiness_guide.md) for the BigQuery service account, and the [Snowflake guide](docs/guides/snowflake.md) for the Snowflake account, setup SQL and secrets.
+
+### Runs on Snowflake
+
+The dbt project builds on Snowflake with no change to the DuckDB SQL: dialect
+differences (date spine, `DATEDIFF`, raw schema) are branched on `target.type`
+inside the models. `scripts/load_snowflake.py` loads the 22 CSVs into `RAW`,
+`scripts/snowflake_setup.sql` creates an X-Small auto-suspending warehouse, the
+database, a `TRANSFORMER` role and a CI user, and `warehouse-deploy.yml` runs
+load → `dbt run` → `dbt test` → parity against the committed golden layer.
+
+What has been verified, and how:
+
+| Check | Result |
+|---|---|
+| Loader unit tests on [fakesnow](https://github.com/tekumara/fakesnow) (`tests/test_load_snowflake.py`) | pass |
+| `dbt build --target snowflake` on fakesnow, full dataset | 108/108 (25 models, 83 tests) |
+| Parity gate on fakesnow (`validate_metrics.py --target snowflake --completed-months-only`) | 12/12, 0 drift |
+| Golden artifact generated on fakesnow vs on DuckDB | 2,810 numeric leaves identical |
+| **Live Snowflake account** | **pending**: needs a trial account and the secrets above |
+
+fakesnow translates Snowflake SQL with sqlglot and runs it on DuckDB, so this
+proves the Snowflake branches are valid Snowflake syntax and give the same
+numbers. It does not prove Snowflake's own planner, staging (PUT/COPY), grants
+or auth; the first live run closes that. Setup and costs (≈ $0.25 per deploy on
+an X-Small): [docs/guides/snowflake.md](docs/guides/snowflake.md).
 
 ---
 
@@ -378,7 +404,7 @@ Since Claude Desktop doesn't support command files, use **Projects**:
 | AI: Gemini CLI      | BigQuery native          | $0 (free generous limits)          |
 | AI: Antigravity IDE | Parallel agents          | $0 (free public preview)           |
 
-Enterprise warehouse demos use free trials: Snowflake (30-day, ~$400 credits) and Databricks (14-day). Only DuckDB runs on every PR; BigQuery and Snowflake run in `warehouse-deploy.yml` when credentials are configured; Databricks and Supabase have a dbt profile / loader but no automated parity check.
+Enterprise warehouse demos use free trials: Snowflake (30-day, $400 credits) and Databricks (14-day). Only DuckDB runs on every PR; BigQuery and Snowflake run in `warehouse-deploy.yml` when credentials are configured (Snowflake so far verified on an emulator, live run pending); Databricks and Supabase have a dbt profile / loader but no automated parity check.
 
 ---
 
@@ -620,6 +646,7 @@ See the [Portability Guide](docs/guides/portability_guide.md) for Snowflake, Dat
 | [Connector UI Guide](docs/guides/connector_ui_guide.md) | Data Sources page walkthrough; live dashboard capabilities across Claude, Streamlit, and HTML |
 | [Setup & Execution Guide](docs/guides/setup_guide.md) | Step-by-step instructions to get the full platform running locally |
 | [Analytical Commands Guide](docs/guides/commands_guide.md) | Reference for all slash commands (`/marketing`, `/campaign`, `/attribution`, etc.) |
+| [Snowflake Guide](docs/guides/snowflake.md) | Trial account, setup SQL, secrets, cost per deploy, what the emulator verified |
 | [Multi-Warehouse Portability Guide](docs/guides/portability_guide.md) | Deploying to Snowflake or Databricks from the default BigQuery/DuckDB setup |
 | [BigQuery Data Warehouse Plan](docs/guides/data-warehouse-plan.md) | BigQuery implementation plan and data warehouse architecture decisions |
 | [Claude Desktop Project Instructions](docs/guides/claude_desktop_project_instructions.md) | Configuring Claude Desktop Projects to use the analytical commands |

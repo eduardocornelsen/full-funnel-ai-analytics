@@ -50,6 +50,7 @@ If you only have time for one section, skip to [Quick-find](#quick-find-i-want-t
 | Use the Streamlit Data Sources UI | [`guides/connector_ui_guide.md`](guides/connector_ui_guide.md) |
 | Configure CI/CD secrets for BigQuery / Snowflake | [`guides/production_readiness_guide.md`](guides/production_readiness_guide.md) |
 | Promote v0.9 → v1.0 (the release checklist) | [`guides/production_readiness_guide.md`](guides/production_readiness_guide.md#promoting-v09--v10--pre-release-checklist) |
+| Run the project on Snowflake (trial, setup SQL, secrets, cost) | [`guides/snowflake.md`](guides/snowflake.md) |
 | Move from DuckDB to Snowflake / Databricks | [`guides/portability_guide.md`](guides/portability_guide.md) |
 | Understand the BigQuery data warehouse design | [`guides/data-warehouse-plan.md`](guides/data-warehouse-plan.md) |
 | See the architecture diagram | [`images/full_funnel_architecture_flow_v2.png`](images/full_funnel_architecture_flow_v2.png) |
@@ -74,6 +75,7 @@ docs/
 │   ├── connector_ui_guide.md                # Streamlit Data Sources UI (231 lines)
 │   ├── production_readiness_guide.md        # CI/CD, secrets, v0.9 → v1.0 checklist (330 lines)
 │   ├── portability_guide.md                 # multi-warehouse deploy (20 lines)
+│   ├── snowflake.md                         # Snowflake: setup SQL, secrets, cost, emulator results
 │   └── data-warehouse-plan.md               # BigQuery design decisions (320 lines)
 │
 ├── images/                                  # diagrams and screenshots

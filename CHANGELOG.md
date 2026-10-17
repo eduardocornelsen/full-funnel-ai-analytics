@@ -6,6 +6,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: [SemVer](
 ## [Unreleased]
 
 ### Fixed
+- `warehouse-deploy.yml` was not valid YAML (an unquoted `: ` in a step name),
+  so GitHub could never start it. It now skips a warehouse cleanly when its
+  secrets are missing, honours the `target` input, regenerates the same
+  synthetic appends CI uses before loading (otherwise every recent month
+  drifts), and gates on `--completed-months-only` parity
+- `validate_metrics.py --target snowflake` used `?` placeholders against the
+  connector's default `pyformat` paramstyle; it now switches to `qmark`
 - **Time-decay attribution is now normalised per order.** The raw weights
   `POWER(2, -days/7)` were summed without dividing by the order's total, so
   time-decay revenue came out at ~$24.7M against ~$18.2M of order revenue
@@ -22,6 +29,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: [SemVer](
 - `src/*.egg-info` is no longer tracked
 
 ### Added
+- **Snowflake path.** `scripts/load_snowflake.py` (env-only credentials,
+  password or key pair, `--dry-run`, every table replaced so reruns are safe,
+  row counts, stops naming the table that failed), `scripts/snowflake_setup.sql`
+  (X-Small warehouse with 60 s auto-suspend, database, `RAW`/`ANALYTICS`
+  schemas, `TRANSFORMER` role, CI user, 5-credit resource monitor) and
+  `docs/guides/snowflake.md`. Models branch on `target.type` for the date spine
+  (`GENERATOR`), `DATEDIFF(day, …)` and the raw schema; DuckDB SQL unchanged.
+  Verified on fakesnow: loader tests, `dbt build --target snowflake` 108/108,
+  parity 0 drift. **Live Snowflake run pending.**
 - Committed-artifact spot check: `validate_metrics.py --completed-months-only`
   validates the checked-in `golden_metrics.json` against the warehouse using
   completed calendar months (anchor-independent), wired into PR CI before the

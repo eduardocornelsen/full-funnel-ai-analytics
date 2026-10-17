@@ -4,6 +4,8 @@
             DATE_DIFF(CAST({{ order_date }} AS DATE), CAST({{ touchpoint_date }} AS DATE), DAY)
         {% elif target.type == 'postgres' %}
             EXTRACT(DAY FROM (CAST({{ order_date }} AS DATE) - CAST({{ touchpoint_date }} AS DATE)))
+        {% elif target.type == 'snowflake' %}
+            DATEDIFF(day, CAST({{ touchpoint_date }} AS DATE), CAST({{ order_date }} AS DATE))
         {% else %}
             DATEDIFF('day', CAST({{ touchpoint_date }} AS DATE), CAST({{ order_date }} AS DATE))
         {% endif %}

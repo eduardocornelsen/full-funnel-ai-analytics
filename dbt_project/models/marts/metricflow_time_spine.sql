@@ -21,6 +21,9 @@
 -- The column MUST be named `date_day` — MetricFlow looks for this exact name
 -- when it discovers the time spine model.
 
+{% if target.type == 'snowflake' %}
+{{ snowflake_day_spine(var("time_spine_start", "2024-01-01"), var("time_spine_end", none)) }}
+{% else %}
 SELECT
     CAST(d AS DATE) AS date_day
 FROM generate_series(
@@ -28,3 +31,4 @@ FROM generate_series(
     {% if var("time_spine_end", none) %}'{{ var("time_spine_end") }}'::DATE{% else %}current_date + INTERVAL '1 year'{% endif %},
     INTERVAL '1 day'
 ) AS t(d)
+{% endif %}

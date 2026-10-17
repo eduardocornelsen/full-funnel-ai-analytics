@@ -2,7 +2,9 @@ version: 2
 
 sources:
   - name: olist
-    schema: main
+    # DuckDB loads raw tables into `main`; cloud warehouses keep raw data in its
+    # own schema (Snowflake: RAW_SCHEMA, default RAW; BigQuery: the target dataset).
+    schema: "{{ 'main' if target.type == 'duckdb' else (env_var('RAW_SCHEMA', '') or ('RAW' if target.type == 'snowflake' else target.schema)) }}"
     description: "Olist Brazilian E-Commerce dataset (Kaggle)"
     tables:
       - name: orders
@@ -17,7 +19,9 @@ sources:
         identifier: "product_category_name_translation"
 
   - name: marketing
-    schema: main
+    # DuckDB loads raw tables into `main`; cloud warehouses keep raw data in its
+    # own schema (Snowflake: RAW_SCHEMA, default RAW; BigQuery: the target dataset).
+    schema: "{{ 'main' if target.type == 'duckdb' else (env_var('RAW_SCHEMA', '') or ('RAW' if target.type == 'snowflake' else target.schema)) }}"
     description: "Synthetic marketing platform data"
     tables:
       - name: google_ads_daily_performance

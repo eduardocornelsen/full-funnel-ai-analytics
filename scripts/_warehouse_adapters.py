@@ -64,14 +64,23 @@ class _BigQueryAdapter:
 class _SnowflakeAdapter:
     def __init__(self):
         import snowflake.connector  # noqa: PLC0415
-        self._con = snowflake.connector.connect(
+        # The validators write DuckDB-style `?` placeholders; the connector's
+        # default is pyformat (%s), so switch it to qmark before connecting.
+        snowflake.connector.paramstyle = "qmark"
+        kwargs = dict(
             account=os.environ["SNOWFLAKE_ACCOUNT"],
             user=os.environ["SNOWFLAKE_USER"],
-            password=os.environ["SNOWFLAKE_PASSWORD"],
             warehouse=os.environ.get("SNOWFLAKE_WAREHOUSE", "ANALYTICS_WH"),
             database=os.environ.get("SNOWFLAKE_DATABASE", "OLIST_ANALYTICS"),
-            schema=os.environ.get("SNOWFLAKE_SCHEMA", "PUBLIC"),
+            schema=os.environ.get("SNOWFLAKE_SCHEMA", "ANALYTICS"),
         )
+        if os.environ.get("SNOWFLAKE_ROLE"):
+            kwargs["role"] = os.environ["SNOWFLAKE_ROLE"]
+        if os.environ.get("SNOWFLAKE_PRIVATE_KEY_PATH"):
+            kwargs["private_key_file"] = os.environ["SNOWFLAKE_PRIVATE_KEY_PATH"]
+        else:
+            kwargs["password"] = os.environ["SNOWFLAKE_PASSWORD"]
+        self._con = snowflake.connector.connect(**kwargs)
         self._cur = self._con.cursor()
 
     def execute(self, sql: str, params=None) -> _ResultProxy:
